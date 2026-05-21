@@ -112,14 +112,10 @@ def encodeMaskSummary(mask):
 	}
 
 def getClassName(classId):
-	"""Get class name from class ID — covers all 7 project classes"""
-	class_map = {
-		1: 'wall',
-		2: 'window',
-		3: 'door',
-		4: 'stairs',
-		5: 'parking',
-		6: 'balcony',
-		7: 'terrace'
-	}
-	return class_map.get(classId, 'unknown')
+	"""Get class name from class ID.
+
+	Reads from config/classes.py (the single source of truth) so new classes
+	are picked up automatically with no edits to this function.
+	"""
+	from config.classes import PROJECT_ID_TO_NAME
+	return PROJECT_ID_TO_NAME.get(classId, 'unknown')

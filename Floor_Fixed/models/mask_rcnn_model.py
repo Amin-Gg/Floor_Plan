@@ -111,7 +111,7 @@ class Mask2FormerSwinLEngine:
 
         {
             "rois":      np.ndarray (N, 4)    — [y1, x1, y2, x2] in pixels
-            "class_ids": np.ndarray (N,)      — project class IDs 1-7
+            "class_ids": np.ndarray (N,)      — project class IDs (1..NUM_CLASSES)
             "scores":    np.ndarray (N,)      — confidence 0.0-1.0
             "masks":     np.ndarray (H, W, N) — boolean instance masks
         }
@@ -300,7 +300,7 @@ def get_model() -> Optional[Mask2FormerSwinLEngine]:
     return _model
 
 
-def get_config() -> Optional[DummyConfig]:
+def get_model_config() -> Optional[DummyConfig]:
     """Return the model configuration shim, or None if not yet initialized."""
     return _cfg
 

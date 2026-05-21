@@ -1,10 +1,13 @@
 # Wall analysis module for floor plan processing
+import logging
 import cv2
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 from utils.geometry import find_nearest_valid_point
 from utils.conversions import pixels_to_mm, convert_thickness_to_mm, convert_centerline_to_mm, convert_bbox_to_mm
 from analysis.junction_analysis import extract_centerline_coords, extract_centerline_coords_with_validation
+
+logger = logging.getLogger(__name__)
 
 def calculate_wall_thickness(wall_mask, centerline_coords):
 	"""Calculate wall thickness along the centerline"""
@@ -156,7 +159,9 @@ def analyze_junction_types(junctions, wall_connections):
 	return junction_analysis
 
 def snap_centerlines_to_junctions(wall_parameters: list,
-                                   snap_tolerance_mm: float = 50.0) -> list:
+                                   junctions: list,
+                                   snap_tolerance_mm: float = 50.0,
+                                   scale_factor_mm_per_pixel: float = 1.0) -> list:
     """
     Snap wall endpoint coordinates to nearby junction points so that walls
     meet precisely in 3D modeling software.
@@ -171,54 +176,44 @@ def snap_centerlines_to_junctions(wall_parameters: list,
 
     Algorithm
     ----------
-    For every wall, collect all junction points within snap_tolerance_mm of
-    either the start or end point of the centerline.  If found, replace the
-    endpoint with the exact junction coordinate.  The junction coordinates are
-    the authoritative intersection points computed by junction_analysis.py.
+    For every wall, look up its start/end junction ID in the authoritative
+    junction list (computed by junction_analysis.py). Convert the junction's
+    pixel position to mm and snap the wall endpoint to that position if it
+    is within snap_tolerance_mm.
 
     Parameters
     ----------
-    wall_parameters    : list of wall dicts (output of extract_wall_parameters)
-                         Each dict must have "centerline": [[x,y], ...] in mm
-    snap_tolerance_mm  : maximum distance in mm to snap an endpoint to a junction.
-                         Default 50 mm — larger than any fitting error, smaller
-                         than the shortest wall segment.
+    wall_parameters          : list of wall dicts (output of extract_wall_parameters)
+                               Each dict must have "centerline": [[x,y], ...] in mm
+    junctions                : list of junction dicts from junction_analysis.py.
+                               Each dict must have "id" and "position": [x_px, y_px].
+    snap_tolerance_mm        : maximum distance in mm to snap an endpoint to a junction.
+                               Default 50 mm — larger than any fitting error, smaller
+                               than the shortest wall segment.
+    scale_factor_mm_per_pixel: used to convert junction pixel positions to mm.
 
     Returns
     -------
     list — same structure as input, with endpoint coordinates snapped in-place.
     """
-    # Collect all junction points from wall connection metadata
-    junction_points: dict = {}   # junction_id → [x_mm, y_mm]
-
-    for wall in wall_parameters:
-        connections = wall.get("connections", {})
-        # The connections dict has start_junction and end_junction IDs but not
-        # coordinates. We reconstruct junction positions from the centerline
-        # endpoints themselves — if two walls share a junction ID, their
-        # respective endpoints should be at the same coordinate.
-        # Strategy: build a map of junction_id → list of endpoint coords,
-        # then average them to get the consensus junction position.
-        for side in ("start_junction", "end_junction"):
-            jid = connections.get(side)
-            if not jid:
-                continue
-            cl = wall.get("centerline", [])
-            if len(cl) < 2:
-                continue
-            pt = cl[0] if side == "start_junction" else cl[-1]
-            junction_points.setdefault(jid, []).append(pt)
-
-    # Compute consensus position for each junction (average of all contributors)
-    junction_consensus: dict = {}
-    for jid, pts in junction_points.items():
-        if pts:
-            junction_consensus[jid] = [
-                sum(p[0] for p in pts) / len(pts),
-                sum(p[1] for p in pts) / len(pts),
+    # Build a lookup from junction ID → position in mm using the authoritative
+    # junction list from junction_analysis.py. These are the true intersection
+    # coordinates, not re-derived from the wall endpoints.
+    junction_positions_mm: dict = {}
+    for j in junctions:
+        jid = j.get("id") or j.get("junction_id")
+        pos_px = j.get("position")
+        if jid and pos_px and len(pos_px) >= 2:
+            junction_positions_mm[jid] = [
+                pos_px[0] * scale_factor_mm_per_pixel,
+                pos_px[1] * scale_factor_mm_per_pixel,
             ]
 
-    # Snap each wall endpoint to its junction consensus position
+    if not junction_positions_mm:
+        logger.debug("snap_centerlines_to_junctions: no junction positions available — skipping snap")
+        return wall_parameters
+
+    # Snap each wall endpoint to its junction's authoritative mm position
     snapped_count = 0
     for wall in wall_parameters:
         cl = wall.get("centerline", [])
@@ -229,10 +224,10 @@ def snap_centerlines_to_junctions(wall_parameters: list,
 
         for side, idx in (("start_junction", 0), ("end_junction", -1)):
             jid = connections.get(side)
-            if not jid or jid not in junction_consensus:
+            if not jid or jid not in junction_positions_mm:
                 continue
 
-            jx, jy = junction_consensus[jid]
+            jx, jy = junction_positions_mm[jid]
             ex, ey = cl[idx][0], cl[idx][1]
             dist   = ((jx - ex) ** 2 + (jy - ey) ** 2) ** 0.5
 
@@ -240,8 +235,7 @@ def snap_centerlines_to_junctions(wall_parameters: list,
                 cl[idx] = [jx, jy]
                 snapped_count += 1
 
-    import logging
-    logging.getLogger(__name__).info(
+    logger.info(
         "snap_centerlines_to_junctions: snapped %d endpoints (tolerance=%.0f mm)",
         snapped_count, snap_tolerance_mm
     )
@@ -285,7 +279,9 @@ def extract_wall_parameters(segments, wall_mask, junctions, scale_factor_mm_per_
 
     # Snap wall endpoints to junction consensus positions so corners close
     # cleanly in Revit, ArchiCAD, and other 3D modeling software.
-    wall_parameters = snap_centerlines_to_junctions(wall_parameters)
+    wall_parameters = snap_centerlines_to_junctions(
+        wall_parameters, junctions, scale_factor_mm_per_pixel=scale_factor_mm_per_pixel
+    )
 
     return wall_parameters
 
@@ -327,7 +323,9 @@ def extract_wall_parameters_with_regions(all_wall_segments, wall_mask, junctions
     # Snap wall endpoints to junction consensus positions — identical to the
     # snap applied in extract_wall_parameters. Without this call, walls
     # processed through the region-based path have open corners in Revit.
-    wall_parameters = snap_centerlines_to_junctions(wall_parameters)
+    wall_parameters = snap_centerlines_to_junctions(
+        wall_parameters, junctions, scale_factor_mm_per_pixel=scale_factor_mm_per_pixel
+    )
 
     return wall_parameters
 

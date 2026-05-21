@@ -46,51 +46,57 @@ def _categorize_icon(stem: str):
 CLASS_MAP = {}
 DISPLAY_NAME = {}
 
-for p in ICON_DIR.glob("*.png"):
-    stem = p.stem
-    category = _categorize_icon(stem)
-    if category is None:
-        continue  # ignore other templates
+if not ICON_DIR.exists():
+    logger.warning(
+        "Icon directory not found: %s — symbol detection disabled. "
+        "Create the directory and add template PNGs to enable it.", ICON_DIR
+    )
+else:
+    for p in ICON_DIR.glob("*.png"):
+        stem = p.stem
+        category = _categorize_icon(stem)
+        if category is None:
+            continue  # ignore other templates
 
-    template_raw = cv2.imread(str(p), 0)
-    if template_raw is None or template_raw.size == 0:
-        continue
-
-    # Skip big or complex drawings (likely product photos)
-    h_raw, w_raw = template_raw.shape[:2]
-    if max(h_raw, w_raw) > 120:
-        if DEBUG_LOAD:
-            logger.debug(f"Skip {p.name}: too large ({w_raw}x{h_raw})")
-        continue
-
-    # Assign class ID based on category
-    cid = 4 if category == "camera" else 5  # 4:Camera, 5:Sensor
-
-    # Store grayscale raw template (better keypoints at small sizes)
-    TEMPLATES[stem] = template_raw
-    CLASS_MAP[stem] = cid
-    DISPLAY_NAME[stem] = category.capitalize()
-
-    # Add rotated versions every 45° (excluding 0° which is already added)
-    for angle in range(45, 360, 45):
-        rotated_raw = _rotate_image_bound(template_raw, angle)
-        r_name = f"{stem}_rot{angle}"
-        TEMPLATES[r_name] = rotated_raw
-        CLASS_MAP[r_name] = cid
-        DISPLAY_NAME[r_name] = DISPLAY_NAME[stem]
-
-    # Add down-scaled copies (0.75, 0.6, 0.5, 0.3) to cover small glyphs
-    for scale in (0.75, 0.6, 0.5, 0.3):
-        if min(h_raw, w_raw) * scale < 20:  # avoid making it too tiny
+        template_raw = cv2.imread(str(p), 0)
+        if template_raw is None or template_raw.size == 0:
             continue
-        scaled_raw = cv2.resize(template_raw, (int(w_raw*scale), int(h_raw*scale)), interpolation=cv2.INTER_AREA)
-        s_name = f"{stem}_s{int(scale*100)}"
-        TEMPLATES[s_name] = scaled_raw
-        CLASS_MAP[s_name] = cid
-        DISPLAY_NAME[s_name] = DISPLAY_NAME[stem]
 
-    if DEBUG_LOAD:
-        logger.debug(f"Keep {p.name}: size {w_raw}x{h_raw}, edge density {np.count_nonzero(template_raw)/(h_raw*w_raw):.2f}")
+        # Skip big or complex drawings (likely product photos)
+        h_raw, w_raw = template_raw.shape[:2]
+        if max(h_raw, w_raw) > 120:
+            if DEBUG_LOAD:
+                logger.debug(f"Skip {p.name}: too large ({w_raw}x{h_raw})")
+            continue
+
+        # Assign class ID based on category
+        cid = 4 if category == "camera" else 5  # 4:Camera, 5:Sensor
+
+        # Store grayscale raw template (better keypoints at small sizes)
+        TEMPLATES[stem] = template_raw
+        CLASS_MAP[stem] = cid
+        DISPLAY_NAME[stem] = category.capitalize()
+
+        # Add rotated versions every 45° (excluding 0° which is already added)
+        for angle in range(45, 360, 45):
+            rotated_raw = _rotate_image_bound(template_raw, angle)
+            r_name = f"{stem}_rot{angle}"
+            TEMPLATES[r_name] = rotated_raw
+            CLASS_MAP[r_name] = cid
+            DISPLAY_NAME[r_name] = DISPLAY_NAME[stem]
+
+        # Add down-scaled copies (0.75, 0.6, 0.5, 0.3) to cover small glyphs
+        for scale in (0.75, 0.6, 0.5, 0.3):
+            if min(h_raw, w_raw) * scale < 20:  # avoid making it too tiny
+                continue
+            scaled_raw = cv2.resize(template_raw, (int(w_raw*scale), int(h_raw*scale)), interpolation=cv2.INTER_AREA)
+            s_name = f"{stem}_s{int(scale*100)}"
+            TEMPLATES[s_name] = scaled_raw
+            CLASS_MAP[s_name] = cid
+            DISPLAY_NAME[s_name] = DISPLAY_NAME[stem]
+
+        if DEBUG_LOAD:
+            logger.debug(f"Keep {p.name}: size {w_raw}x{h_raw}, edge density {np.count_nonzero(template_raw)/(h_raw*w_raw):.2f}")
 
 # Precompute template areas for quick size checks
 TEMPLATE_SIZES = {name: tmpl.shape[:2] for name, tmpl in TEMPLATES.items()}  # (h, w)

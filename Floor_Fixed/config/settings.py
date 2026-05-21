@@ -111,8 +111,6 @@ class ProductionConfig(Config):
             )
         return origins
 
-    CORS_ORIGINS: str = os.getenv("APP_CORS_ORIGINS", "")
-
 
 class TestingConfig(Config):
     """Unit and integration tests — no caching, debug logging."""

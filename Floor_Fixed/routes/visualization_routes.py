@@ -11,7 +11,7 @@ import cv2
 import numpy
 from datetime import datetime
 
-from models.mask_rcnn_model import get_model, get_config, is_model_initialized
+from models.mask_rcnn_model import get_model, is_model_initialized
 from services.image_validation import validate_and_resize_image, check_memory_usage
 from image_processing.image_loader import myImageLoader
 
@@ -21,10 +21,13 @@ from utils.inference_executor import get_executor
 from utils.geometry import safe_logical_or, safe_logical_and
 from utils.conversions import (
     pixels_to_mm, pixels_sq_to_mm_sq, convert_junction_position_to_mm, save_wall_analysis)
+from utils.polygon_geometry import polygon_area_m2, polygon_perimeter_m
 
 from analysis.room_analysis import extract_room_polygons, find_host_wall_id
 from utils.file_utils import getNextTestNumber
 from schemas import AnalyzeFormRequest
+from services.analysis_report import AnalysisReport
+from services.bim_builder    import BimDataBuilder
 
 from image_processing.mask_processing import (
     extract_wall_masks, segment_individual_walls)
@@ -84,6 +87,13 @@ def analyze_floor_plan():
     if not is_model_initialized():
         raise ModelNotReadyError()
 
+    # Tracker for the analysis_report block returned in the response.
+    # Recording into this object never affects route behavior — it's pure
+    # additive metadata. If anything inside the tracker fails it swallows
+    # its own errors (see services/analysis_report.py).
+    report = AnalysisReport()
+    report.set_model_mode("fine_tuned" if os.getenv("FLOORPLAN_MODEL_PATH") else "coco_fallback")
+
     imagefile = require_image_upload("image")
     scale_factor_mm_per_pixel = validate_scale_factor(
         request.form.get("scale_factor_mm_per_pixel", 1.0)
@@ -95,8 +105,12 @@ def analyze_floor_plan():
     _bp_raw = request.form.get("building_params", "{}")
     try:
         building_params = _json.loads(_bp_raw) if isinstance(_bp_raw, str) else {}
-    except (ValueError, TypeError):
+        report.set_stage("building_params", "ok")
+    except (ValueError, TypeError) as _bp_err:
         building_params = {}
+        report.set_stage("building_params", "degraded",
+                         f"invalid JSON, using defaults ({_bp_err})")
+        report.add_warning("building_params was not valid JSON — defaults applied")
     from utils.validators import validate_building_params
     building_params = validate_building_params(building_params)
 
@@ -147,6 +161,11 @@ def analyze_floor_plan():
         
         if resize_info["resized"]:
             logger.info(f"Image was resized: {resize_info['original_size']} -> {resize_info['new_size']}")
+            report.add_warning(
+                f"Input image was downsampled from "
+                f"{resize_info['original_size']} to {resize_info['new_size']} "
+                f"(reason: {resize_info.get('reason', 'size_limit')})"
+            )
         
         t0 = time.time()
         model = get_model()
@@ -355,8 +374,21 @@ def analyze_floor_plan():
         
         t0 = time.time()
         logger.info("Starting OCR detection for space names...")
-        space_names = detect_space_names(numpy.array(original_image))
-        
+        # OCR is wrapped in try/except so PaddleOCR failures (missing model
+        # files, GPU OOM, library install issues) degrade gracefully to an
+        # empty list instead of failing the whole /analyze request. Room
+        # extraction and host-wall resolution already handle empty space_names.
+        try:
+            space_names = detect_space_names(numpy.array(original_image))
+            report.set_ocr_used(True)
+            report.set_stage("ocr", "ok")
+        except Exception as _ocr_err:
+            logger.warning("OCR failed (continuing without space names): %s", _ocr_err, exc_info=True)
+            space_names = []
+            report.set_ocr_used(False)
+            report.set_stage("ocr", "failed", str(_ocr_err))
+            report.add_warning("OCR engine failed — room names will not be available")
+
         for space in space_names:
             # Process OCR Coordinates correctly for PaddleOCR format
             ix, iy = space['insertion_point']
@@ -390,17 +422,42 @@ def analyze_floor_plan():
             space_names=space_names
         )
         logger.info(f"Room analysis: {len(room_polygons)} rooms extracted in {time.time()-t0:.2f}s")
+        report.set_stage("rooms", "ok")
 
         # ── Host wall assignment for doors and windows ────────────────────────
         # Dynamo needs to know which wall hosts each door/window to place the
         # family instance correctly. Find the nearest wall centerline for each.
-        for door in detailed_doors:
+        # If a door/window has no host wall, it's recorded in the report as
+        # skipped from BIM hosting — the element still appears in the response
+        # but won't place correctly in Revit/Dynamo without a host.
+        doors_without_host = 0
+        for i, door in enumerate(detailed_doors):
             ip = [door["location"]["center"]["x"], door["location"]["center"]["y"]]
-            door["host_wall_id"] = find_host_wall_id(ip, wall_parameters)
+            host_id = find_host_wall_id(ip, wall_parameters)
+            door["host_wall_id"] = host_id
+            if host_id is None:
+                doors_without_host += 1
+                report.add_skipped("door", "no host wall could be assigned",
+                                   element_id=f"Door_{i+1}")
 
-        for win in detailed_windows:
+        windows_without_host = 0
+        for i, win in enumerate(detailed_windows):
             ip = [win["location"]["center"]["x"], win["location"]["center"]["y"]]
-            win["host_wall_id"] = find_host_wall_id(ip, wall_parameters)
+            host_id = find_host_wall_id(ip, wall_parameters)
+            win["host_wall_id"] = host_id
+            if host_id is None:
+                windows_without_host += 1
+                report.add_skipped("window", "no host wall could be assigned",
+                                   element_id=f"Window_{i+1}")
+
+        if doors_without_host or windows_without_host:
+            report.set_stage(
+                "host_walls", "degraded",
+                f"{doors_without_host} door(s) and {windows_without_host} window(s) "
+                f"have no host wall assignment"
+            )
+        else:
+            report.set_stage("host_walls", "ok")
         
         t0 = time.time()
         vis_image = create_wall_visualization(original_image, r, wall_parameters, junction_analysis, w, h, scale_factor_mm_per_pixel, exterior_walls, space_names)
@@ -413,19 +470,51 @@ def analyze_floor_plan():
         wall_vis_filepath = os.path.join(IMAGES_OUTPUT_DIR, wall_vis_filename)
         vis_image.save(wall_vis_filepath)
 
-        # Resolve building height parameters — API values override defaults
-        bp         = building_params  # already validated dict
-        WALL_H     = float(bp.get("wall_height",        2800.0))
-        DOOR_H     = float(bp.get("door_height",        2100.0))
-        WIN_SILL   = float(bp.get("window_sill_height",  900.0))
-        WIN_H      = float(bp.get("window_height",      1200.0))
-        SLAB_THICK = float(bp.get("floor_thickness",    200.0))
+        # Single source of truth for building height parameters.
+        # The builder validates and falls back to industry-standard defaults
+        # if any field is missing or malformed; see services/bim_builder.py.
+        bim_builder = BimDataBuilder(building_params)
+        WALL_H     = bim_builder.wall_height
+        DOOR_H     = bim_builder.door_height
+        WIN_SILL   = bim_builder.window_sill
+        WIN_H      = bim_builder.window_height
+        SLAB_THICK = bim_builder.floor_thickness
 
-        # Extract stair and slab geometries — convert pixel coords to mm
+        # Extract stair and slab geometries — convert pixel coords to mm.
+        # Detected masks that don't produce valid geometry (e.g. fragmented
+        # masks, polygons with < 3 points) are recorded in the report as
+        # skipped rather than silently dropped.
         bim_stairs = []
         bim_slabs  = []
+        # New element buckets for classes 8-15 (room types, railing, closet).
+        # These are CAPTURED here so they reach the API response, but the
+        # detailed BIM modeling (IfcSpace type derivation, railing extrusion
+        # direction, closet host-room assignment) is intentionally deferred
+        # until the model is trained on these classes and we can design the
+        # downstream BIM logic against real predictions.
+        # Until training completes for classes 8-15, these lists will be empty.
+        bim_ml_rooms      = []   # room_* classes (project IDs 8-13)
+        bim_railings      = []   # railing class (project ID 14)
+        bim_closets       = []   # closet class (project ID 15)
+
+        stairs_detected_in_masks = 0
+        slabs_detected_in_masks  = 0
+        ml_rooms_detected        = 0
+        railings_detected        = 0
+        closets_detected         = 0
+
+        # Map project IDs 8-13 → human-readable room type names (used in BIM output)
+        _ROOM_TYPE_MAP = {
+            8:  "Bedroom",
+            9:  "LivingRoom",
+            10: "Kitchen",
+            11: "Bathroom",
+            12: "Entry",
+            13: "Storage",
+        }
         for idx, cid in enumerate(r['class_ids']):
             if cid == 4 and 'masks' in r:   # Stairs
+                stairs_detected_in_masks += 1
                 mask = r['masks'][:, :, idx]
                 stair_data = extract_stair_footprint(mask)
                 if stair_data:
@@ -447,8 +536,17 @@ def analyze_floor_plan():
                         "rotation_angle":  stair_data["rotation_angle"],
                         "base_level":      0.0,
                         "top_level":       WALL_H,
+                        # area_m2 / perimeter_m are auto-computed for validation
+                        # and for the client to display without parsing geometry.
+                        "area_m2":         round(polygon_area_m2(corners_mm), 2),
+                        "perimeter_m":     round(polygon_perimeter_m(corners_mm), 2),
                     })
+                else:
+                    report.add_skipped("stair",
+                                       "extract_stair_footprint returned no valid geometry",
+                                       element_id=f"detection_{idx}")
             elif cid in [5, 6, 7] and 'masks' in r:   # Parking, Balcony, Terrace
+                slabs_detected_in_masks += 1
                 mask = r['masks'][:, :, idx]
                 polygon_px = extract_slab_polygon(mask)
                 if len(polygon_px) >= 3:
@@ -467,8 +565,168 @@ def analyze_floor_plan():
                         "polygon":   polygon_mm,
                         "thickness": SLAB_THICK,
                         "elevation": 0.0,
+                        # area_m2 / perimeter_m are auto-computed for validation
+                        # and for the client to display without parsing geometry.
+                        "area_m2":     round(polygon_area_m2(polygon_mm), 2),
+                        "perimeter_m": round(polygon_perimeter_m(polygon_mm), 2),
                     })
-        
+                else:
+                    slab_type = {5: "parking", 6: "balcony", 7: "terrace"}.get(cid, "slab")
+                    report.add_skipped(slab_type,
+                                       f"polygon had fewer than 3 points ({len(polygon_px)})",
+                                       element_id=f"detection_{idx}")
+
+            # ── New classes (8-15) — placeholder capture ─────────────────────
+            # Until the model is trained for these classes, this branch is
+            # cold code: no predictions arrive with cid >= 8. After training,
+            # this captures them into the appropriate bucket so the response
+            # is complete; the downstream BIM/IFC modeling for these will be
+            # designed in a follow-up iteration.
+            elif cid in (8, 9, 10, 11, 12, 13) and 'masks' in r:   # Room types
+                ml_rooms_detected += 1
+                mask = r['masks'][:, :, idx]
+                polygon_px = extract_slab_polygon(mask)   # same polygon extractor
+                if len(polygon_px) >= 3:
+                    polygon_mm = [
+                        [pt[0] * scale_factor_mm_per_pixel,
+                         pt[1] * scale_factor_mm_per_pixel]
+                        for pt in polygon_px
+                    ]
+                    if polygon_mm[0] != polygon_mm[-1]:
+                        polygon_mm.append(polygon_mm[0])
+                    bim_ml_rooms.append({
+                        "id":          f"MLRoom_{len(bim_ml_rooms)+1}",
+                        "room_type":   _ROOM_TYPE_MAP.get(cid, "Unknown"),
+                        "polygon":     polygon_mm,
+                        "area_m2":     round(polygon_area_m2(polygon_mm), 2),
+                        "perimeter_m": round(polygon_perimeter_m(polygon_mm), 2),
+                        # source field distinguishes ML detections from the
+                        # flood-fill rooms in bim_data["rooms"]. The client
+                        # (or a future merge step) can decide which to trust.
+                        "source":      "ml_detection",
+                    })
+                else:
+                    room_type = _ROOM_TYPE_MAP.get(cid, "room").lower()
+                    report.add_skipped(room_type,
+                                       f"polygon had fewer than 3 points ({len(polygon_px)})",
+                                       element_id=f"detection_{idx}")
+            elif cid == 14 and 'masks' in r:   # Railing
+                railings_detected += 1
+                mask = r['masks'][:, :, idx]
+                polygon_px = extract_slab_polygon(mask)
+                if len(polygon_px) >= 2:   # railings can be just a line
+                    polygon_mm = [
+                        [pt[0] * scale_factor_mm_per_pixel,
+                         pt[1] * scale_factor_mm_per_pixel]
+                        for pt in polygon_px
+                    ]
+                    bim_railings.append({
+                        "id":          f"Railing_{len(bim_railings)+1}",
+                        "polygon":     polygon_mm,
+                        "perimeter_m": round(polygon_perimeter_m(polygon_mm), 2),
+                        # Detailed properties (height, host element, top_level)
+                        # are deferred — Iranian building code typically requires
+                        # 1100mm railing height for balconies above 1m elevation.
+                    })
+                else:
+                    report.add_skipped("railing",
+                                       f"polygon too small ({len(polygon_px)} points)",
+                                       element_id=f"detection_{idx}")
+            elif cid == 15 and 'masks' in r:   # Closet
+                closets_detected += 1
+                mask = r['masks'][:, :, idx]
+                polygon_px = extract_slab_polygon(mask)
+                if len(polygon_px) >= 3:
+                    polygon_mm = [
+                        [pt[0] * scale_factor_mm_per_pixel,
+                         pt[1] * scale_factor_mm_per_pixel]
+                        for pt in polygon_px
+                    ]
+                    if polygon_mm[0] != polygon_mm[-1]:
+                        polygon_mm.append(polygon_mm[0])
+                    bim_closets.append({
+                        "id":          f"Closet_{len(bim_closets)+1}",
+                        "polygon":     polygon_mm,
+                        "area_m2":     round(polygon_area_m2(polygon_mm), 2),
+                        "perimeter_m": round(polygon_perimeter_m(polygon_mm), 2),
+                        # host_room_id assignment is deferred — needs a point-in-
+                        # polygon test against the room polygons, designed once
+                        # real predictions are available.
+                    })
+                else:
+                    report.add_skipped("closet",
+                                       f"polygon had fewer than 3 points ({len(polygon_px)})",
+                                       element_id=f"detection_{idx}")
+
+        # Stage status for stairs/slabs based on detect-vs-keep ratio
+        if stairs_detected_in_masks > 0:
+            if len(bim_stairs) == stairs_detected_in_masks:
+                report.set_stage("stairs", "ok")
+            elif len(bim_stairs) == 0:
+                report.set_stage("stairs", "failed",
+                                 f"all {stairs_detected_in_masks} stair masks failed geometry extraction")
+            else:
+                report.set_stage("stairs", "degraded",
+                                 f"{stairs_detected_in_masks - len(bim_stairs)} of "
+                                 f"{stairs_detected_in_masks} stair masks failed geometry extraction")
+        else:
+            report.set_stage("stairs", "skipped", "no stair detections in model output")
+
+        if slabs_detected_in_masks > 0:
+            if len(bim_slabs) == slabs_detected_in_masks:
+                report.set_stage("slabs", "ok")
+            elif len(bim_slabs) == 0:
+                report.set_stage("slabs", "failed",
+                                 f"all {slabs_detected_in_masks} slab masks failed geometry extraction")
+            else:
+                report.set_stage("slabs", "degraded",
+                                 f"{slabs_detected_in_masks - len(bim_slabs)} of "
+                                 f"{slabs_detected_in_masks} slab masks failed geometry extraction")
+        else:
+            report.set_stage("slabs", "skipped", "no slab detections in model output")
+
+        # Stage status for the new classes (8-15). Until the model is trained
+        # for these classes, all three will be "skipped" — that's expected
+        # and intentional, not a problem.
+        if ml_rooms_detected > 0:
+            if len(bim_ml_rooms) == ml_rooms_detected:
+                report.set_stage("ml_rooms", "ok")
+            elif len(bim_ml_rooms) == 0:
+                report.set_stage("ml_rooms", "failed",
+                                 f"all {ml_rooms_detected} room masks failed geometry extraction")
+            else:
+                report.set_stage("ml_rooms", "degraded",
+                                 f"{ml_rooms_detected - len(bim_ml_rooms)} of "
+                                 f"{ml_rooms_detected} room masks failed geometry extraction")
+        else:
+            report.set_stage("ml_rooms", "skipped",
+                             "no room detections in model output "
+                             "(model not yet trained on room classes)")
+
+        if railings_detected > 0:
+            if len(bim_railings) == railings_detected:
+                report.set_stage("railings", "ok")
+            else:
+                report.set_stage("railings", "degraded",
+                                 f"{railings_detected - len(bim_railings)} of "
+                                 f"{railings_detected} railing masks failed geometry extraction")
+        else:
+            report.set_stage("railings", "skipped",
+                             "no railing detections in model output "
+                             "(model not yet trained on railing class)")
+
+        if closets_detected > 0:
+            if len(bim_closets) == closets_detected:
+                report.set_stage("closets", "ok")
+            else:
+                report.set_stage("closets", "degraded",
+                                 f"{closets_detected - len(bim_closets)} of "
+                                 f"{closets_detected} closet masks failed geometry extraction")
+        else:
+            report.set_stage("closets", "skipped",
+                             "no closet detections in model output "
+                             "(model not yet trained on closet class)")
+
         # Build unified JSON combining BIM data and OCR
         wall_analysis = {
             "metadata": {
@@ -478,53 +736,22 @@ def analyze_floor_plan():
                 "analysis_type": "comprehensive_floor_plan_analysis",
                 "units": "millimeters"
             },
-            "bim_data": {
-                "description": "Geometric vector data ready for Revit/BIM modeling via Dynamo",
-                "coordinate_system": {
-                    "origin": [0.0, 0.0, 0.0],
-                    "units": "millimeters",
-                    "level_elevation": 0.0,
-                    "note": "All coordinates are relative to image top-left corner"
-                },
-                "walls": [
-                    {
-                        "id": wall["wall_id"],
-                        "start_point":  [wall["centerline"][0][0],  wall["centerline"][0][1],  0.0],
-                        "end_point":    [wall["centerline"][-1][0], wall["centerline"][-1][1], 0.0],
-                        "thickness":    wall["thickness"]["average"],
-                        "height":       WALL_H,
-                        "type":         f"Basic Wall - {int(wall['thickness']['average'])}mm",
-                        "is_exterior":  wall["wall_id"] in [ew.get("wall_id") for ew in exterior_walls]
-                    } for wall in wall_parameters if len(wall["centerline"]) >= 2
-                ],
-                "doors": [
-                    {
-                        "id":              f"Door_{d['door_id']}",
-                        "host_wall_id":    d.get("host_wall_id"),
-                        "insertion_point": [d["location"]["center"]["x"],
-                                            d["location"]["center"]["y"], 0.0],
-                        "width":           d["dimensions"]["width"],
-                        "height":          DOOR_H,
-                        "swing_angle":     d.get("swing_angle", 0.0),
-                        "hinge_side":      d["orientation"].get("hinge_side", "unknown"),
-                        "type":            "Single-Flush"
-                    } for d in detailed_doors
-                ],
-                "windows": [
-                    {
-                        "id":              f"Window_{win['window_id']}",
-                        "host_wall_id":    win.get("host_wall_id"),
-                        "insertion_point": [win["location"]["center"]["x"],
-                                            win["location"]["center"]["y"], 0.0],
-                        "width":           win["dimensions"]["width"],
-                        "height":          WIN_H,
-                        "sill_height":     WIN_SILL,
-                        "type":            win["window_type"].capitalize() + " Window"
-                    } for win in detailed_windows
-                ],
-                "rooms": room_polygons,
-                "stairs": bim_stairs,
-                "slabs":  bim_slabs
+            "bim_data": bim_builder.build(
+                wall_parameters  = wall_parameters,
+                detailed_doors   = detailed_doors,
+                detailed_windows = detailed_windows,
+                room_polygons    = room_polygons,
+                bim_stairs       = bim_stairs,
+                bim_slabs        = bim_slabs,
+                exterior_walls   = exterior_walls,
+            ),
+            # New ML-detected element buckets — separate from bim_data so the
+            # existing client integration doesn't break. Empty lists are normal
+            # until the model is trained on the new classes.
+            "ml_detections": {
+                "rooms":    bim_ml_rooms,
+                "railings": bim_railings,
+                "closets":  bim_closets,
             },
             "summary": {
                 "walls": {
@@ -600,6 +827,35 @@ def analyze_floor_plan():
         memory_after = check_memory_usage()
         logger.debug(f"Memory after processing: {memory_after:.1f}MB")
         
+        # Finalize the analysis_report with final element counts.
+        # Wrapped in try/except so report-building errors NEVER fail the request.
+        try:
+            report.set_elements({
+                "walls":       len(wall_parameters),
+                "doors":       len(detailed_doors),
+                "windows":     len(detailed_windows),
+                "rooms":       len(room_polygons),
+                "junctions":   len(junction_analysis),
+                "stairs":      len(bim_stairs),
+                "slabs":       len(bim_slabs),
+                "space_names": len(space_names),
+                # New element counts (classes 8-15). Always 0 until the model
+                # is trained on these classes — that's expected and intentional.
+                "ml_rooms":    len(bim_ml_rooms),
+                "railings":    len(bim_railings),
+                "closets":     len(bim_closets),
+            })
+            analysis_report_block = report.to_dict()
+        except Exception as _rep_err:
+            logger.warning("Failed to finalize analysis_report (%s)", _rep_err, exc_info=True)
+            analysis_report_block = {
+                "model_mode": "unknown",
+                "elements":   {},
+                "stages":     {},
+                "skipped":    [],
+                "warnings":   ["analysis_report finalization failed"],
+            }
+
         return jsonify({
             "message": "Comprehensive floor plan analysis completed successfully",
             "visualization_file": wall_vis_filename,
@@ -637,7 +893,8 @@ def analyze_floor_plan():
                 "perimeter_length_mm": perimeter_dimensions["total_perimeter_length"],
                 "perimeter_area_mm2": perimeter_dimensions["perimeter_area"],
                 "total_floor_area_m2": round(sum(r["area_m2"] for r in room_polygons), 2)
-            }
+            },
+            "analysis_report": analysis_report_block,
         })
         
     except Exception as e:
