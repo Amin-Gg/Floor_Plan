@@ -78,6 +78,7 @@ from services.accuracy_service import performAccuracyAnalysis
 from routes.health_routes import bp as health_bp
 from routes.accuracy_routes import bp as accuracy_bp
 from routes.visualization_routes import bp as visualization_bp
+from routes.export_routes import bp as export_bp
    
 # Configure logging
 logging.basicConfig(
@@ -100,6 +101,7 @@ cors = CORS(application, resources={r"/*": {"origins": app_config.CORS_ORIGINS}}
 application.register_blueprint(health_bp)
 application.register_blueprint(accuracy_bp)
 application.register_blueprint(visualization_bp)
+application.register_blueprint(export_bp)
 
 # Initialize model at startup
 logger.info("Starting model initialization...")
