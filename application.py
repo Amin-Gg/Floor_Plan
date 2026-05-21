@@ -69,7 +69,7 @@ def _configure_logging(cfg) -> None:
     try:
         formatter = logging.Formatter(cfg.LOG_FORMAT)
         formatter.format(logging.LogRecord("test", logging.INFO, "", 0, "msg", [], None))
-    except KeyError:
+    except (KeyError, ValueError):
         formatter = logging.Formatter(cfg.LOG_FORMAT_FALLBACK)
 
     handler.setFormatter(formatter)

@@ -785,7 +785,11 @@ def main() -> None:
 
     for p in [train_img, train_ann, val_img, val_ann]:
         if not p.exists():
-            raise FileNotFoundError(f"Required path not found: {p}")
+            raise FileNotFoundError(
+                f"Required path not found: {p}\n"
+                f"If running Section 9 alone in Colab, re-run Section 7 first "
+                f"to regenerate the COCO dataset on local disk."
+            )
 
     effective_batch = args.batch_size * args.grad_accum
     logger.info(

@@ -255,7 +255,7 @@ def _create_wall(model, body_ctx, axis_ctx, w: dict, wall_height: float):
 
     wall = ifcopenshell.api.root.create_entity(
         model, ifc_class="IfcWall",
-        name=w.get("id", "Wall"),
+        name=str(w.get("id", "Wall")),
         predefined_type="SOLIDWALL"
     )
     wall.Description = w.get("type", "")
@@ -295,7 +295,7 @@ def _create_door(model, body_ctx, d: dict, default_height: float,
 
     door = ifcopenshell.api.root.create_entity(
         model, ifc_class="IfcDoor",
-        name=d.get("id", "Door"),
+        name=str(d.get("id", "Door")),
         predefined_type="DOOR"
     )
     door.OverallWidth  = width
@@ -347,7 +347,7 @@ def _create_window(model, body_ctx, win: dict, default_height: float,
 
     window = ifcopenshell.api.root.create_entity(
         model, ifc_class="IfcWindow",
-        name=win.get("id", "Window"),
+        name=str(win.get("id", "Window")),
         predefined_type="WINDOW"
     )
     window.OverallWidth  = width
@@ -361,7 +361,10 @@ def _create_window(model, body_ctx, win: dict, default_height: float,
 
     # Window geometry
     win_type = win.get("type", "Horizontal Window").lower()
-    partition_type = "FIXED" if "fixed" in win_type else "DOUBLE_PANEL_HORIZONTAL"
+    # SINGLE_PANEL is the only safe default: "FIXED" is not a valid
+    # IfcWindowTypePartitioningEnum value, and DOUBLE_PANEL_HORIZONTAL
+    # requires 2 panel_properties entries (IndexError with the default 1).
+    partition_type = "SINGLE_PANEL"
     win_rep = ifcopenshell.api.geometry.add_window_representation(
         model,
         context=body_ctx,
@@ -430,8 +433,14 @@ def _create_space(model, body_ctx, room: dict, wall_height: float, storey):
     except Exception as exc:
         logger.debug(f"Space geometry failed for {room.get('id')}: {exc}")
 
-    ifcopenshell.api.spatial.assign_container(
-        model, relating_structure=storey, products=[space]
+    # IfcSpace is an IfcSpatialStructureElement — it must be decomposed from
+    # the storey via IfcRelAggregates (aggregate.assign_object), NOT via
+    # IfcRelContainedInSpatialStructure (spatial.assign_container).
+    # Using spatial.assign_container raises:
+    #   "entity instance of type 'IFC4.IfcSpace' has no attribute
+    #    'ContainedInStructure'"
+    ifcopenshell.api.aggregate.assign_object(
+        model, relating_object=storey, products=[space]
     )
 
     # Property set with area and category
@@ -462,7 +471,7 @@ def _create_stair(model, body_ctx, stair: dict, storey):
 
     ifc_stair = ifcopenshell.api.root.create_entity(
         model, ifc_class="IfcStair",
-        name=stair.get("id", "Stair"),
+        name=str(stair.get("id", "Stair")),
         predefined_type="STRAIGHT_RUN_STAIR"
     )
 
@@ -516,7 +525,7 @@ def _create_slab(model, body_ctx, slab: dict, floor_thickness: float, storey):
 
     ifc_slab = ifcopenshell.api.root.create_entity(
         model, ifc_class="IfcSlab",
-        name=slab.get("id", "Slab"),
+        name=str(slab.get("id", "Slab")),
         predefined_type=predefined
     )
     ifc_slab.Description = slab.get("type", "")
@@ -586,18 +595,29 @@ def _create_opening(model, insertion_point, width: float, height: float,
         model, product=opening, representation=opening_rep
     )
 
-    # Void the host wall
-    ifcopenshell.api.void.add_opening(
-        model, opening=opening, element=host_wall
-    )
+    # Void the host wall — api.void was renamed to api.feature in ifcopenshell 0.8+
+    try:
+        import ifcopenshell.api.feature
+        ifcopenshell.api.feature.add_opening(
+            model, opening=opening, element=host_wall
+        )
+    except (ImportError, AttributeError):
+        import ifcopenshell.api.void
+        ifcopenshell.api.void.add_opening(
+            model, opening=opening, element=host_wall
+        )
 
     return opening
 
 
 def _fill_opening(model, opening, element):
     """Fill an IfcOpeningElement with a door or window."""
-    import ifcopenshell.api.void
-    ifcopenshell.api.void.add_filling(model, opening=opening, element=element)
+    try:
+        import ifcopenshell.api.feature
+        ifcopenshell.api.feature.add_filling(model, opening=opening, element=element)
+    except (ImportError, AttributeError):
+        import ifcopenshell.api.void
+        ifcopenshell.api.void.add_filling(model, opening=opening, element=element)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
