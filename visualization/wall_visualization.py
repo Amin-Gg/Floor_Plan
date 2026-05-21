@@ -1,3 +1,4 @@
+import logging
 # Visualization module for floor plan analysis results
 import numpy
 from PIL import Image, ImageDraw, ImageFont
@@ -21,16 +22,38 @@ def create_wall_visualization(original_image, model_results, wall_parameters, ju
 	
 
 	colors = {
-		1: (255, 0, 0),     # Wall - Red
-		2: (0, 255, 0),     # Window - Green  
-		3: (0, 0, 255),     # Door - Blue
+		# Structural (1-4)
+		1:  (255,   0,   0),    # Wall          - red
+		2:  (  0, 255,   0),    # Window        - green
+		3:  (  0,   0, 255),    # Door          - blue
+		4:  (255, 165,   0),    # Stairs        - orange
+		# Outdoor spaces (5-7)
+		5:  (128, 128,   0),    # Parking       - olive
+		6:  (  0, 128, 128),    # Balcony       - teal
+		7:  (128,   0, 128),    # Terrace       - purple
+		# Room types (8-13)
+		8:  (255, 192, 203),    # Bedroom       - pink
+		9:  (255, 255, 153),    # LivingRoom    - light yellow
+		10: (255, 140,   0),    # Kitchen       - dark orange
+		11: (173, 216, 230),    # Bathroom      - light blue
+		12: (200, 200, 200),    # Entry         - light gray
+		13: (139,  69,  19),    # Storage       - brown
+		# Safety & storage (14-15)
+		14: (255,   0, 255),    # Railing       - magenta
+		15: (160,  82,  45),    # Closet        - sienna
 	}
 
 	centerline_color = (255, 255, 0)     # Yellow for centerlines (more visible)
 	junction_color = (255, 0, 255)       # Magenta for junctions
 	text_color = (0, 0, 0)               # Black for text
 	
-	class_names = {1: 'Wall', 2: 'Window', 3: 'Door'}
+	class_names = {
+		1: 'Wall',     2: 'Window',     3: 'Door',         4: 'Stairs',
+		5: 'Parking',  6: 'Balcony',    7: 'Terrace',
+		8: 'Bedroom',  9: 'LivingRoom', 10: 'Kitchen',     11: 'Bathroom',
+		12: 'Entry',   13: 'Storage',
+		14: 'Railing', 15: 'Closet',
+	}
 	
 
 	bboxes = model_results['rois']
@@ -387,7 +410,7 @@ def create_wall_visualization(original_image, model_results, wall_parameters, ju
 	
 	# Draw OCR-detected space names
 	if space_names:
-		print(f"Drawing {len(space_names)} detected space names on visualization")
+		logging.getLogger(__name__).debug("Drawing %d detected space names on visualization", len(space_names))
 		space_name_color = (255, 128, 0)  # Orange color for space names
 		space_center_color = (255, 0, 128)  # Pink color for space centerpoints
 		

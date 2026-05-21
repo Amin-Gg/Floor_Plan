@@ -3,10 +3,18 @@ import json
 from config.constants import ROOT_DIR, JSON_OUTPUT_DIR
 
 def pixels_to_mm(pixels, scale_factor_mm_per_pixel):
-    """Convert pixel measurements to millimeters"""
-    # If scale_factor_mm_per_pixel represents mm per pixel, use it directly
-    # If it represents pixels per mm, we need to invert it
+    """Convert a linear pixel measurement to millimetres."""
     return pixels * scale_factor_mm_per_pixel
+
+
+def pixels_sq_to_mm_sq(area_pixels, scale_factor_mm_per_pixel):
+    """
+    Convert an area from pixels² to mm².
+    Area scales with the SQUARE of the linear scale factor.
+    Using pixels_to_mm() on an area value would be wrong by a factor
+    of scale_factor_mm_per_pixel.
+    """
+    return area_pixels * (scale_factor_mm_per_pixel ** 2)
 
 def mm_to_pixels(mm, scale_factor_mm_per_pixel):
     """Convert millimeter measurements to pixels"""
@@ -70,13 +78,14 @@ def convert_junction_position_to_mm(junction_data, scale_factor_mm_per_pixel):
 
 def save_wall_analysis(wall_data, filename):
 	"""Save wall analysis to file in JSON output directory"""
+	import logging as _logging
+	_logger = _logging.getLogger(__name__)
 	filepath = os.path.join(JSON_OUTPUT_DIR, filename)
-	
 	try:
-		with open(filepath, 'w') as f:
-			json.dump(wall_data, f, indent=2)
-		print(f"Wall analysis saved to: {filepath}")
+		with open(filepath, 'w', encoding='utf-8') as f:
+			json.dump(wall_data, f, indent=2, ensure_ascii=False)
+		_logger.info("Wall analysis saved to: %s", filepath)
 		return filename
 	except Exception as e:
-		print(f"Error saving wall analysis: {str(e)}")
+		_logger.error("Error saving wall analysis: %s", str(e))
 		return None

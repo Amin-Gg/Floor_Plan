@@ -1,9 +1,11 @@
 # Configuration constants for FloorPlanTo3D API
-# Defines paths and settings
 import os
+from pathlib import Path
 
-# Root directory and output paths
-ROOT_DIR = os.path.abspath("./")
+# Root directory — resolved relative to this file's location, not the
+# current working directory. This ensures correct paths regardless of where
+# Gunicorn or any other process starter is invoked from.
+ROOT_DIR = str(Path(__file__).resolve().parents[1])
 
 # Output directories
 OUTPUTS_DIR = os.path.join(ROOT_DIR, "outputs")

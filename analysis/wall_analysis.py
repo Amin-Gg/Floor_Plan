@@ -1,9 +1,13 @@
 # Wall analysis module for floor plan processing
+import logging
+import cv2
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 from utils.geometry import find_nearest_valid_point
 from utils.conversions import pixels_to_mm, convert_thickness_to_mm, convert_centerline_to_mm, convert_bbox_to_mm
 from analysis.junction_analysis import extract_centerline_coords, extract_centerline_coords_with_validation
+
+logger = logging.getLogger(__name__)
 
 def calculate_wall_thickness(wall_mask, centerline_coords):
 	"""Calculate wall thickness along the centerline"""
@@ -154,6 +158,90 @@ def analyze_junction_types(junctions, wall_connections):
 	
 	return junction_analysis
 
+def snap_centerlines_to_junctions(wall_parameters: list,
+                                   junctions: list,
+                                   snap_tolerance_mm: float = 50.0,
+                                   scale_factor_mm_per_pixel: float = 1.0) -> list:
+    """
+    Snap wall endpoint coordinates to nearby junction points so that walls
+    meet precisely in 3D modeling software.
+
+    When cv2.fitLine computes a wall centerline it terminates at the bounding
+    box of the wall mask — not at the true geometric intersection with adjacent
+    walls. This leaves gaps of a few pixels at every corner. In Revit and
+    ArchiCAD, un-snapped walls create open corners that break:
+        - Room area computation
+        - Plan export (PDF/DWG)
+        - IFC solid geometry rendering
+
+    Algorithm
+    ----------
+    For every wall, look up its start/end junction ID in the authoritative
+    junction list (computed by junction_analysis.py). Convert the junction's
+    pixel position to mm and snap the wall endpoint to that position if it
+    is within snap_tolerance_mm.
+
+    Parameters
+    ----------
+    wall_parameters          : list of wall dicts (output of extract_wall_parameters)
+                               Each dict must have "centerline": [[x,y], ...] in mm
+    junctions                : list of junction dicts from junction_analysis.py.
+                               Each dict must have "id" and "position": [x_px, y_px].
+    snap_tolerance_mm        : maximum distance in mm to snap an endpoint to a junction.
+                               Default 50 mm — larger than any fitting error, smaller
+                               than the shortest wall segment.
+    scale_factor_mm_per_pixel: used to convert junction pixel positions to mm.
+
+    Returns
+    -------
+    list — same structure as input, with endpoint coordinates snapped in-place.
+    """
+    # Build a lookup from junction ID → position in mm using the authoritative
+    # junction list from junction_analysis.py. These are the true intersection
+    # coordinates, not re-derived from the wall endpoints.
+    junction_positions_mm: dict = {}
+    for j in junctions:
+        jid = j.get("id") or j.get("junction_id")
+        pos_px = j.get("position")
+        if jid and pos_px and len(pos_px) >= 2:
+            junction_positions_mm[jid] = [
+                pos_px[0] * scale_factor_mm_per_pixel,
+                pos_px[1] * scale_factor_mm_per_pixel,
+            ]
+
+    if not junction_positions_mm:
+        logger.debug("snap_centerlines_to_junctions: no junction positions available — skipping snap")
+        return wall_parameters
+
+    # Snap each wall endpoint to its junction's authoritative mm position
+    snapped_count = 0
+    for wall in wall_parameters:
+        cl = wall.get("centerline", [])
+        if len(cl) < 2:
+            continue
+
+        connections = wall.get("connections", {})
+
+        for side, idx in (("start_junction", 0), ("end_junction", -1)):
+            jid = connections.get(side)
+            if not jid or jid not in junction_positions_mm:
+                continue
+
+            jx, jy = junction_positions_mm[jid]
+            ex, ey = cl[idx][0], cl[idx][1]
+            dist   = ((jx - ex) ** 2 + (jy - ey) ** 2) ** 0.5
+
+            if dist <= snap_tolerance_mm:
+                cl[idx] = [jx, jy]
+                snapped_count += 1
+
+    logger.info(
+        "snap_centerlines_to_junctions: snapped %d endpoints (tolerance=%.0f mm)",
+        snapped_count, snap_tolerance_mm
+    )
+    return wall_parameters
+
+
 def extract_wall_parameters(segments, wall_mask, junctions, scale_factor_mm_per_pixel=1.0):
     """Extract comprehensive parameters for each wall segment (output only mm fields)"""
     wall_parameters = []
@@ -188,6 +276,13 @@ def extract_wall_parameters(segments, wall_mask, junctions, scale_factor_mm_per_
             "segment_area": float(len(segment))
         }
         wall_parameters.append(wall_params)
+
+    # Snap wall endpoints to junction consensus positions so corners close
+    # cleanly in Revit, ArchiCAD, and other 3D modeling software.
+    wall_parameters = snap_centerlines_to_junctions(
+        wall_parameters, junctions, scale_factor_mm_per_pixel=scale_factor_mm_per_pixel
+    )
+
     return wall_parameters
 
 def extract_wall_parameters_with_regions(all_wall_segments, wall_mask, junctions, scale_factor_mm_per_pixel=1.0):
@@ -224,6 +319,14 @@ def extract_wall_parameters_with_regions(all_wall_segments, wall_mask, junctions
             "segment_area": float(len(segment))
         }
         wall_parameters.append(wall_params)
+
+    # Snap wall endpoints to junction consensus positions — identical to the
+    # snap applied in extract_wall_parameters. Without this call, walls
+    # processed through the region-based path have open corners in Revit.
+    wall_parameters = snap_centerlines_to_junctions(
+        wall_parameters, junctions, scale_factor_mm_per_pixel=scale_factor_mm_per_pixel
+    )
+
     return wall_parameters
 
 
@@ -403,145 +506,57 @@ def calculate_perimeter_dimensions(exterior_walls):
 
 def calculate_centered_straight_centerline(wall_mask, bbox=None):
     """
-    Calculate a straight, centered centerline using distance transform and geometric analysis.
-    
-    Args:
-        wall_mask: Binary mask of the wall
-        bbox: Optional bounding box to guide centerline direction
-    
-    Returns:
-        List of [x, y] coordinates for the centerline
+    Calculate a perfectly straight centerline for ANY angle (horizontal, vertical, or diagonal).
+    Uses geometric line fitting (cv2.fitLine) to create Revit-ready vectors.
     """
     if np.sum(wall_mask) < 10:
         return []
     
-    # Calculate distance transform to find medial axis
+    # 1. Calculate distance transform to find medial axis (ضخامت دیوار)
     distance_map = distance_transform_edt(wall_mask)
     
-    # Find the ridge (medial axis) points with high distance values
-    threshold = np.percentile(distance_map[distance_map > 0], 70)  # Top 30% of distances
+    # 2. Find the ridge points (پیکسل‌های مرکزی)
+    threshold = np.percentile(distance_map[distance_map > 0], 70)
     ridge_points = np.where(distance_map >= threshold)
     
     if len(ridge_points[0]) < 2:
         return []
-    
-    # Convert to (x, y) coordinates
-    ridge_coords = list(zip(ridge_points[1], ridge_points[0]))  # (x, y)
-    
-    # Use bounding box to determine primary direction
-    if bbox is not None:
-        x1, y1, x2, y2 = bbox
-        width = x2 - x1
-        height = y2 - y1
-        is_horizontal = width > height
-    else:
-        # Calculate orientation from ridge points
-        ridge_array = np.array(ridge_coords)
-        x_range = np.max(ridge_array[:, 0]) - np.min(ridge_array[:, 0])
-        y_range = np.max(ridge_array[:, 1]) - np.min(ridge_array[:, 1])
-        is_horizontal = x_range > y_range
-    
-    # Sort ridge points along the primary direction
-    if is_horizontal:
-        ridge_coords.sort(key=lambda p: p[0])  # Sort by x
-    else:
-        ridge_coords.sort(key=lambda p: p[1])  # Sort by y
-    
-    # Create a straight centerline by fitting a line through the ridge points
-    if len(ridge_coords) >= 2:
-        # Use robust line fitting
-        points = np.array(ridge_coords)
         
-        # For horizontal walls, fit y = mx + b
-        # For vertical walls, fit x = my + b
-        if is_horizontal:
-            x_coords = points[:, 0]
-            y_coords = points[:, 1]
-            
-            # Find the line that best fits through the center
-            if len(x_coords) > 1:
-                # Use weighted average of y-coordinates for each x region
-                x_min, x_max = np.min(x_coords), np.max(x_coords)
-                
-                # Create evenly spaced points along the line
-                num_points = min(max(3, int((x_max - x_min) / 10)), 20)
-                straight_x = np.linspace(x_min, x_max, num_points)
-                
-                # For each x position, find the average y position of nearby ridge points
-                straight_y = []
-                for x in straight_x:
-                    # Find ridge points within a small window around this x
-                    window = 15  # pixels
-                    nearby_y = y_coords[np.abs(x_coords - x) <= window]
-                    if len(nearby_y) > 0:
-                        # Use weighted average, giving more weight to points with higher distance values
-                        nearby_x = x_coords[np.abs(x_coords - x) <= window]
-                        nearby_points = [(int(nx), int(ny)) for nx, ny in zip(nearby_x, nearby_y)]
-                        weights = [distance_map[py, px] for px, py in nearby_points if 0 <= py < distance_map.shape[0] and 0 <= px < distance_map.shape[1]]
-                        
-                        if weights:
-                            weighted_y = np.average(nearby_y, weights=weights)
-                        else:
-                            weighted_y = np.mean(nearby_y)
-                        straight_y.append(weighted_y)
-                    else:
-                        # Interpolate from previous points
-                        if len(straight_y) > 0:
-                            straight_y.append(straight_y[-1])
-                        else:
-                            straight_y.append(np.mean(y_coords))
-                
-                centerline = [[x, y] for x, y in zip(straight_x, straight_y)]
-        else:
-            # Vertical wall - similar logic but swapped axes
-            x_coords = points[:, 0]
-            y_coords = points[:, 1]
-            
-            if len(y_coords) > 1:
-                y_min, y_max = np.min(y_coords), np.max(y_coords)
-                
-                # Create evenly spaced points along the line
-                num_points = min(max(3, int((y_max - y_min) / 10)), 20)
-                straight_y = np.linspace(y_min, y_max, num_points)
-                
-                # For each y position, find the average x position of nearby ridge points
-                straight_x = []
-                for y in straight_y:
-                    window = 15  # pixels
-                    nearby_x = x_coords[np.abs(y_coords - y) <= window]
-                    if len(nearby_x) > 0:
-                        # Use weighted average
-                        nearby_y = y_coords[np.abs(y_coords - y) <= window]
-                        nearby_points = [(int(nx), int(ny)) for nx, ny in zip(nearby_x, nearby_y)]
-                        weights = [distance_map[py, px] for px, py in nearby_points if 0 <= py < distance_map.shape[0] and 0 <= px < distance_map.shape[1]]
-                        
-                        if weights:
-                            weighted_x = np.average(nearby_x, weights=weights)
-                        else:
-                            weighted_x = np.mean(nearby_x)
-                        straight_x.append(weighted_x)
-                    else:
-                        # Interpolate from previous points
-                        if len(straight_x) > 0:
-                            straight_x.append(straight_x[-1])
-                        else:
-                            straight_x.append(np.mean(x_coords))
-                
-                centerline = [[x, y] for x, y in zip(straight_x, straight_y)]
+    # 3. Convert to (x, y) coordinates
+    points = np.column_stack((ridge_points[1], ridge_points[0])).astype(np.float32)
     
-    # Final validation - ensure all points are within the wall mask
-    if 'centerline' in locals():
-        validated_centerline = []
-        for point in centerline:
-            x, y = int(point[0]), int(point[1])
-            if (0 <= y < wall_mask.shape[0] and 0 <= x < wall_mask.shape[1] and wall_mask[y, x]):
-                validated_centerline.append(point)
-            else:
-                # Find nearest valid point
-                nearest = find_nearest_valid_point(x, y, wall_mask, max_search_radius=10)
-                if nearest is not None:
-                    validated_centerline.append([nearest[1], nearest[0]])  # Convert to [x, y]
+    # 4. Mathematical Vectorization (تشخیص زاویه دقیق دیوار)
+    # cv2.fitLine finds the perfect mathematical line passing through the points
+    [vx, vy, x, y] = cv2.fitLine(points, cv2.DIST_L2, 0, 0.01, 0.01)
+    vx, vy = float(vx[0]), float(vy[0])
+    x0, y0 = float(x[0]), float(y[0])
+    
+    # 5. Project points onto the mathematical line to find exact Start and End points
+    t_values = []
+    for p in points:
+        px, py = p[0], p[1]
+        t = (px - x0) * vx + (py - y0) * vy
+        t_values.append(t)
         
-        return validated_centerline if len(validated_centerline) >= 2 else []
+    t_min, t_max = min(t_values), max(t_values)
     
-    return []
+    # Absolute start and end coordinates (مختصات دقیق برداری)
+    start_point = [x0 + t_min * vx, y0 + t_min * vy]
+    end_point = [x0 + t_max * vx, y0 + t_max * vy]
+    
+    # 6. Generate evenly spaced points along this PERFECT line
+    # (To maintain compatibility with your length calculation functions)
+    num_points = max(3, int(np.sqrt((end_point[0]-start_point[0])**2 + (end_point[1]-start_point[1])**2) / 10))
+    straight_x = np.linspace(start_point[0], end_point[0], num_points)
+    straight_y = np.linspace(start_point[1], end_point[1], num_points)
+    
+    centerline = [[x, y] for x, y in zip(straight_x, straight_y)]
+    
+    # 7. Safety clamp to ensure points stay within image boundaries
+    validated_centerline = []
+    for point in centerline:
+        x_clamp = max(0, min(point[0], wall_mask.shape[1] - 1))
+        y_clamp = max(0, min(point[1], wall_mask.shape[0] - 1))
+        validated_centerline.append([float(x_clamp), float(y_clamp)])
+
+    return validated_centerline if len(validated_centerline) >= 2 else []
