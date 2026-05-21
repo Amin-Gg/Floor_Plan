@@ -1,0 +1,107 @@
+# ============================================================================
+# .dockerignore — what NOT to copy into the Docker image
+# ============================================================================
+# Every file matched here is excluded from `COPY . /app` in the Dockerfile.
+# Two reasons to exclude:
+#
+#   1. Size — model weights and datasets are huge, never bake them in.
+#   2. Security — never bake secrets, env files, or local config in.
+#
+# Test this file with:    docker build --dry-run .
+# Or after building:      docker image inspect floorplan3d-api:1.0
+# ============================================================================
+
+# ── Python bytecode and caches ───────────────────────────────────────────────
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+
+# ── Virtual environments — should be rebuilt by Docker from requirements.txt
+.venv
+venv
+env
+
+# ── Model weights — mounted as a volume at runtime, not baked in ─────────────
+# These can be multiple gigabytes. Baking them in would make every image
+# rebuild transfer the full weights, even when only code changed.
+weights/*
+!weights/.gitkeep
+!weights/README.md
+
+# ── Outputs — runtime-generated, mounted as a volume ─────────────────────────
+outputs/
+output/
+*.ifc
+*.json.gz
+
+# ── Training data — never goes in the production image ───────────────────────
+dataset/
+data/
+*.h5
+*.hdf5
+
+# ── Local development files ──────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Documentation and dev artifacts ──────────────────────────────────────────
+docs/
+*.md
+!readme.md
+!weights/README.md
+TODO
+NOTES
+
+# ── Secrets — never in the image ─────────────────────────────────────────────
+# Covers the common conventions. If a developer creates a file named with
+# a non-standard pattern (e.g. "my_secret.txt"), no .dockerignore can catch
+# every case — they need to use the secrets/ directory.
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+credentials.json
+*.credentials
+auth.json
+
+# ── Docker itself — including the Dockerfile in the build context is fine,
+#    but other Docker artifacts shouldn't be baked in.
+docker-compose*.yml
+.dockerignore
+
+# ── CI and test artifacts ────────────────────────────────────────────────────
+.coverage
+htmlcov/
+coverage.xml
+test-results/
+*.log
+logs/
+
+# ── Jupyter notebooks — useful in dev, never in production ───────────────────
+*.ipynb
+.ipynb_checkpoints/
+
+# ── OS-specific files ────────────────────────────────────────────────────────
+.Trash
+.AppleDouble
+.LSOverride

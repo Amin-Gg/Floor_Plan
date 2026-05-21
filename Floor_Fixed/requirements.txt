@@ -1,0 +1,66 @@
+# Dependencies for FloorPlanTo3D API
+# Flask Application Requirements
+# Optimized for Mask2Former + HuggingFace Trainer
+
+# ==========================================
+# Core ML Framework (Mask2Former Engine)
+# ==========================================
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.35.0
+accelerate>=0.24.0
+
+# ==========================================
+# Computer Vision & Image Processing
+# ==========================================
+opencv-python==4.8.1.78
+scikit-image==0.21.0
+Pillow==10.0.1
+imageio==2.31.5
+
+# ==========================================
+# Advanced OCR & String Matching
+# ==========================================
+paddleocr>=2.6.0
+paddlepaddle>=2.5.0
+thefuzz==0.20.0
+python-Levenshtein==0.23.0
+
+# ==========================================
+# Scientific Computing
+# ==========================================
+numpy==1.24.3
+scipy==1.11.3
+matplotlib==3.7.2
+
+# ==========================================
+# Web Framework
+# ==========================================
+Flask==2.3.3
+Flask-Cors==4.0.0
+Werkzeug==2.3.7
+
+# ==========================================
+# Image Processing & Augmentation
+# ==========================================
+imgaug==0.4.0
+
+# ==========================================
+# Utilities
+# ==========================================
+h5py==3.9.0
+PyYAML==6.0.1
+requests==2.31.0
+Cython==3.0.2
+psutil>=5.9.0
+
+# ==========================================
+# Date/Time handling
+# ==========================================
+python-dateutil==2.8.2
+
+# ==========================================
+# Training (HuggingFace Trainer + dataset tools)
+# ==========================================
+datasets>=2.14.0
+pycocotools>=2.0.6
