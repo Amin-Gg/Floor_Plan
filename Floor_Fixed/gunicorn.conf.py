@@ -41,9 +41,7 @@ backlog = 64             # queued connections before refusing new ones
 # This is correct for CPU/GPU-bound inference — do NOT use gevent or eventlet
 # with PyTorch, they break CUDA context.
 worker_class = "sync"
-# GPU-safe defaults: 1 worker loads the model once; scale up only after
-# profiling VRAM usage. Each extra worker = another full model in GPU memory.
-workers = int(os.getenv("GUNICORN_WORKERS", 1))
+workers      = int(os.getenv("GUNICORN_WORKERS", 2))
 threads      = 1         # one thread per sync worker — keeps PyTorch safe
 
 # ── Timeouts ─────────────────────────────────────────────────────────────────

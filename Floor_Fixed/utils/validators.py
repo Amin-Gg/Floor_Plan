@@ -30,11 +30,6 @@ from PIL import Image
 
 from utils.error_handlers import ValidationError, ImageValidationError
 
-# Prevent decompression bomb attacks — images that appear small but expand to
-# gigabytes in memory (e.g. a 1x1 pixel PNG with embedded 1 GB data).
-# Default PIL limit is 178 million pixels; we keep a conservative 100 MP cap.
-Image.MAX_IMAGE_PIXELS = 100_000_000   # 100 megapixels
-
 logger = logging.getLogger(__name__)
 
 # Allowed image MIME types
@@ -98,18 +93,6 @@ def require_image_upload(field_name: str = "image") -> Image.Image:
         raise ImageValidationError(
             f"File field '{field_name}' is present but no file was selected.",
             details={"field": field_name}
-        )
-
-    # Content-type pre-check — first line of defence before Pillow opens the file.
-    # Pillow is still the authoritative validator; this catches obvious mismatches early.
-    ct = (upload.content_type or "").lower().split(";")[0].strip()
-    if ct and ct not in _ALLOWED_MIME:
-        raise ImageValidationError(
-            f"Unsupported file type: '{ct}'. Upload a JPEG, PNG, BMP, TIFF, or WebP image.",
-            details={
-                "received_content_type": ct,
-                "allowed_types":         sorted(_ALLOWED_MIME),
-            }
         )
 
     try:

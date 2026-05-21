@@ -1,127 +1,178 @@
 """
-Main application entry point for FloorPlanTo3D API
+application.py
+==============
+Main entry point for the FloorPlanTo3D Flask API.
+
+Responsibilities
+----------------
+1. Create the Flask application and configure it.
+2. Set up structured logging with per-request IDs.
+3. Register blueprints (routes).
+4. Register centralized error handlers.
+5. Initialize the AI model inside the application context.
+
+What this file does NOT do
+---------------------------
+It does not import analysis helpers, image processing utilities, or
+visualization modules — those belong in the route files that use them.
+Adding imports here is the single most common cause of confusing startup
+errors and unnecessarily slow cold starts.
+
+Starting the server
+-------------------
+Development:
+    python application.py
+
+Production (recommended):
+    APP_ENV=production gunicorn --config gunicorn.conf.py application:application
 """
+
 import os
 import sys
-import time
-import json
-import traceback
+import uuid
 import logging
-from datetime import datetime
+import logging.config
 
-# Third-party imports
-import numpy
-import cv2
-from PIL import Image
-
-# Flask and web framework imports
-from flask import Flask, request, jsonify
+from flask import Flask, g, request
 from flask_cors import CORS
 
-# Local imports
-from config.constants import *
 from config.settings import get_config
 
-# Get application configuration
+# ── Configuration ─────────────────────────────────────────────────────────────
 app_config = get_config()
 
-# Utility imports
-from utils.geometry import (
-    line_intersects_rectangle, line_segments_intersect,
-    split_line_around_windows, calculateOverlap, safe_logical_or, safe_logical_and)
-from utils.conversions import (
-    pixels_to_mm, mm_to_pixels, convert_centerline_to_mm,
-    convert_thickness_to_mm, convert_bbox_to_mm, convert_junction_position_to_mm,
-    save_wall_analysis)
-from utils.file_utils import (
-    getNextTestNumber, saveJsonToFile, saveAccuracyAnalysis)
+# ── Logging ───────────────────────────────────────────────────────────────────
+# Configure before any other import so the format applies everywhere.
+# We use a filter to inject the per-request request_id into every log record,
+# which makes it possible to trace one request through interleaved log lines.
 
-from image_processing.image_loader import (
-    myImageLoader, getClassNames, normalizePoints, turnSubArraysToJson,
-    calculateObjectArea, calculateObjectCenter, encodeMaskSummary, getClassName)
-from image_processing.mask_processing import (
-    extract_wall_masks, improve_mask_for_skeletonization, keep_largest_component,
-    clean_skeleton, segment_individual_walls, validate_centerline_boundary,
-    find_nearest_valid_point)
+class _RequestIdFilter(logging.Filter):
+    """Add request_id to every LogRecord so the format string can use it."""
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            record.request_id = getattr(g, "request_id", "-")
+        except RuntimeError:
+            # Outside of a request context (startup, shutdown) g is not available
+            record.request_id = "-"
+        return True
 
-from analysis.door_analysis import (
-    analyzeDoorOrientation, enhancedDoorAnalysis, generateArchitecturalNotes,
-    categorize_door_size, assess_door_accessibility, generate_door_layout_insights,
-    convert_door_center_to_mm)
 
-from analysis.wall_analysis import (
-    calculate_wall_thickness, validate_centerline_in_walls, calculate_wall_length,
-    calculate_wall_orientation, find_wall_connections, analyze_junction_types,
-    extract_wall_parameters, extract_wall_parameters_with_regions, generate_wall_insights,
-    identify_exterior_walls, calculate_perimeter_dimensions, calculate_centered_straight_centerline)
+def _configure_logging(cfg) -> None:
+    root = logging.getLogger()
+    root.setLevel(getattr(logging, cfg.LOG_LEVEL, logging.INFO))
 
-from analysis.junction_analysis import (
-    find_junction_points, find_junction_points_simple, find_junctions_from_bboxes,
-    extract_centerline_coords, extract_centerline_coords_with_validation,
-    smooth_centerline_curve, order_centerline_points_connectivity, order_centerline_points)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(root.level)
+    handler.addFilter(_RequestIdFilter())
 
-from analysis.window_analysis import (
-    categorize_window_size, assess_window_glazing, generate_window_notes)
+    try:
+        # Use the format with %(request_id)s if the filter is in place
+        formatter = logging.Formatter(cfg.LOG_FORMAT)
+        # Test the format works (raises KeyError if filter not applied yet)
+        formatter.format(logging.LogRecord(
+            "test", logging.INFO, "", 0, "msg", [], None
+        ))
+    except KeyError:
+        formatter = logging.Formatter(cfg.LOG_FORMAT_FALLBACK)
 
-from visualization.wall_visualization import create_wall_visualization
+    handler.setFormatter(formatter)
 
-# Import OCR detector
-from ocr_detector import detect_space_names
+    # Remove any handlers Flask or other imports may have added already
+    root.handlers.clear()
+    root.addHandler(handler)
 
-# Import new modular components
-from models.mask_rcnn_model import initialize_model, get_model, get_config, is_model_initialized
-from services.image_validation import validate_and_resize_image, check_memory_usage
-from services.json_service import buildEnhancedJson
-from services.accuracy_service import performAccuracyAnalysis
 
-# Import route blueprints
-from routes.health_routes import bp as health_bp
-from routes.accuracy_routes import bp as accuracy_bp
-from routes.visualization_routes import bp as visualization_bp
-from routes.export_routes import bp as export_bp
-   
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, app_config.LOG_LEVEL),
-    format=app_config.LOG_FORMAT)
+_configure_logging(app_config)
 logger = logging.getLogger(__name__)
 
-# Global variables
-ROOT_DIR = os.path.abspath("./")
+# ── Application factory ───────────────────────────────────────────────────────
 
-# Add root directory to path
-sys.path.append(ROOT_DIR)
+def create_app(cfg=None) -> Flask:
+    """
+    Create and configure the Flask application.
 
-# Initialize Flask application
-application = Flask(__name__)
-application.debug = app_config.DEBUG
-cors = CORS(application, resources={r"/*": {"origins": app_config.CORS_ORIGINS}})
+    Parameters
+    ----------
+    cfg : Config, optional
+        Pass a Config instance to override the environment-detected config.
+        Useful in tests:  app = create_app(TestingConfig())
+    """
+    if cfg is None:
+        cfg = app_config
 
-# Register blueprints
-application.register_blueprint(health_bp)
-application.register_blueprint(accuracy_bp)
-application.register_blueprint(visualization_bp)
-application.register_blueprint(export_bp)
+    app = Flask(__name__)
+    app.debug = cfg.DEBUG
 
-# Initialize model at startup
-logger.info("Starting model initialization...")
-try:
-    initialize_model()
-    logger.info("Model initialization completed successfully!")
-except Exception as e:
-    logger.error(f"Failed to initialize model: {str(e)}")
+    # Maximum upload size — enforced by Werkzeug before our route code runs
+    app.config["MAX_CONTENT_LENGTH"] = cfg.MAX_UPLOAD_MB * 1024 * 1024
 
-if __name__ == '__main__':
-    api_config = app_config.get_api_config()
-    logger.info('===========Starting FloorPlanTo3D API==========')
-    logger.info(f"Running on {api_config['HOST']}:{api_config['PORT']}")
-    logger.info(f"Debug mode: {api_config['DEBUG']}")
-    try:
-        application.run(
-            host=api_config['HOST'],
-            port=api_config['PORT'],
-            debug=api_config['DEBUG']
+    # CORS
+    CORS(app, resources={r"/*": {"origins": cfg.CORS_ORIGINS}})
+
+    # ── Per-request ID ────────────────────────────────────────────────────────
+    # Assigned before every request so log lines can be grouped by request.
+    @app.before_request
+    def _assign_request_id():
+        g.request_id = str(uuid.uuid4())[:8]
+        logger.debug(
+            "→ %s %s  [content-type: %s]",
+            request.method, request.path, request.content_type
         )
-    except Exception as e:
-        logger.error(f"Failed to start application: {str(e)}")
-    logger.info('===========API stopped==========')
+
+    @app.after_request
+    def _log_response(response):
+        logger.debug("← %s %s → %d", request.method, request.path, response.status_code)
+        # Attach request ID to the response header so clients can correlate
+        response.headers["X-Request-ID"] = getattr(g, "request_id", "-")
+        return response
+
+    # ── Blueprints ────────────────────────────────────────────────────────────
+    from routes.health_routes        import bp as health_bp
+    from routes.accuracy_routes      import bp as accuracy_bp
+    from routes.visualization_routes import bp as visualization_bp
+    from routes.export_routes        import bp as export_bp
+
+    app.register_blueprint(health_bp)
+    app.register_blueprint(accuracy_bp)
+    app.register_blueprint(visualization_bp)
+    app.register_blueprint(export_bp)
+
+    # ── Error handlers ────────────────────────────────────────────────────────
+    from utils.error_handlers import register_error_handlers
+    register_error_handlers(app)
+
+    # ── AI model initialization ───────────────────────────────────────────────
+    # Run inside the app context so any extension that needs it has access.
+    # A failed init is logged but does not crash the server — the /health
+    # endpoint will report the model as unavailable, and individual routes
+    # raise ModelNotReadyError (→ HTTP 503) if called without a loaded model.
+    with app.app_context():
+        logger.info("Initializing AI model (Mask2Former Swin-Large)...")
+        try:
+            from models.mask_rcnn_model import initialize_model
+            initialize_model()
+            logger.info("AI model initialized successfully.")
+        except Exception as exc:
+            logger.error("AI model initialization failed: %s", exc, exc_info=True)
+            logger.warning(
+                "Server will start without a loaded model. "
+                "POST /analyze will return HTTP 503 until the model is available."
+            )
+
+    return app
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+# `application` is the name Gunicorn expects: `application:application`
+application = create_app()
+
+if __name__ == "__main__":
+    api = app_config.get_api_config()
+    logger.info("Starting FloorPlanTo3D API (development server)")
+    logger.info("Host: %s  Port: %s  Debug: %s", api["HOST"], api["PORT"], api["DEBUG"])
+    logger.warning(
+        "You are using Flask's built-in development server. "
+        "For production use: gunicorn --config gunicorn.conf.py application:application"
+    )
+    application.run(host=api["HOST"], port=api["PORT"], debug=api["DEBUG"])

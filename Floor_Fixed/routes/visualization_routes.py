@@ -4,18 +4,18 @@ Visualization routes for wall analysis
 
 from flask import Blueprint, request, jsonify
 import logging
-import traceback
 import time
 import os
 import cv2
 import numpy
 from datetime import datetime
-from PIL import Image
 
 from models.mask_rcnn_model import get_model, get_config, is_model_initialized
 from services.image_validation import validate_and_resize_image, check_memory_usage
 from image_processing.image_loader import myImageLoader
 
+from utils.error_handlers import ModelNotReadyError, ImageValidationError
+from utils.validators import require_image_upload, validate_scale_factor
 from utils.geometry import safe_logical_or, safe_logical_and
 from utils.conversions import (
     pixels_to_mm, pixels_sq_to_mm_sq, convert_junction_position_to_mm, save_wall_analysis)
@@ -79,25 +79,30 @@ def analyze_floor_plan():
     """Create enhanced visualization showing wall centerlines, junctions, and wall parameters"""
 
     if not is_model_initialized():
-        return jsonify({"error": "Model not initialized. Please check server logs."}), 503
-    
+        raise ModelNotReadyError()
+
+    imagefile = require_image_upload("image")
+    scale_factor_mm_per_pixel = validate_scale_factor(
+        request.form.get("scale_factor_mm_per_pixel", 1.0)
+    )
+
     try:
-        imagefile = Image.open(request.files['image'].stream)
-        
-        scale_factor_mm_per_pixel = float(request.form.get('scale_factor_mm_per_pixel', 1.0))
-        
         imagefile, resize_info = validate_and_resize_image(imagefile)
-        
-        if resize_info["reason"] in ["image_too_small", "resize_would_make_too_small", "image_too_large_resize_disabled"]:
-            return jsonify({
-                "error": f"Image validation failed: {resize_info['reason']}",
-                "details": {
+
+        if resize_info["reason"] in [
+            "image_too_small",
+            "resize_would_make_too_small",
+            "image_too_large_resize_disabled",
+        ]:
+            raise ImageValidationError(
+                f"Image validation failed: {resize_info['reason']}",
+                details={
                     "original_size": resize_info["original_size"],
                     "min_size": 100,
                     "max_size": 2048,
-                    "resize_allowed": True
-                }
-            }), 400
+                    "resize_allowed": True,
+                },
+            )
         
         memory_before = check_memory_usage()
         logger.debug(f"Memory before processing: {memory_before:.1f}MB")
@@ -582,6 +587,5 @@ def analyze_floor_plan():
         })
         
     except Exception as e:
-        logger.error(f"Error in wall visualization: {str(e)}")
-        logger.error(traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
+        logger.error("Error in wall visualization: %s", e, exc_info=True)
+        raise
