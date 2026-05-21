@@ -4,13 +4,14 @@ Health check routes
 
 import logging
 
-from flask import Blueprint, jsonify, g
+from flask_openapi3 import APIBlueprint
+from flask import jsonify, g
 
 from models.mask_rcnn_model import get_config, is_model_initialized
 
 logger = logging.getLogger(__name__)
 
-bp = Blueprint("health", __name__)
+bp = APIBlueprint("health", __name__)
 
 
 @bp.route("/health", methods=["GET"])

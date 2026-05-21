@@ -31,16 +31,18 @@ import json
 import logging
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request, send_file, g, after_this_request as flask_after_this_request
+from flask_openapi3 import APIBlueprint
+from flask import jsonify, request, send_file, g, after_this_request as flask_after_this_request
 
 from config.constants import JSON_OUTPUT_DIR, OUTPUTS_DIR
 from export.ifc_exporter import bim_json_to_ifc, DEFAULTS
+from schemas import ExportIFCRequest, BuildingParams
 from utils.error_handlers import ValidationError, NotFoundError, APIError
 from utils.validators import validate_building_params
 
 logger = logging.getLogger(__name__)
 
-bp = Blueprint("export", __name__)
+bp = APIBlueprint("export", __name__)
 
 IFC_OUTPUT_DIR = os.path.join(OUTPUTS_DIR, "ifc")
 os.makedirs(IFC_OUTPUT_DIR, exist_ok=True)

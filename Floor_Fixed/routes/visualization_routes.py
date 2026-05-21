@@ -2,7 +2,8 @@
 Visualization routes for wall analysis
 """
 
-from flask import Blueprint, request, jsonify
+from flask_openapi3 import APIBlueprint
+from flask import request, jsonify, g
 import logging
 import time
 import os
@@ -23,6 +24,7 @@ from utils.conversions import (
 
 from analysis.room_analysis import extract_room_polygons, find_host_wall_id
 from utils.file_utils import getNextTestNumber
+from schemas import AnalyzeFormRequest
 
 from image_processing.mask_processing import (
     extract_wall_masks, segment_individual_walls)
@@ -52,7 +54,7 @@ from config.constants import IMAGES_OUTPUT_DIR
 
 logger = logging.getLogger(__name__)
 
-bp = Blueprint('visualization', __name__)
+bp = APIBlueprint('visualization', __name__)
 
 
 def _orientation_to_angle(orientation: dict) -> float:

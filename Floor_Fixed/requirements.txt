@@ -70,3 +70,9 @@ gunicorn>=21.2.0
 ifcopenshell>=0.7.0
 datasets>=2.14.0
 pycocotools>=2.0.6
+
+# ==========================================
+# Validation and API Documentation
+# ==========================================
+pydantic>=2.0.0
+flask-openapi3>=3.0.0

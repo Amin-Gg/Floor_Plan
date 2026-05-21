@@ -4,7 +4,8 @@ Accuracy analysis routes
 
 import logging
 
-from flask import Blueprint, request, jsonify
+from flask_openapi3 import APIBlueprint
+from flask import request, jsonify
 
 from models.mask_rcnn_model import get_model, is_model_initialized
 from services.image_validation import validate_and_resize_image, check_memory_usage
@@ -17,7 +18,7 @@ from utils.inference_executor import get_executor
 
 logger = logging.getLogger(__name__)
 
-bp = Blueprint('accuracy', __name__)
+bp = APIBlueprint('accuracy', __name__)
 
 
 @bp.route('/analyze_accuracy', methods=['POST'])
