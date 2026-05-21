@@ -3,10 +3,18 @@ import json
 from config.constants import ROOT_DIR, JSON_OUTPUT_DIR
 
 def pixels_to_mm(pixels, scale_factor_mm_per_pixel):
-    """Convert pixel measurements to millimeters"""
-    # If scale_factor_mm_per_pixel represents mm per pixel, use it directly
-    # If it represents pixels per mm, we need to invert it
+    """Convert a linear pixel measurement to millimetres."""
     return pixels * scale_factor_mm_per_pixel
+
+
+def pixels_sq_to_mm_sq(area_pixels, scale_factor_mm_per_pixel):
+    """
+    Convert an area from pixels² to mm².
+    Area scales with the SQUARE of the linear scale factor.
+    Using pixels_to_mm() on an area value would be wrong by a factor
+    of scale_factor_mm_per_pixel.
+    """
+    return area_pixels * (scale_factor_mm_per_pixel ** 2)
 
 def mm_to_pixels(mm, scale_factor_mm_per_pixel):
     """Convert millimeter measurements to pixels"""

@@ -18,7 +18,9 @@ from image_processing.image_loader import myImageLoader
 
 from utils.geometry import safe_logical_or, safe_logical_and
 from utils.conversions import (
-    pixels_to_mm, convert_junction_position_to_mm, save_wall_analysis)
+    pixels_to_mm, pixels_sq_to_mm_sq, convert_junction_position_to_mm, save_wall_analysis)
+
+from analysis.room_analysis import extract_room_polygons, find_host_wall_id
 from utils.file_utils import getNextTestNumber
 
 from image_processing.mask_processing import (
@@ -50,6 +52,27 @@ from config.constants import IMAGES_OUTPUT_DIR
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('visualization', __name__)
+
+
+def _orientation_to_angle(orientation: dict) -> float:
+    """
+    Convert door orientation analysis to a Revit-compatible rotation angle (degrees).
+
+    Revit door families face the +X direction (East) at 0 degrees.
+    Mapping:
+        opens_rightward ->   0  (faces East,  opens right)
+        opens_upward    ->  90  (faces North, opens up)
+        opens_leftward  -> 180  (faces West,  opens left)
+        opens_downward  -> 270  (faces South, opens down)
+    """
+    swing_map = {
+        "opens_rightward": 0.0,
+        "opens_upward":    90.0,
+        "opens_leftward":  180.0,
+        "opens_downward":  270.0,
+    }
+    swing = orientation.get("estimated_swing", "unknown")
+    return swing_map.get(swing, 0.0)
 
 @bp.route('/analyze', methods=['POST'])
 def analyze_floor_plan():
@@ -228,10 +251,11 @@ def analyze_floor_plan():
                     "dimensions": {
                         "width": width_mm,
                         "height": float(pixels_to_mm(door_height, scale_factor_mm_per_pixel)),
-                        "area": float(pixels_to_mm(door_area, scale_factor_mm_per_pixel)),
+                        "area": float(pixels_sq_to_mm_sq(door_area, scale_factor_mm_per_pixel)),
                         "aspect_ratio": door_width / door_height if door_height > 0 else 0
                     },
                     "orientation": orientation,
+                    "swing_angle": _orientation_to_angle(orientation),
                     "architectural_analysis": {
                         "door_type": "interior" if door_width < door_height else "entrance",
                         "size_category": categorize_door_size(door_width, door_height),
@@ -286,7 +310,7 @@ def analyze_floor_plan():
                     "dimensions": {
                         "width": width_mm,
                         "height": float(pixels_to_mm(window_height, scale_factor_mm_per_pixel)),
-                        "area": float(pixels_to_mm(window_area, scale_factor_mm_per_pixel)),
+                        "area": float(pixels_sq_to_mm_sq(window_area, scale_factor_mm_per_pixel)),
                         "aspect_ratio": window_width / window_height if window_height > 0 else 0
                     },
                     "window_type": window_type,
@@ -327,6 +351,28 @@ def analyze_floor_plan():
             }
         
         logger.info(f"OCR detected {len(space_names)} space names in {time.time()-t0:.2f}s")
+
+        # ── Room polygon extraction ───────────────────────────────────────────
+        # Runs on the same combined_wall_mask used for wall analysis.
+        # space_names are passed so OCR labels get bound to the correct room polygon.
+        t0 = time.time()
+        room_polygons = extract_room_polygons(
+            combined_wall_mask,
+            scale_factor_mm_per_pixel,
+            space_names=space_names
+        )
+        logger.info(f"Room analysis: {len(room_polygons)} rooms extracted in {time.time()-t0:.2f}s")
+
+        # ── Host wall assignment for doors and windows ────────────────────────
+        # Dynamo needs to know which wall hosts each door/window to place the
+        # family instance correctly. Find the nearest wall centerline for each.
+        for door in detailed_doors:
+            ip = [door["location"]["center"]["x"], door["location"]["center"]["y"]]
+            door["host_wall_id"] = find_host_wall_id(ip, wall_parameters)
+
+        for win in detailed_windows:
+            ip = [win["location"]["center"]["x"], win["location"]["center"]["y"]]
+            win["host_wall_id"] = find_host_wall_id(ip, wall_parameters)
         
         t0 = time.time()
         vis_image = create_wall_visualization(original_image, r, wall_parameters, junction_analysis, w, h, scale_factor_mm_per_pixel, exterior_walls, space_names)
@@ -374,29 +420,52 @@ def analyze_floor_plan():
                 "units": "millimeters"
             },
             "bim_data": {
-                "description": "Geometric vector data ready for Revit/BIM modeling",
-                "room_tags": space_names,  # Bind OCR output to BIM
+                "description": "Geometric vector data ready for Revit/BIM modeling via Dynamo",
+                "coordinate_system": {
+                    "origin": [0.0, 0.0, 0.0],
+                    "units": "millimeters",
+                    "level_elevation": 0.0,
+                    "note": "All coordinates are relative to image top-left corner"
+                },
                 "walls": [
                     {
-                        "id": w["wall_id"], 
-                        "start_point": [w["centerline"][0][0], w["centerline"][0][1], 0.0], 
-                        "end_point": [w["centerline"][-1][0], w["centerline"][-1][1], 0.0], 
-                        "thickness": w["thickness"]["average"], 
-                        "height": 2800.0, 
-                        "type": f"Basic Wall - {int(w['thickness']['average'])}mm"
-                    } for w in wall_parameters if len(w["centerline"]) >= 2
+                        "id": wall["wall_id"],
+                        "start_point":  [wall["centerline"][0][0],  wall["centerline"][0][1],  0.0],
+                        "end_point":    [wall["centerline"][-1][0], wall["centerline"][-1][1], 0.0],
+                        "thickness":    wall["thickness"]["average"],
+                        "height":       2800.0,
+                        "type":         f"Basic Wall - {int(wall['thickness']['average'])}mm",
+                        "is_exterior":  wall["wall_id"] in [ew.get("wall_id") for ew in exterior_walls]
+                    } for wall in wall_parameters if len(wall["centerline"]) >= 2
                 ],
                 "doors": [
                     {
-                        "id": f"Door_{d['door_id']}", 
-                        "insertion_point": [d['location']['center']['x'], d['location']['center']['y'], 0.0], 
-                        "width": d['dimensions']['width'], 
-                        "height": 2100.0, 
-                        "type": "Single-Flush"
+                        "id":              f"Door_{d['door_id']}",
+                        "host_wall_id":    d.get("host_wall_id"),
+                        "insertion_point": [d["location"]["center"]["x"],
+                                            d["location"]["center"]["y"], 0.0],
+                        "width":           d["dimensions"]["width"],
+                        "height":          2100.0,
+                        "swing_angle":     d.get("swing_angle", 0.0),
+                        "hinge_side":      d["orientation"].get("hinge_side", "unknown"),
+                        "type":            "Single-Flush"
                     } for d in detailed_doors
                 ],
+                "windows": [
+                    {
+                        "id":              f"Window_{win['window_id']}",
+                        "host_wall_id":    win.get("host_wall_id"),
+                        "insertion_point": [win["location"]["center"]["x"],
+                                            win["location"]["center"]["y"], 0.0],
+                        "width":           win["dimensions"]["width"],
+                        "height":          1200.0,
+                        "sill_height":     900.0,
+                        "type":            win["window_type"].capitalize() + " Window"
+                    } for win in detailed_windows
+                ],
+                "rooms": room_polygons,
                 "stairs": bim_stairs,
-                "slabs": bim_slabs
+                "slabs":  bim_slabs
             },
             "summary": {
                 "walls": {
@@ -426,6 +495,10 @@ def analyze_floor_plan():
                 "space_names": {
                     "total_spaces_detected": len(space_names),
                     "average_confidence": float(numpy.mean([s["confidence"] for s in space_names])) if space_names else 0
+                },
+                "rooms": {
+                    "total_rooms": len(room_polygons),
+                    "total_area_m2": round(sum(r["area_m2"] for r in room_polygons), 2)
                 }
             },
             "walls": {
@@ -490,18 +563,21 @@ def analyze_floor_plan():
             "total_walls": len(wall_parameters),
             "total_doors": len(detailed_doors),
             "total_windows": len(detailed_windows),
+            "total_rooms": len(room_polygons),
             "total_junctions": len(junction_analysis),
             "total_space_names": len(space_names),
             "comprehensive_summary": {
                 "wall_count": len(wall_parameters),
                 "door_count": len(detailed_doors),
                 "window_count": len(detailed_windows),
+                "room_count": len(room_polygons),
                 "junction_count": len(junction_analysis),
                 "space_name_count": len(space_names),
                 "total_wall_length_mm": sum(w["length"] for w in wall_parameters),
                 "total_wall_thickness_mm": sum(w["thickness"]["average"] for w in wall_parameters),
                 "perimeter_length_mm": perimeter_dimensions["total_perimeter_length"],
-                "perimeter_area_mm2": perimeter_dimensions["perimeter_area"]
+                "perimeter_area_mm2": perimeter_dimensions["perimeter_area"],
+                "total_floor_area_m2": round(sum(r["area_m2"] for r in room_polygons), 2)
             }
         })
         
