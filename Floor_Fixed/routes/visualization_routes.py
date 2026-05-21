@@ -123,8 +123,16 @@ def analyze_floor_plan():
         
         if resize_info["resized"]:
             original_scale = scale_factor_mm_per_pixel
-            scale_factor_mm_per_pixel *= resize_info["resize_factor"]
-            logger.info(f"Adjusted scale factor from {original_scale:.4f} to {scale_factor_mm_per_pixel:.4f} due to image resize")
+            # When an image is scaled DOWN by resize_factor (e.g. 0.5),
+            # each surviving pixel represents MORE real-world distance.
+            # Correct formula: mm_per_px = original_mm_per_px / resize_factor
+            # (NOT *=, which would make mm/px smaller — the wrong direction)
+            scale_factor_mm_per_pixel = original_scale / resize_info["resize_factor"]
+            logger.info(
+                "Scale factor adjusted for resize: %.4f → %.4f "
+                "(resize_factor=%.3f)",
+                original_scale, scale_factor_mm_per_pixel, resize_info["resize_factor"]
+            )
         
         original_image = imagefile.copy()
         
@@ -405,29 +413,57 @@ def analyze_floor_plan():
         wall_vis_filepath = os.path.join(IMAGES_OUTPUT_DIR, wall_vis_filename)
         vis_image.save(wall_vis_filepath)
 
-        # Extract stair and slab geometries from model output
+        # Resolve building height parameters — API values override defaults
+        bp         = building_params  # already validated dict
+        WALL_H     = float(bp.get("wall_height",        2800.0))
+        DOOR_H     = float(bp.get("door_height",        2100.0))
+        WIN_SILL   = float(bp.get("window_sill_height",  900.0))
+        WIN_H      = float(bp.get("window_height",      1200.0))
+        SLAB_THICK = float(bp.get("floor_thickness",    200.0))
+
+        # Extract stair and slab geometries — convert pixel coords to mm
         bim_stairs = []
-        bim_slabs = []
+        bim_slabs  = []
         for idx, cid in enumerate(r['class_ids']):
-            if cid == 4 and 'masks' in r:  # Stairs
+            if cid == 4 and 'masks' in r:   # Stairs
                 mask = r['masks'][:, :, idx]
                 stair_data = extract_stair_footprint(mask)
                 if stair_data:
-                    stair_data["id"] = f"Stair_{len(bim_stairs)+1}"
-                    stair_data["base_level"] = 0.0
-                    stair_data["top_level"] = 2800.0
-                    bim_stairs.append(stair_data)
-            elif cid in [5, 6, 7] and 'masks' in r:  # Parking, Balcony, Terrace
+                    corners_mm = [
+                        [pt[0] * scale_factor_mm_per_pixel,
+                         pt[1] * scale_factor_mm_per_pixel]
+                        for pt in stair_data["corners"]
+                    ]
+                    corners_mm.append(corners_mm[0])   # close polygon
+                    bim_stairs.append({
+                        "id":               f"Stair_{len(bim_stairs)+1}",
+                        "footprint_polygon": corners_mm,
+                        "center_mm": [
+                            stair_data["center"][0] * scale_factor_mm_per_pixel,
+                            stair_data["center"][1] * scale_factor_mm_per_pixel,
+                        ],
+                        "width_mm":        stair_data["dimensions"]["width"]  * scale_factor_mm_per_pixel,
+                        "length_mm":       stair_data["dimensions"]["length"] * scale_factor_mm_per_pixel,
+                        "rotation_angle":  stair_data["rotation_angle"],
+                        "base_level":      0.0,
+                        "top_level":       WALL_H,
+                    })
+            elif cid in [5, 6, 7] and 'masks' in r:   # Parking, Balcony, Terrace
                 mask = r['masks'][:, :, idx]
-                polygon = extract_slab_polygon(mask)
-                if len(polygon) >= 3:
+                polygon_px = extract_slab_polygon(mask)
+                if len(polygon_px) >= 3:
+                    polygon_mm = [
+                        [pt[0] * scale_factor_mm_per_pixel,
+                         pt[1] * scale_factor_mm_per_pixel]
+                        for pt in polygon_px
+                    ]
                     name_map = {5: "Parking", 6: "Balcony", 7: "Terrace"}
                     bim_slabs.append({
-                        "id": f"Slab_{len(bim_slabs)+1}",
-                        "type": name_map[cid],
-                        "thickness": 150.0,
+                        "id":        f"Slab_{len(bim_slabs)+1}",
+                        "type":      name_map[cid],
+                        "polygon":   polygon_mm,
+                        "thickness": SLAB_THICK,
                         "elevation": 0.0,
-                        "polygon": polygon
                     })
         
         # Build unified JSON combining BIM data and OCR
@@ -453,7 +489,7 @@ def analyze_floor_plan():
                         "start_point":  [wall["centerline"][0][0],  wall["centerline"][0][1],  0.0],
                         "end_point":    [wall["centerline"][-1][0], wall["centerline"][-1][1], 0.0],
                         "thickness":    wall["thickness"]["average"],
-                        "height":       2800.0,
+                        "height":       WALL_H,
                         "type":         f"Basic Wall - {int(wall['thickness']['average'])}mm",
                         "is_exterior":  wall["wall_id"] in [ew.get("wall_id") for ew in exterior_walls]
                     } for wall in wall_parameters if len(wall["centerline"]) >= 2
@@ -465,7 +501,7 @@ def analyze_floor_plan():
                         "insertion_point": [d["location"]["center"]["x"],
                                             d["location"]["center"]["y"], 0.0],
                         "width":           d["dimensions"]["width"],
-                        "height":          2100.0,
+                        "height":          DOOR_H,
                         "swing_angle":     d.get("swing_angle", 0.0),
                         "hinge_side":      d["orientation"].get("hinge_side", "unknown"),
                         "type":            "Single-Flush"
@@ -478,8 +514,8 @@ def analyze_floor_plan():
                         "insertion_point": [win["location"]["center"]["x"],
                                             win["location"]["center"]["y"], 0.0],
                         "width":           win["dimensions"]["width"],
-                        "height":          1200.0,
-                        "sill_height":     900.0,
+                        "height":          WIN_H,
+                        "sill_height":     WIN_SILL,
                         "type":            win["window_type"].capitalize() + " Window"
                     } for win in detailed_windows
                 ],

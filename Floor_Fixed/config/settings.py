@@ -20,8 +20,11 @@ from typing import Dict, Any
 class Config:
     """Base configuration — shared by all environments."""
 
-    # ── Model ─────────────────────────────────────────────────────────────────
-    NUM_CLASSES           = 8       # background + wall, window, door, stairs, parking, balcony, terrace
+    # Class count — imported from the single source of truth.
+    # Do NOT set this to 8 (that was a legacy Mask R-CNN value that included background).
+    # Mask2Former handles background implicitly; we have 7 architectural classes.
+    from config.classes import NUM_CLASSES as _NC
+    NUM_CLASSES = _NC   # 7
     GPU_COUNT             = 1
     IMAGES_PER_GPU        = 1
     DETECTION_MIN_CONFIDENCE = 0.15

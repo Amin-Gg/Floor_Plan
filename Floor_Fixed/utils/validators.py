@@ -30,6 +30,11 @@ from PIL import Image
 
 from utils.error_handlers import ValidationError, ImageValidationError
 
+# Prevent decompression bomb attacks — images that appear small but expand to
+# gigabytes in memory (e.g. a 1x1 pixel PNG with embedded 1 GB data).
+# Default PIL limit is 178 million pixels; we keep a conservative 100 MP cap.
+Image.MAX_IMAGE_PIXELS = 100_000_000   # 100 megapixels
+
 logger = logging.getLogger(__name__)
 
 # Allowed image MIME types

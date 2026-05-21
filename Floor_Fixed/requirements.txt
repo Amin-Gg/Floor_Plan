@@ -5,10 +5,10 @@
 # ==========================================
 # Core ML Framework (Mask2Former Engine)
 # ==========================================
-torch>=2.0.0
-torchvision>=0.15.0
-transformers>=4.35.0
-accelerate>=0.24.0
+torch==2.1.2
+torchvision==0.16.2
+transformers==4.40.2
+accelerate==0.29.3
 
 # ==========================================
 # Computer Vision & Image Processing
@@ -21,15 +21,15 @@ imageio==2.31.5
 # ==========================================
 # Advanced OCR & String Matching
 # ==========================================
-paddleocr>=2.6.0
-paddlepaddle>=2.5.0
+paddleocr==2.7.3
+paddlepaddle==2.5.2
 thefuzz==0.20.0
 python-Levenshtein==0.23.0
 
 # ==========================================
 # Scientific Computing
 # ==========================================
-numpy==1.24.3
+numpy==1.26.4
 scipy==1.11.3
 matplotlib==3.7.2
 
@@ -67,7 +67,7 @@ gunicorn>=21.2.0
 # ==========================================
 # IFC Export (BIM standard format)
 # ==========================================
-ifcopenshell>=0.7.0
+ifcopenshell==0.7.0
 datasets>=2.14.0
 pycocotools>=2.0.6
 

@@ -1,4 +1,7 @@
-import cv2, numpy as np, math
+import logging
+import cv2
+
+logger = logging.getLogger(__name__), numpy as np, math
 from pathlib import Path
 import time
 import unicodedata
@@ -28,7 +31,7 @@ TEMPLATES = {}
 # ------------------
 # Debug flag
 # ------------------
-DEBUG_LOAD = True  # set True to print why templates are kept / discarded
+DEBUG_LOAD = False  # set True to print why templates are kept / discarded
 
 def _categorize_icon(stem: str):
     stem_norm = unicodedata.normalize('NFC', stem)
@@ -57,7 +60,7 @@ for p in ICON_DIR.glob("*.png"):
     h_raw, w_raw = template_raw.shape[:2]
     if max(h_raw, w_raw) > 120:
         if DEBUG_LOAD:
-            print(f"Skip {p.name}: too large ({w_raw}x{h_raw})")
+            logger.debug(f"Skip {p.name}: too large ({w_raw}x{h_raw})")
         continue
 
     # Assign class ID based on category
@@ -87,7 +90,7 @@ for p in ICON_DIR.glob("*.png"):
         DISPLAY_NAME[s_name] = DISPLAY_NAME[stem]
 
     if DEBUG_LOAD:
-        print(f"Keep {p.name}: size {w_raw}x{h_raw}, edge density {np.count_nonzero(template_raw)/(h_raw*w_raw):.2f}")
+        logger.debug(f"Keep {p.name}: size {w_raw}x{h_raw}, edge density {np.count_nonzero(template_raw)/(h_raw*w_raw):.2f}")
 
 # Precompute template areas for quick size checks
 TEMPLATE_SIZES = {name: tmpl.shape[:2] for name, tmpl in TEMPLATES.items()}  # (h, w)
@@ -171,10 +174,10 @@ def detect_icons(rgb_image, threshold=0.85, debug=False, max_hits_per_template=2
                 ys = ys[top_idx]
                 xs = xs[top_idx]
                 if debug and scores_flat.size > max_hits_per_template:
-                    print(f"Template '{stem}' sv{sv:.2f} had {scores_flat.size} hits, trimmed to {max_hits_per_template}")
+                    logger.debug(f"Template '{stem}' sv{sv:.2f} had {scores_flat.size} hits, trimmed to {max_hits_per_template}")
 
             if debug and (ys.size > 0):
-                print(f"Template '{stem}' matched {len(ys)} times (scale={combined_scale:.2f}) in {time.time()-t_start:.2f}s")
+                logger.debug(f"Template '{stem}' matched {len(ys)} times (scale={combined_scale:.2f}) in {time.time()-t_start:.2f}s")
 
             # Convert to bounding boxes in original-scale coordinates
             for (x_s, y_s) in zip(xs, ys):
@@ -198,12 +201,12 @@ def detect_icons(rgb_image, threshold=0.85, debug=False, max_hits_per_template=2
             final.append((boxes[k], cid, scores[k]))
 
     if debug:
-        print(f"detect_icons: found {len(final)} detections in {time.time()-t_total:.2f}s (scale factor {scale:.2f})")
+        logger.debug(f"detect_icons: found {len(final)} detections in {time.time()-t_total:.2f}s (scale factor {scale:.2f})")
 
     return final
 
 # Debug: show loaded template names once at import
-print("Loaded icon templates:", list(TEMPLATES.keys())[:20], "... total", len(TEMPLATES))
+logger.info("Loaded icon templates: %s ... total %d", list(TEMPLATES.keys())[:20], len(TEMPLATES))
 
 # ------------------
 # ORB feature setup
@@ -223,7 +226,7 @@ for name, edge_img in list(TEMPLATES.items()):
     kp, des = _ORB.detectAndCompute(gray_for_kp, None)
     if des is None or len(kp) < 2:
         if DEBUG_LOAD:
-            print(f"Remove {name}: only {0 if des is None else len(kp)} keypoints")
+            logger.debug(f"Remove {name}: only {0 if des is None else len(kp)} keypoints")
         # Too few features – remove template to avoid wasted work
         TEMPLATES.pop(name)
         continue
@@ -231,7 +234,7 @@ for name, edge_img in list(TEMPLATES.items()):
     TEMPLATE_DES[name] = des
 
     if DEBUG_LOAD:
-        print(f"Keep {name}: size {edge_img.shape[1]}x{edge_img.shape[0]}, edge density {np.count_nonzero(edge_img)/(edge_img.shape[0]*edge_img.shape[1]):.2f}")
+        logger.debug(f"Keep {name}: size {edge_img.shape[1]}x{edge_img.shape[0]}, edge density {np.count_nonzero(edge_img)/(edge_img.shape[0]*edge_img.shape[1]):.2f}")
 
 def detect_icons_orb(rgb_image, debug=False, min_inliers=5):
     """Detect camera/sensor icons using ORB keypoint matching & homography.
@@ -243,11 +246,11 @@ def detect_icons_orb(rgb_image, debug=False, min_inliers=5):
     kp_img, des_img = _ORB.detectAndCompute(gray, None)
     if des_img is None or len(kp_img) < 10:
         if debug:
-            print("ORB: too few keypoints in image – skipping icon detection")
+            logger.debug("ORB: too few keypoints in image – skipping icon detection")
         return []
 
     if debug:
-        print(f"ORB: image has {len(kp_img)} keypoints")
+        logger.debug(f"ORB: image has {len(kp_img)} keypoints")
 
     detections = []
 
@@ -257,7 +260,7 @@ def detect_icons_orb(rgb_image, debug=False, min_inliers=5):
 
         matches = _BF.match(des_t, des_img)
         if debug:
-            print(f"Template {name}: {len(matches)} raw matches")
+            logger.debug(f"Template {name}: {len(matches)} raw matches")
         if len(matches) < min_inliers:
             continue
 
@@ -268,7 +271,7 @@ def detect_icons_orb(rgb_image, debug=False, min_inliers=5):
             continue
 
         if debug:
-            print(f"Template {name}: {len(matches)} raw matches")
+            logger.debug(f"Template {name}: {len(matches)} raw matches")
 
         pts_t = np.float32([kp_t[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
         pts_i = np.float32([kp_img[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
@@ -276,16 +279,16 @@ def detect_icons_orb(rgb_image, debug=False, min_inliers=5):
         H, mask = cv2.findHomography(pts_t, pts_i, cv2.RANSAC, 5.0)
         if H is None:
             if debug:
-                print(f"Template {name}: homography failed")
+                logger.debug(f"Template {name}: homography failed")
             continue
         inliers = int(mask.sum()) if mask is not None else 0
         if inliers < min_inliers or inliers < 0.25 * len(matches):
             if debug:
-                print(f"Template {name}: only {inliers} inliers – rejected")
+                logger.debug(f"Template {name}: only {inliers} inliers – rejected")
             continue
 
         if debug:
-            print(f"Template '{name}' ORB inliers={inliers}, bbox=({int(pts_t[:, 0, 0].min())}x{int(pts_t[:, 0, 1].min())}, {int(pts_t[:, 0, 0].max())}x{int(pts_t[:, 0, 1].max())})")
+            logger.debug(f"Template '{name}' ORB inliers={inliers}, bbox=({int(pts_t[:, 0, 0].min())}x{int(pts_t[:, 0, 1].min())}, {int(pts_t[:, 0, 0].max())}x{int(pts_t[:, 0, 1].max())})")
 
         # Map template corners to image to get bbox
         h_t, w_t = TEMPLATES[name].shape[:2]
@@ -374,7 +377,7 @@ def detect_icons_shape(rgb_image, debug=False, min_area=25, max_area=400, min_ar
             detections.append((bbox, 4, 1.0))  # class 4 = camera
             
             if debug:
-                print(f"Found camera at {bbox} (area={area:.1f}, ar={ar:.2f}, circ={circularity:.2f}, val={mean_val:.1f})")
+                logger.debug(f"Found camera at {bbox} (area={area:.1f}, ar={ar:.2f}, circ={circularity:.2f}, val={mean_val:.1f})")
     
     # Apply NMS to remove overlaps
     if detections:
@@ -384,6 +387,6 @@ def detect_icons_shape(rgb_image, debug=False, min_area=25, max_area=400, min_ar
         detections = [detections[i] for i in keep]
     
     if debug:
-        print(f"detect_icons_shape: found {len(detections)} camera symbols")
+        logger.debug(f"detect_icons_shape: found {len(detections)} camera symbols")
     
     return detections 

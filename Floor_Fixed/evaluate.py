@@ -35,15 +35,10 @@ from transformers import (
     Mask2FormerForUniversalSegmentation,
     Mask2FormerImageProcessor,
 )
+from config.classes import TRAIN_ID_TO_NAME as ID2LABEL, NUM_CLASSES
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
-
-LABEL2ID = {
-    "wall": 1, "window": 2, "door": 3, "stairs": 4,
-    "parking": 5, "balcony": 6, "terrace": 7,
-}
-ID2LABEL = {v: k for k, v in LABEL2ID.items()}
 
 
 def parse_args():
@@ -182,29 +177,89 @@ def evaluate(checkpoint: str, dataset_dir: str,
             # Unmatched GTs are false negatives
             stats[cls_id]["fn"] += len(gts) - len(matched_gt)
 
-    # ── Compute precision / recall / F1 / AP per class ────────────────────────
-    results = {}
-    ap_values = []
+    # ── Compute real mAP using torchmetrics ───────────────────────────────────
+    try:
+        from torchmetrics.detection.mean_ap import MeanAveragePrecision
+    except ImportError:
+        raise ImportError(
+            "torchmetrics is required for evaluation. "
+            "Install with: pip install torchmetrics"
+        )
 
-    for cls_id, s in stats.items():
-        tp, fp, fn = s["tp"], s["fp"], s["fn"]
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        recall    = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1        = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+    metric = MeanAveragePrecision(iou_type="segm", class_metrics=True)
 
-        # AP approximation at this single IoU threshold
-        ap = precision * recall  # simplified; full AP needs P-R curve
-        ap_values.append(ap)
+    # We already collected TP/FP/FN counts above for the threshold sweep.
+    # For real mAP we need to feed torchmetrics the raw predictions and targets.
+    # Re-run the collection pass in torchmetrics format.
+    logger.info("Computing real mAP with torchmetrics (iou_type='segm')...")
 
-        results[ID2LABEL[cls_id]] = {
-            "precision": round(precision, 4),
-            "recall":    round(recall,    4),
-            "f1":        round(f1,        4),
-            "ap":        round(ap,        4),
-            "tp": tp, "fp": fp, "fn": fn,
-        }
+    for image_id in tqdm(image_ids, desc="mAP pass"):
+        img_info    = images_by_id[image_id]
+        annotations = ann_by_image[image_id]
+        img_path    = val_img / img_info["file_name"]
+        image       = Image.open(img_path).convert("RGB")
+        W, H        = image.size
+        img_arr     = np.array(image)
 
-    results["mAP"] = round(float(np.mean(ap_values)), 4)
+        inputs = processor(images=img_arr, return_tensors="pt")
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+
+        with torch.inference_mode():
+            outputs = model(**inputs)
+
+        result  = processor.post_process_instance_segmentation(
+            outputs, target_sizes=[(H, W)]
+        )[0]
+        seg_map = result["segmentation"].cpu()
+
+        # Build torchmetrics prediction dict
+        pred_masks, pred_labels, pred_scores = [], [], []
+        for info in result["segments_info"]:
+            if float(info["score"]) < conf_thresh:
+                continue
+            cls_id = info["label_id"]   # training ID 0-6
+            if cls_id not in ID2LABEL:
+                continue
+            mask = (seg_map == info["id"])
+            if not mask.any():
+                continue
+            pred_masks.append(mask)
+            pred_labels.append(cls_id)
+            pred_scores.append(float(info["score"]))
+
+        # Build torchmetrics target dict
+        gt_masks, gt_labels = [], []
+        for ann in annotations:
+            cat_id = ann["category_id"]  # project ID 1-7
+            from config.classes import PROJECT_ID_TO_TRAIN_ID
+            train_id = PROJECT_ID_TO_TRAIN_ID.get(cat_id)
+            if train_id is None:
+                continue
+            gt_mask = polygon_to_mask(ann["segmentation"], H, W)
+            if not gt_mask.any():
+                continue
+            gt_masks.append(torch.from_numpy(gt_mask))
+            gt_labels.append(train_id)
+
+        if pred_masks and gt_masks:
+            metric.update(
+                [{"masks":  torch.stack(pred_masks),
+                  "labels": torch.tensor(pred_labels),
+                  "scores": torch.tensor(pred_scores)}],
+                [{"masks":  torch.stack(gt_masks),
+                  "labels": torch.tensor(gt_labels)}],
+            )
+
+    map_results = metric.compute()
+    overall_map50    = float(map_results.get("map_50",    0.0))
+    overall_map5095  = float(map_results.get("map",       0.0))
+    per_class_ap     = map_results.get("map_per_class",  [])
+
+    results = {"mAP@50": round(overall_map50, 4), "mAP@50:95": round(overall_map5095, 4)}
+    for i, cls_id in enumerate(sorted(ID2LABEL.keys())):
+        cls_name = ID2LABEL[cls_id]
+        ap_val   = float(per_class_ap[i]) if i < len(per_class_ap) else 0.0
+        results[cls_name] = {"ap": round(ap_val, 4)}
 
     return results
 
@@ -213,16 +268,18 @@ def main():
     args = parse_args()
 
     if args.find_best_threshold:
-        logger.info("Sweeping confidence thresholds 0.10 → 0.90...")
+        logger.info("Sweeping confidence thresholds 0.10 → 0.90 ...")
         best_map, best_thresh = 0.0, args.conf_thresh
         for thresh in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
             res = evaluate(args.checkpoint, args.dataset_dir, thresh, args.iou_thresh)
-            logger.info("  conf=%.2f  mAP=%.4f", thresh, res["mAP"])
-            if res["mAP"] > best_map:
-                best_map, best_thresh = res["mAP"], thresh
-        logger.info("Best threshold: %.2f  mAP=%.4f", best_thresh, best_map)
+            map50 = res.get("mAP@50", 0.0)
+            logger.info("  conf=%.2f  mAP@50=%.4f", thresh, map50)
+            if map50 > best_map:
+                best_map, best_thresh = map50, thresh
+        logger.info("Best threshold: %.2f  mAP@50=%.4f", best_thresh, best_map)
         logger.info(
-            "Update DETECTION_MIN_CONFIDENCE = %.2f in config/settings.py", best_thresh
+            "→ Update DETECTION_MIN_CONFIDENCE = %.2f in config/settings.py",
+            best_thresh
         )
         return
 
@@ -230,18 +287,22 @@ def main():
         args.checkpoint, args.dataset_dir, args.conf_thresh, args.iou_thresh
     )
 
-    logger.info("\n%s", "=" * 52)
-    logger.info("EVALUATION RESULTS  (conf=%.2f  iou=%.2f)", args.conf_thresh, args.iou_thresh)
-    logger.info("%-12s  %8s  %8s  %8s  %8s", "Class", "Prec", "Recall", "F1", "AP")
-    logger.info("-" * 52)
-    for cls_name, m in results.items():
-        if cls_name == "mAP":
+    logger.info("\n%s", "=" * 56)
+    logger.info(
+        "EVALUATION RESULTS  (conf=%.2f  iou=%.2f)",
+        args.conf_thresh, args.iou_thresh
+    )
+    logger.info("%-12s  %8s", "Class", "AP@50")
+    logger.info("-" * 56)
+    for key, val in results.items():
+        if key.startswith("mAP"):
             continue
-        logger.info("%-12s  %8.4f  %8.4f  %8.4f  %8.4f",
-                    cls_name, m["precision"], m["recall"], m["f1"], m["ap"])
-    logger.info("-" * 52)
-    logger.info("%-12s  %39.4f", "mAP", results["mAP"])
-    logger.info("=" * 52)
+        ap = val.get("ap", 0.0) if isinstance(val, dict) else 0.0
+        logger.info("%-12s  %8.4f", key, ap)
+    logger.info("-" * 56)
+    logger.info("%-12s  %8.4f", "mAP@50",    results.get("mAP@50",    0.0))
+    logger.info("%-12s  %8.4f", "mAP@50:95", results.get("mAP@50:95", 0.0))
+    logger.info("=" * 56)
 
 
 if __name__ == "__main__":

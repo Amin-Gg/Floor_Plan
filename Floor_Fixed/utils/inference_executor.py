@@ -45,9 +45,10 @@ logger = logging.getLogger(__name__)
 INFERENCE_TIMEOUT_SECONDS = int(os.getenv("INFERENCE_TIMEOUT", "90"))
 
 # Maximum concurrent inference tasks.
-# Keep this at 1-2: each Mask2Former forward pass saturates the GPU fully.
-# Running more than 2 simultaneously causes CUDA OOM.
-MAX_WORKERS = int(os.getenv("INFERENCE_WORKERS", "2"))
+# Default: 1. Each Mask2Former Swin-Large forward pass occupies the full GPU.
+# Running 2 simultaneously can cause CUDA OOM on cards with < 16 GB VRAM.
+# Increase to 2 only after profiling your specific GPU's memory headroom.
+MAX_WORKERS = int(os.getenv("INFERENCE_WORKERS", "1"))
 
 
 class InferenceTimeoutError(APIError):

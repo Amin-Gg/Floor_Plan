@@ -26,6 +26,7 @@ After fine-tuning — two changes required in this file
            return label_id if label_id in valid_classes else None
 """
 
+import os
 import logging
 from typing import Optional
 
@@ -37,12 +38,60 @@ from transformers import (
 )
 
 from config.settings import get_config
+from config.classes import TRAIN_ID_TO_PROJECT_ID, TRAIN_ID_TO_NAME
 
 app_config = get_config()
 logger = logging.getLogger(__name__)
 
 _model: Optional["Mask2FormerSwinLEngine"] = None
 _cfg:   Optional["DummyConfig"]            = None
+
+# ── Model path resolution ─────────────────────────────────────────────────────
+# Set FLOORPLAN_MODEL_PATH to your fine-tuned checkpoint directory.
+# In production, ALLOW_COCO_FALLBACK must be "false" — the server will refuse
+# to start without a real floor plan checkpoint.
+_ENV_MODEL_PATH    = os.getenv("FLOORPLAN_MODEL_PATH", "")
+_ALLOW_COCO_FALLBACK = os.getenv("ALLOW_COCO_FALLBACK", "true").lower() == "true"
+_COCO_BASE_MODEL   = "facebook/mask2former-swin-large-coco-instance"
+
+
+def _resolve_model_id() -> str:
+    """
+    Return the model path to load.
+    Fails fast in production (APP_ENV=production) if no fine-tuned checkpoint
+    is configured and ALLOW_COCO_FALLBACK is false.
+    """
+    if _ENV_MODEL_PATH and os.path.isdir(_ENV_MODEL_PATH):
+        logger.info("Loading fine-tuned floor plan model from: %s", _ENV_MODEL_PATH)
+        return _ENV_MODEL_PATH
+
+    if _ENV_MODEL_PATH and not os.path.isdir(_ENV_MODEL_PATH):
+        raise FileNotFoundError(
+            f"FLOORPLAN_MODEL_PATH is set to '{_ENV_MODEL_PATH}' "
+            "but that directory does not exist. "
+            "Run train_mask2former.py first, then set the path."
+        )
+
+    # No env var set — fall back to local weights directory if it exists
+    local_weights = "./weights/mask2former-floorplan-finetuned"
+    if os.path.isdir(local_weights):
+        logger.info("Loading fine-tuned model from default path: %s", local_weights)
+        return local_weights
+
+    # No fine-tuned model anywhere
+    if not _ALLOW_COCO_FALLBACK:
+        raise RuntimeError(
+            "No fine-tuned floor plan model found and ALLOW_COCO_FALLBACK=false. "
+            "Set FLOORPLAN_MODEL_PATH to your trained checkpoint directory, "
+            "or set ALLOW_COCO_FALLBACK=true for development/testing only."
+        )
+
+    logger.warning(
+        "No fine-tuned checkpoint found. Falling back to generic COCO model. "
+        "Detections will be unreliable for floor plan elements. "
+        "Set FLOORPLAN_MODEL_PATH after training to fix this."
+    )
+    return _COCO_BASE_MODEL
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -66,10 +115,7 @@ class Mask2FormerSwinLEngine:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         logger.info("Loading Mask2Former (Swin-Large) on %s", self.device)
 
-        # After fine-tuning, replace this with your local checkpoint path:
-        #   model_id = "./weights/mask2former-floorplan-finetuned"
-        model_id = "facebook/mask2former-swin-large-coco-instance"
-
+        model_id = _resolve_model_id()
         self.processor = Mask2FormerImageProcessor.from_pretrained(model_id)
         self.model     = Mask2FormerForUniversalSegmentation.from_pretrained(model_id)
         self.model.to(self.device)
@@ -202,20 +248,15 @@ class Mask2FormerSwinLEngine:
 
     def _map_to_project_classes(self, label_id: int) -> Optional[int]:
         """
-        Map the model's output label_id to the project class system (1-7).
+        Convert the model's output training ID (0-6) to a project class ID (1-7).
 
-        Project class IDs
-        -----------------
-            1  Wall      2  Window    3  Door
-            4  Stairs    5  Parking   6  Balcony    7  Terrace
+        Training IDs are 0-indexed (0=wall … 6=terrace).
+        Project IDs are 1-indexed (1=wall … 7=terrace).
+        The mapping is defined in config/classes.py — do not modify it here.
 
-        Status: ACTIVE (post-training).
-        The fine-tuned model's label_ids map directly to project IDs 1-7.
-        Any label outside that set is background or an unsupported class and
-        is discarded (returns None).
+        Returns None for any ID outside the known range (background, noise).
         """
-        valid_classes = {1, 2, 3, 4, 5, 6, 7}
-        return label_id if label_id in valid_classes else None
+        return TRAIN_ID_TO_PROJECT_ID.get(label_id)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

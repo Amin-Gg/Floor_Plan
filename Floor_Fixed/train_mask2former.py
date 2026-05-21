@@ -73,31 +73,15 @@ from transformers import (
     TrainingArguments,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger(__name__)
+from config.classes import (
+    NAME_TO_TRAIN_ID  as LABEL2ID,
+    TRAIN_ID_TO_NAME  as ID2LABEL,
+    NUM_CLASSES,
+    CLASS_WEIGHTS,
+    PROJECT_ID_TO_TRAIN_ID,
+)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Class definitions
-# ─────────────────────────────────────────────────────────────────────────────
-LABEL2ID: Dict[str, int] = {
-    "wall":    1, "window": 2, "door":    3, "stairs":  4,
-    "parking": 5, "balcony": 6, "terrace": 7,
-}
-ID2LABEL: Dict[int, str] = {v: k for k, v in LABEL2ID.items()}
-
-# Class frequency weights — inversely proportional to how often each class
-# appears in a typical floor plan.  Walls are most common (weight 1.0),
-# terraces and balconies are rare (weight 3.0).  Adjust after inspecting
-# your own dataset's class distribution.
-CLASS_WEIGHTS: Dict[int, float] = {
-    1: 1.0,   # wall      — most common
-    2: 1.5,   # window
-    3: 1.5,   # door
-    4: 2.0,   # stairs    — less common
-    5: 2.5,   # parking
-    6: 3.0,   # balcony   — rare
-    7: 3.0,   # terrace   — rare
-}
+# Remove local redefinitions that were here before — they are now in config/classes.py
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -171,6 +155,20 @@ class FloorPlanAugmenter:
             factor = random.uniform(0.8, 1.2)
             image  = ImageEnhance.Contrast(image).enhance(factor)
 
+        # ── Scale jitter ──────────────────────────────────────────────────────
+        # Resize both image and instance_map by the same random scale factor.
+        # Simulates different scan resolutions and zoom levels.
+        if random.random() < 0.4:
+            scale = random.uniform(*self.scale_range)
+            orig_w, orig_h = image.size
+            new_w = max(64, int(orig_w * scale))
+            new_h = max(64, int(orig_h * scale))
+            image        = image.resize((new_w, new_h), Image.BILINEAR)
+            instance_map = cv2.resize(
+                instance_map, (new_w, new_h),
+                interpolation=cv2.INTER_NEAREST   # nearest-neighbour preserves instance IDs
+            )
+
         return image, instance_map
 
 
@@ -235,16 +233,24 @@ class FloorPlanDataset(Dataset):
             instance_masks.append(mask)
             category_labels.append(cat_id)
 
+        if not instance_masks:
+            # All annotations for this image were filtered out (unknown class /
+            # empty polygon). Skip this sample by raising an error that the
+            # DataLoader will skip, rather than injecting a fake 1-pixel mask
+            # which pollutes the training batch with a false wall annotation.
+            raise ValueError(
+                f"Image {image_id} ({image_info['file_name']}) has no valid "
+                f"annotations after filtering. Remove it from the dataset or "
+                f"correct its annotations."
+            )
+
         instance_map = np.zeros((H, W), dtype=np.int32)
         instance_id_to_semantic_id: Dict[int, int] = {}
 
-        if instance_masks:
-            for i, (mask, cat_id) in enumerate(zip(instance_masks, category_labels), start=1):
-                instance_map[mask > 0] = i
-                instance_id_to_semantic_id[i] = cat_id
-        else:
-            instance_map[0, 0] = 1
-            instance_id_to_semantic_id[1] = 1
+        for i, (mask, cat_id) in enumerate(zip(instance_masks, category_labels), start=1):
+            instance_map[mask > 0] = i
+            # Convert project annotation ID (1-7) → training ID (0-6)
+            instance_id_to_semantic_id[i] = PROJECT_ID_TO_TRAIN_ID.get(cat_id, cat_id)
 
         # ── Augmentation ──────────────────────────────────────────────────────
         if self.augmenter is not None:
@@ -445,7 +451,9 @@ def main() -> None:
     processor = Mask2FormerImageProcessor.from_pretrained(args.base_model)
 
     # ── Model ─────────────────────────────────────────────────────────────────
-    num_labels = len(LABEL2ID)
+    # NUM_CLASSES comes from config/classes.py — single source of truth (value: 7)
+    # Training head indices are 0-indexed (0..6), which is correct for num_labels=7.
+    num_labels = NUM_CLASSES
     model = Mask2FormerForUniversalSegmentation.from_pretrained(
         args.base_model,
         num_labels=num_labels,
