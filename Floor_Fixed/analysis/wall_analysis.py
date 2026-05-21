@@ -323,6 +323,12 @@ def extract_wall_parameters_with_regions(all_wall_segments, wall_mask, junctions
             "segment_area": float(len(segment))
         }
         wall_parameters.append(wall_params)
+
+    # Snap wall endpoints to junction consensus positions — identical to the
+    # snap applied in extract_wall_parameters. Without this call, walls
+    # processed through the region-based path have open corners in Revit.
+    wall_parameters = snap_centerlines_to_junctions(wall_parameters)
+
     return wall_parameters
 
 
