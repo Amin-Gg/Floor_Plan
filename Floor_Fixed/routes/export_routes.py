@@ -28,6 +28,7 @@ GET /export/ifc/parameters
 
 import os
 import json
+import uuid
 import logging
 from datetime import datetime
 
@@ -154,7 +155,8 @@ def export_ifc():
 
     # ── Generate IFC file ─────────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    ifc_name  = f"floorplan_{timestamp}.ifc"
+    uid       = uuid.uuid4().hex[:8]
+    ifc_name  = f"floorplan_{timestamp}_{uid}.ifc"
     ifc_path  = os.path.join(IFC_OUTPUT_DIR, ifc_name)
 
     try:

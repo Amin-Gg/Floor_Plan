@@ -43,12 +43,24 @@ Usage
         --grad_accum  8 \\
         --fp16
 
-After training — two changes to models/mask_rcnn_model.py
-----------------------------------------------------------
-    1. model_id = "./weights/mask2former-floorplan-finetuned"
-    2. In _map_to_project_classes:
-           valid_classes = {1, 2, 3, 4, 5, 6, 7}
-           return label_id if label_id in valid_classes else None
+After training
+--------------
+1. Set FLOORPLAN_MODEL_PATH to the checkpoint directory:
+       export FLOORPLAN_MODEL_PATH=./weights/mask2former-floorplan-finetuned
+
+2. Run evaluate.py to compute mAP and find the best confidence threshold:
+       python evaluate.py --checkpoint ./weights/mask2former-floorplan-finetuned
+       python evaluate.py --checkpoint ... --find_best_threshold
+
+3. Update DETECTION_MIN_CONFIDENCE in config/settings.py with the best threshold.
+
+4. Start the API with ALLOW_COCO_FALLBACK=false in production:
+       APP_ENV=production ALLOW_COCO_FALLBACK=false \\
+       gunicorn --config gunicorn.conf.py application:application
+
+No manual edits to models/mask_rcnn_model.py are needed — model path and
+class mapping are handled automatically via environment variables and
+config/classes.py.
 """
 
 import os
@@ -198,9 +210,14 @@ class FloorPlanDataset(Dataset):
         for ann in coco["annotations"]:
             self.ann_by_image.setdefault(ann["image_id"], []).append(ann)
 
-        self.image_ids: List[int] = [
-            iid for iid in self.images if iid in self.ann_by_image
-        ]
+        self.image_ids: List[int] = []
+        for iid in self.images:
+            anns = self.ann_by_image.get(iid, [])
+            # Keep only images that have at least one annotation with a valid
+            # project class ID (1-7). Filter here so PyTorch DataLoader never
+            # receives an invalid sample — DataLoader does not skip exceptions.
+            if any(ann.get("category_id") in PROJECT_ID_TO_TRAIN_ID for ann in anns):
+                self.image_ids.append(iid)
 
         logger.info(
             "Dataset loaded: %d images  augmentation=%s  (%s)",
@@ -223,34 +240,35 @@ class FloorPlanDataset(Dataset):
         instance_masks:  List[np.ndarray] = []
         category_labels: List[int]        = []
 
+        # Validate against PROJECT_ID_TO_TRAIN_ID (keys: project IDs 1-7).
+        # Store training IDs (0-6) directly in category_labels so the conversion
+        # is done once here and not scattered across two places below.
         for ann in annotations:
-            cat_id = ann["category_id"]
-            if cat_id not in ID2LABEL:
+            project_id = ann["category_id"]
+            train_id   = PROJECT_ID_TO_TRAIN_ID.get(project_id)
+            if train_id is None:
+                # Unknown class (not one of our 7) — skip this annotation
                 continue
             mask = _polygon_to_mask(ann["segmentation"], H, W)
             if mask.sum() == 0:
                 continue
             instance_masks.append(mask)
-            category_labels.append(cat_id)
+            category_labels.append(train_id)   # ← training ID (0-6), not project ID
 
+        # This should not happen because __init__ already filtered valid images,
+        # but guard defensively in case the dataset changes between init and getitem.
         if not instance_masks:
-            # All annotations for this image were filtered out (unknown class /
-            # empty polygon). Skip this sample by raising an error that the
-            # DataLoader will skip, rather than injecting a fake 1-pixel mask
-            # which pollutes the training batch with a false wall annotation.
-            raise ValueError(
-                f"Image {image_id} ({image_info['file_name']}) has no valid "
-                f"annotations after filtering. Remove it from the dataset or "
-                f"correct its annotations."
+            raise RuntimeError(
+                f"Image {image_id} has no valid annotations after filtering. "
+                "This should have been caught during dataset initialization."
             )
 
         instance_map = np.zeros((H, W), dtype=np.int32)
         instance_id_to_semantic_id: Dict[int, int] = {}
 
-        for i, (mask, cat_id) in enumerate(zip(instance_masks, category_labels), start=1):
+        for i, (mask, train_id) in enumerate(zip(instance_masks, category_labels), start=1):
             instance_map[mask > 0] = i
-            # Convert project annotation ID (1-7) → training ID (0-6)
-            instance_id_to_semantic_id[i] = PROJECT_ID_TO_TRAIN_ID.get(cat_id, cat_id)
+            instance_id_to_semantic_id[i] = train_id   # already a training ID
 
         # ── Augmentation ──────────────────────────────────────────────────────
         if self.augmenter is not None:
@@ -309,44 +327,17 @@ def collate_fn(batch: List[dict]) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# mAP metric computation
+# Checkpoint selection note
 # ─────────────────────────────────────────────────────────────────────────────
-
-def build_compute_metrics(processor: Mask2FormerImageProcessor):
-    """
-    Returns a compute_metrics function that calculates mAP@50 on the val set.
-    The best checkpoint is saved by mAP, not by eval_loss.
-
-    Uses torchmetrics.detection.MeanAveragePrecision which follows the COCO
-    evaluation protocol (IoU thresholds 0.50:0.95, reported as mAP@50).
-    """
-    def compute_metrics(eval_pred):
-        # eval_pred is a tuple of (predictions, labels) from the Trainer.
-        # For Mask2Former, predictions are raw logits — we need post-processing.
-        # The Trainer passes EvalPrediction; we extract logits from it.
-        try:
-            import torchmetrics
-        except ImportError:
-            logger.warning(
-                "torchmetrics not installed — mAP metric unavailable. "
-                "Install with: pip install torchmetrics"
-            )
-            return {}
-
-        # Note: full mAP computation from raw Mask2Former logits requires
-        # running post_process_instance_segmentation, which needs the original
-        # image sizes. The Trainer API does not pass image sizes to compute_metrics.
-        # The practical approach is to use eval_loss as the primary metric during
-        # training and run a separate evaluation script (evaluate.py) after training
-        # to compute mAP on the val set with access to full context.
-        #
-        # This function returns eval_loss-based metrics which the Trainer
-        # already computes, so best checkpoint selection by eval_loss remains valid.
-        # The dedicated evaluate.py script computes true mAP.
-        return {}
-
-    return compute_metrics
-
+# Training saves the best checkpoint by eval_loss (not mAP).
+# This is intentional: the HuggingFace Trainer API does not pass image sizes
+# to compute_metrics, so true mAP cannot be computed inline during training.
+# After training, run evaluate.py to measure real mAP@50 on the val set
+# and use it to select the best checkpoint manually if needed.
+#
+# CLASS_WEIGHTS is defined in config/classes.py for future use. Implementing
+# custom per-class loss weights in Mask2Former requires subclassing Trainer and
+# overriding compute_loss(). This is planned for a later iteration.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Differential learning rate — backbone vs classification head
@@ -526,14 +517,17 @@ def main() -> None:
     processor.save_pretrained(args.output_dir)
 
     logger.info("=" * 60)
-    logger.info("NEXT STEPS:")
-    logger.info("  1. Run evaluate.py to compute mAP on the val set:")
+    logger.info("TRAINING COMPLETE — NEXT STEPS:")
+    logger.info("  1. Evaluate mAP on the val set:")
     logger.info("         python evaluate.py --checkpoint %s", args.output_dir)
-    logger.info("  2. In models/mask_rcnn_model.py set:")
-    logger.info("         model_id = '%s'", args.output_dir)
-    logger.info("  3. In _map_to_project_classes replace 'return None' with:")
-    logger.info("         valid_classes = {1, 2, 3, 4, 5, 6, 7}")
-    logger.info("         return label_id if label_id in valid_classes else None")
+    logger.info("         python evaluate.py --checkpoint %s --find_best_threshold",
+                args.output_dir)
+    logger.info("  2. Set FLOORPLAN_MODEL_PATH:")
+    logger.info("         export FLOORPLAN_MODEL_PATH=%s", args.output_dir)
+    logger.info("  3. Update DETECTION_MIN_CONFIDENCE in config/settings.py")
+    logger.info("  4. Start production API:")
+    logger.info("         APP_ENV=production ALLOW_COCO_FALLBACK=false "
+                "gunicorn --config gunicorn.conf.py application:application")
     logger.info("=" * 60)
 
 

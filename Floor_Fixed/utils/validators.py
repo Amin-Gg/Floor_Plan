@@ -100,6 +100,18 @@ def require_image_upload(field_name: str = "image") -> Image.Image:
             details={"field": field_name}
         )
 
+    # Content-type pre-check — first line of defence before Pillow opens the file.
+    # Pillow is still the authoritative validator; this catches obvious mismatches early.
+    ct = (upload.content_type or "").lower().split(";")[0].strip()
+    if ct and ct not in _ALLOWED_MIME:
+        raise ImageValidationError(
+            f"Unsupported file type: '{ct}'. Upload a JPEG, PNG, BMP, TIFF, or WebP image.",
+            details={
+                "received_content_type": ct,
+                "allowed_types":         sorted(_ALLOWED_MIME),
+            }
+        )
+
     try:
         img = Image.open(upload.stream)
         img.verify()                    # detects truncated / corrupt files

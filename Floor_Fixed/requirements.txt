@@ -70,6 +70,8 @@ gunicorn>=21.2.0
 ifcopenshell==0.7.0
 datasets>=2.14.0
 pycocotools>=2.0.6
+torchmetrics==1.3.2
+tqdm==4.66.4
 
 # ==========================================
 # Validation and API Documentation

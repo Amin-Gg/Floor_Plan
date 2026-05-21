@@ -125,7 +125,11 @@ def create_app(cfg=None) -> OpenAPI:
 
     app.config["MAX_CONTENT_LENGTH"] = cfg.MAX_UPLOAD_MB * 1024 * 1024
 
-    CORS(app, resources={r"/*": {"origins": cfg.CORS_ORIGINS}})
+    # Validate and apply CORS — raises RuntimeError in production if not set
+    cors_origins = cfg.CORS_ORIGINS
+    if hasattr(cfg, "_get_cors"):
+        cors_origins = cfg._get_cors()
+    CORS(app, resources={r"/*": {"origins": cors_origins}})
 
     # ── Per-request ID ────────────────────────────────────────────────────────
     @app.before_request
@@ -165,8 +169,15 @@ def create_app(cfg=None) -> OpenAPI:
             logger.info("AI model initialised successfully.")
         except Exception as exc:
             logger.error("AI model initialisation failed: %s", exc, exc_info=True)
+            _env = os.getenv("APP_ENV", "development").lower()
+            if _env == "production":
+                logger.critical(
+                    "APP_ENV=production and model failed to load — refusing to start. "
+                    "Set FLOORPLAN_MODEL_PATH to a valid checkpoint directory."
+                )
+                raise SystemExit(1) from exc
             logger.warning(
-                "Server started without a model. "
+                "Server started without a loaded model (development mode). "
                 "POST /analyze returns HTTP 503 until the model is available."
             )
 

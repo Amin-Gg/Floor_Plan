@@ -78,13 +78,14 @@ def convert_junction_position_to_mm(junction_data, scale_factor_mm_per_pixel):
 
 def save_wall_analysis(wall_data, filename):
 	"""Save wall analysis to file in JSON output directory"""
+	import logging as _logging
+	_logger = _logging.getLogger(__name__)
 	filepath = os.path.join(JSON_OUTPUT_DIR, filename)
-	
 	try:
-		with open(filepath, 'w') as f:
-			json.dump(wall_data, f, indent=2)
-		print(f"Wall analysis saved to: {filepath}")
+		with open(filepath, 'w', encoding='utf-8') as f:
+			json.dump(wall_data, f, indent=2, ensure_ascii=False)
+		_logger.info("Wall analysis saved to: %s", filepath)
 		return filename
 	except Exception as e:
-		print(f"Error saving wall analysis: {str(e)}")
+		_logger.error("Error saving wall analysis: %s", str(e))
 		return None

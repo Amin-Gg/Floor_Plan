@@ -91,18 +91,27 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     """
-    Production — warnings only, CORS must be explicitly set.
-
-    Before going live, set the environment variable:
-        APP_CORS_ORIGINS="https://yourdomain.ir"
-    If the variable is not set, CORS falls back to Config.CORS_ORIGINS ("*"),
-    which is intentionally left permissive so the app still starts.
-    Set this variable before any real deployment.
+    Production — strict security defaults.
+    APP_CORS_ORIGINS MUST be set before starting the server.
     """
     DEBUG      = False
     LOG_LEVEL  = "WARNING"
     ENABLE_CACHING = True
-    CACHE_TIMEOUT  = 600            # 10 minutes
+    CACHE_TIMEOUT  = 600
+
+    @classmethod
+    def _get_cors(cls) -> str:
+        origins = os.getenv("APP_CORS_ORIGINS", "")
+        if not origins:
+            raise RuntimeError(
+                "APP_CORS_ORIGINS must be set in production. "
+                "Example: export APP_CORS_ORIGINS='https://yourdomain.ir'\n"
+                "To temporarily bypass (not recommended): "
+                "export APP_CORS_ORIGINS='*'"
+            )
+        return origins
+
+    CORS_ORIGINS: str = os.getenv("APP_CORS_ORIGINS", "")
 
 
 class TestingConfig(Config):

@@ -1,14 +1,14 @@
 import logging
 import cv2
+import numpy as np
+import math
 
-logger = logging.getLogger(__name__), numpy as np, math
+logger = logging.getLogger(__name__)
 from pathlib import Path
 import time
 import unicodedata
 
 # Helper to rotate without cropping (placed BEFORE template loading)
-import cv2
-import numpy as np
 
 def _rotate_image_bound(img, angle):
     """Rotate image without cropping (returns a new image)"""

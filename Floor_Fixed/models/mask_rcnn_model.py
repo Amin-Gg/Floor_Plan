@@ -37,7 +37,9 @@ from transformers import (
     Mask2FormerImageProcessor,
 )
 
+from pathlib import Path
 from config.settings import get_config
+from config.constants import ROOT_DIR
 from config.classes import TRAIN_ID_TO_PROJECT_ID, TRAIN_ID_TO_NAME
 
 app_config = get_config()
@@ -50,8 +52,12 @@ _cfg:   Optional["DummyConfig"]            = None
 # Set FLOORPLAN_MODEL_PATH to your fine-tuned checkpoint directory.
 # In production, ALLOW_COCO_FALLBACK must be "false" — the server will refuse
 # to start without a real floor plan checkpoint.
-_ENV_MODEL_PATH    = os.getenv("FLOORPLAN_MODEL_PATH", "")
-_ALLOW_COCO_FALLBACK = os.getenv("ALLOW_COCO_FALLBACK", "true").lower() == "true"
+_ENV_MODEL_PATH  = os.getenv("FLOORPLAN_MODEL_PATH", "")
+_APP_ENV         = os.getenv("APP_ENV", "development").lower()
+# In production, COCO fallback is OFF by default — must be explicitly enabled.
+# In development, it is ON so the API starts without a trained checkpoint.
+_DEFAULT_FALLBACK  = "false" if _APP_ENV == "production" else "true"
+_ALLOW_COCO_FALLBACK = os.getenv("ALLOW_COCO_FALLBACK", _DEFAULT_FALLBACK).lower() == "true"
 _COCO_BASE_MODEL   = "facebook/mask2former-swin-large-coco-instance"
 
 
@@ -72,11 +78,11 @@ def _resolve_model_id() -> str:
             "Run train_mask2former.py first, then set the path."
         )
 
-    # No env var set — fall back to local weights directory if it exists
-    local_weights = "./weights/mask2former-floorplan-finetuned"
-    if os.path.isdir(local_weights):
+    # No env var set — check default local weights directory relative to project root
+    local_weights = Path(ROOT_DIR) / "weights" / "mask2former-floorplan-finetuned"
+    if local_weights.is_dir():
         logger.info("Loading fine-tuned model from default path: %s", local_weights)
-        return local_weights
+        return str(local_weights)
 
     # No fine-tuned model anywhere
     if not _ALLOW_COCO_FALLBACK:

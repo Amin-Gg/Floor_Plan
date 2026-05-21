@@ -1,7 +1,21 @@
 """
-JSON building and response formatting services
-Enhanced with BIM/Revit compatible vector data export 
+DEPRECATED — This module is no longer called by any active route.
+
+BIM JSON generation is now handled directly inside
+`routes/visualization_routes.py`, where all heights and geometries are sourced
+from the validated `building_params` dict and real mm-converted coordinates.
+
+This file is retained for reference only. Do NOT import or call it in new code.
+When this module is confirmed unused across all environments it should be deleted.
 """
+
+import warnings
+warnings.warn(
+    "services/json_service.py is deprecated and will be removed. "
+    "Use the bim_data block in routes/visualization_routes.py instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 import numpy
 from datetime import datetime

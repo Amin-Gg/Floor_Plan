@@ -46,8 +46,10 @@ def parse_args():
     p.add_argument("--checkpoint",   required=True,
                    help="Path to trained checkpoint directory")
     p.add_argument("--dataset_dir",  default="./dataset")
-    p.add_argument("--conf_thresh",  type=float, default=0.45,
-                   help="Confidence threshold for predictions")
+    p.add_argument("--conf_thresh",  type=float, default=0.01,
+                   help="Low-floor confidence filter for mAP computation (default 0.01). "
+                        "Do NOT use the operational threshold here — that inflates mAP. "
+                        "Use --find_best_threshold to pick the operational threshold.")
     p.add_argument("--iou_thresh",   type=float, default=0.50,
                    help="IoU threshold for a prediction to count as TP")
     p.add_argument("--find_best_threshold", action="store_true",
@@ -82,8 +84,31 @@ def polygon_to_mask(segmentation, H: int, W: int) -> np.ndarray:
 def evaluate(checkpoint: str, dataset_dir: str,
              conf_thresh: float, iou_thresh: float) -> dict:
     """
-    Run evaluation and return per-class AP dict plus overall mAP.
+    Compute mAP@50 and mAP@50:95 on the validation set using torchmetrics.
+
+    Design decisions
+    ----------------
+    - conf_thresh is applied as a low-floor safety filter only (default 0.01).
+      Do NOT use the operational threshold here — that inflates mAP.
+      For threshold selection, use find_best_threshold in main().
+    - Every image is always fed to metric.update(), including images where the
+      model produces zero predictions. Skipping zero-prediction images inflates
+      mAP by hiding false negatives.
+    - Ground truth project IDs (1-7) are converted to training IDs (0-6) via
+      PROJECT_ID_TO_TRAIN_ID before being passed to torchmetrics.
+    - The old TP/FP/FN pass has been removed — torchmetrics is the single source
+      of truth for evaluation metrics.
     """
+    from config.classes import PROJECT_ID_TO_TRAIN_ID
+
+    try:
+        from torchmetrics.detection.mean_ap import MeanAveragePrecision
+    except ImportError:
+        raise ImportError(
+            "torchmetrics is required for evaluation. "
+            "Run: pip install torchmetrics==1.3.2"
+        )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info("Loading checkpoint from: %s", checkpoint)
 
@@ -91,109 +116,26 @@ def evaluate(checkpoint: str, dataset_dir: str,
     model     = Mask2FormerForUniversalSegmentation.from_pretrained(checkpoint)
     model.to(device).eval()
 
-    val_img  = Path(dataset_dir) / "val" / "images"
-    val_ann  = Path(dataset_dir) / "val" / "annotations.json"
-    coco     = load_coco_annotations(str(val_ann))
+    val_img = Path(dataset_dir) / "val" / "images"
+    val_ann = Path(dataset_dir) / "val" / "annotations.json"
+    coco    = load_coco_annotations(str(val_ann))
 
     images_by_id = {img["id"]: img for img in coco["images"]}
-    ann_by_image = {}
+    ann_by_image: dict = {}
     for ann in coco["annotations"]:
         ann_by_image.setdefault(ann["image_id"], []).append(ann)
 
-    # Per-class TP, FP, FN counters
-    stats = {cls_id: {"tp": 0, "fp": 0, "fn": 0} for cls_id in ID2LABEL}
-
+    # Only evaluate images that have at least one annotation
     image_ids = [iid for iid in images_by_id if iid in ann_by_image]
-    logger.info("Evaluating %d val images at conf=%.2f  iou=%.2f",
-                len(image_ids), conf_thresh, iou_thresh)
-
-    for image_id in tqdm(image_ids, desc="Evaluating"):
-        img_info    = images_by_id[image_id]
-        annotations = ann_by_image[image_id]
-        img_path    = val_img / img_info["file_name"]
-
-        image    = Image.open(img_path).convert("RGB")
-        W, H     = image.size
-        img_arr  = np.array(image)
-
-        # ── Inference ─────────────────────────────────────────────────────────
-        inputs = processor(images=img_arr, return_tensors="pt")
-        inputs = {k: v.to(device) for k, v in inputs.items()}
-
-        with torch.inference_mode():
-            outputs = model(**inputs)
-
-        result = processor.post_process_instance_segmentation(
-            outputs, target_sizes=[(H, W)]
-        )[0]
-
-        seg_map = result["segmentation"].cpu().numpy()
-
-        # Collect predictions above threshold
-        preds_by_class = {cls_id: [] for cls_id in ID2LABEL}
-        for info in result["segments_info"]:
-            if float(info["score"]) < conf_thresh:
-                continue
-            cls_id = info["label_id"]
-            if cls_id not in ID2LABEL:
-                continue
-            mask = (seg_map == info["id"]).astype(bool)
-            if mask.sum() == 0:
-                continue
-            preds_by_class[cls_id].append({"mask": mask, "score": float(info["score"])})
-
-        # Collect ground truth by class
-        gt_by_class = {cls_id: [] for cls_id in ID2LABEL}
-        for ann in annotations:
-            cls_id = ann["category_id"]
-            if cls_id not in ID2LABEL:
-                continue
-            gt_mask = polygon_to_mask(ann["segmentation"], H, W)
-            if gt_mask.sum() == 0:
-                continue
-            gt_by_class[cls_id].append(gt_mask)
-
-        # ── Match predictions to ground truth ─────────────────────────────────
-        for cls_id in ID2LABEL:
-            preds = preds_by_class[cls_id]
-            gts   = list(gt_by_class[cls_id])   # copy — we remove matched GTs
-
-            matched_gt = set()
-            for pred in sorted(preds, key=lambda x: x["score"], reverse=True):
-                best_iou, best_idx = 0.0, -1
-                for j, gt_mask in enumerate(gts):
-                    if j in matched_gt:
-                        continue
-                    iou = masks_iou(pred["mask"], gt_mask)
-                    if iou > best_iou:
-                        best_iou, best_idx = iou, j
-
-                if best_iou >= iou_thresh and best_idx >= 0:
-                    stats[cls_id]["tp"] += 1
-                    matched_gt.add(best_idx)
-                else:
-                    stats[cls_id]["fp"] += 1
-
-            # Unmatched GTs are false negatives
-            stats[cls_id]["fn"] += len(gts) - len(matched_gt)
-
-    # ── Compute real mAP using torchmetrics ───────────────────────────────────
-    try:
-        from torchmetrics.detection.mean_ap import MeanAveragePrecision
-    except ImportError:
-        raise ImportError(
-            "torchmetrics is required for evaluation. "
-            "Install with: pip install torchmetrics"
-        )
+    logger.info(
+        "Evaluating %d val images  (low-floor conf=%.2f, for threshold testing use "
+        "--find_best_threshold)",
+        len(image_ids), conf_thresh
+    )
 
     metric = MeanAveragePrecision(iou_type="segm", class_metrics=True)
 
-    # We already collected TP/FP/FN counts above for the threshold sweep.
-    # For real mAP we need to feed torchmetrics the raw predictions and targets.
-    # Re-run the collection pass in torchmetrics format.
-    logger.info("Computing real mAP with torchmetrics (iou_type='segm')...")
-
-    for image_id in tqdm(image_ids, desc="mAP pass"):
+    for image_id in tqdm(image_ids, desc="Evaluating"):
         img_info    = images_by_id[image_id]
         annotations = ann_by_image[image_id]
         img_path    = val_img / img_info["file_name"]
@@ -201,6 +143,7 @@ def evaluate(checkpoint: str, dataset_dir: str,
         W, H        = image.size
         img_arr     = np.array(image)
 
+        # ── Inference ─────────────────────────────────────────────────────────
         inputs = processor(images=img_arr, return_tensors="pt")
         inputs = {k: v.to(device) for k, v in inputs.items()}
 
@@ -212,12 +155,16 @@ def evaluate(checkpoint: str, dataset_dir: str,
         )[0]
         seg_map = result["segmentation"].cpu()
 
-        # Build torchmetrics prediction dict
+        # ── Build predictions (training IDs 0-6) ──────────────────────────────
+        # Apply only a very low safety floor — we want the full confidence
+        # distribution for COCO-style mAP. Using the operational threshold here
+        # would inflate mAP by removing borderline false positives.
         pred_masks, pred_labels, pred_scores = [], [], []
         for info in result["segments_info"]:
-            if float(info["score"]) < conf_thresh:
+            score  = float(info["score"])
+            if score < conf_thresh:   # conf_thresh should be very low (default 0.01)
                 continue
-            cls_id = info["label_id"]   # training ID 0-6
+            cls_id = info["label_id"]   # training ID 0-6 from fine-tuned model
             if cls_id not in ID2LABEL:
                 continue
             mask = (seg_map == info["id"])
@@ -225,37 +172,46 @@ def evaluate(checkpoint: str, dataset_dir: str,
                 continue
             pred_masks.append(mask)
             pred_labels.append(cls_id)
-            pred_scores.append(float(info["score"]))
+            pred_scores.append(score)
 
-        # Build torchmetrics target dict
+        # ── Build ground truth (project IDs → training IDs) ───────────────────
         gt_masks, gt_labels = [], []
         for ann in annotations:
-            cat_id = ann["category_id"]  # project ID 1-7
-            from config.classes import PROJECT_ID_TO_TRAIN_ID
-            train_id = PROJECT_ID_TO_TRAIN_ID.get(cat_id)
+            project_id = ann["category_id"]   # annotation file uses project IDs 1-7
+            train_id   = PROJECT_ID_TO_TRAIN_ID.get(project_id)
             if train_id is None:
-                continue
+                continue   # annotation class not in our 7-class system
             gt_mask = polygon_to_mask(ann["segmentation"], H, W)
             if not gt_mask.any():
                 continue
             gt_masks.append(torch.from_numpy(gt_mask))
             gt_labels.append(train_id)
 
-        if pred_masks and gt_masks:
-            metric.update(
-                [{"masks":  torch.stack(pred_masks),
-                  "labels": torch.tensor(pred_labels),
-                  "scores": torch.tensor(pred_scores)}],
-                [{"masks":  torch.stack(gt_masks),
-                  "labels": torch.tensor(gt_labels)}],
-            )
+        # ── Always update — even if predictions or GTs are empty ──────────────
+        # Skipping images with no predictions hides false negatives and inflates mAP.
+        pred_entry = {
+            "masks":  torch.stack(pred_masks) if pred_masks
+                      else torch.zeros((0, H, W), dtype=torch.bool),
+            "labels": torch.tensor(pred_labels, dtype=torch.long),
+            "scores": torch.tensor(pred_scores, dtype=torch.float32),
+        }
+        gt_entry = {
+            "masks":  torch.stack(gt_masks) if gt_masks
+                      else torch.zeros((0, H, W), dtype=torch.bool),
+            "labels": torch.tensor(gt_labels, dtype=torch.long),
+        }
+        metric.update([pred_entry], [gt_entry])
 
-    map_results = metric.compute()
-    overall_map50    = float(map_results.get("map_50",    0.0))
-    overall_map5095  = float(map_results.get("map",       0.0))
-    per_class_ap     = map_results.get("map_per_class",  [])
+    # ── Compute and return ────────────────────────────────────────────────────
+    map_results     = metric.compute()
+    overall_map50   = float(map_results.get("map_50",          0.0))
+    overall_map5095 = float(map_results.get("map",             0.0))
+    per_class_ap    = map_results.get("map_per_class",         [])
 
-    results = {"mAP@50": round(overall_map50, 4), "mAP@50:95": round(overall_map5095, 4)}
+    results = {
+        "mAP@50":    round(overall_map50,   4),
+        "mAP@50:95": round(overall_map5095, 4),
+    }
     for i, cls_id in enumerate(sorted(ID2LABEL.keys())):
         cls_name = ID2LABEL[cls_id]
         ap_val   = float(per_class_ap[i]) if i < len(per_class_ap) else 0.0

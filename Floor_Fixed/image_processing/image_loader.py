@@ -30,7 +30,11 @@ def myImageLoader(imageInput, enhance_for_office=False):
 			image = image.astype(numpy.uint8)
 	
 	h, w, c = image.shape
-	print(f"Processed image shape: {h}x{w}x{c}{' (office enhancement)' if enhance_for_office else ''}")
+	import logging as _log
+	_log.getLogger(__name__).debug(
+		"Processed image shape: %dx%dx%d%s", h, w, c,
+		" (office enhancement)" if enhance_for_office else ""
+	)
 	return image, w, h
 
 def getClassNames(classIds):

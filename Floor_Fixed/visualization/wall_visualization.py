@@ -1,3 +1,4 @@
+import logging
 # Visualization module for floor plan analysis results
 import numpy
 from PIL import Image, ImageDraw, ImageFont
@@ -387,7 +388,7 @@ def create_wall_visualization(original_image, model_results, wall_parameters, ju
 	
 	# Draw OCR-detected space names
 	if space_names:
-		print(f"Drawing {len(space_names)} detected space names on visualization")
+		logging.getLogger(__name__).debug("Drawing %d detected space names on visualization", len(space_names))
 		space_name_color = (255, 128, 0)  # Orange color for space names
 		space_center_color = (255, 0, 128)  # Pink color for space centerpoints
 		

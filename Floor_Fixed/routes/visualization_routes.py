@@ -457,6 +457,9 @@ def analyze_floor_plan():
                          pt[1] * scale_factor_mm_per_pixel]
                         for pt in polygon_px
                     ]
+                    # Ensure polygon is explicitly closed (first == last point)
+                    if polygon_mm[0] != polygon_mm[-1]:
+                        polygon_mm.append(polygon_mm[0])
                     name_map = {5: "Parking", 6: "Balcony", 7: "Terrace"}
                     bim_slabs.append({
                         "id":        f"Slab_{len(bim_slabs)+1}",
