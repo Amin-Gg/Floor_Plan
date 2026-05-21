@@ -16,6 +16,7 @@ from image_processing.image_loader import myImageLoader
 
 from utils.error_handlers import ModelNotReadyError, ImageValidationError
 from utils.validators import require_image_upload, validate_scale_factor
+from utils.inference_executor import get_executor
 from utils.geometry import safe_logical_or, safe_logical_and
 from utils.conversions import (
     pixels_to_mm, pixels_sq_to_mm_sq, convert_junction_position_to_mm, save_wall_analysis)
@@ -86,6 +87,17 @@ def analyze_floor_plan():
         request.form.get("scale_factor_mm_per_pixel", 1.0)
     )
 
+    # Parse optional building height parameters from the request.
+    # These override the hardcoded defaults in buildEnhancedJson and ifc_exporter.
+    import json as _json
+    _bp_raw = request.form.get("building_params", "{}")
+    try:
+        building_params = _json.loads(_bp_raw) if isinstance(_bp_raw, str) else {}
+    except (ValueError, TypeError):
+        building_params = {}
+    from utils.validators import validate_building_params
+    building_params = validate_building_params(building_params)
+
     try:
         imagefile, resize_info = validate_and_resize_image(imagefile)
 
@@ -128,9 +140,10 @@ def analyze_floor_plan():
         
         t0 = time.time()
         model = get_model()
-        
-        # New engine processes raw images directly. No molding or dimension expansion needed.
-        r = model.detect([image], verbose=0)[0]
+
+        # Run inference in thread pool — prevents this 15-30s call from
+        # blocking the Flask worker and locking out all other users.
+        r = get_executor().run(model.detect, [image], verbose=0)[0]
         logger.debug(f"Time - inference: {time.time()-t0:.2f}s")
         
         t0 = time.time()

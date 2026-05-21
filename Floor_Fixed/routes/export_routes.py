@@ -31,7 +31,7 @@ import json
 import logging
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request, send_file, g
+from flask import Blueprint, jsonify, request, send_file, g, after_this_request as flask_after_this_request
 
 from config.constants import JSON_OUTPUT_DIR, OUTPUTS_DIR
 from export.ifc_exporter import bim_json_to_ifc, DEFAULTS
@@ -164,6 +164,19 @@ def export_ifc():
         ) from exc
 
     logger.info("[%s] IFC file generated: %s", getattr(g, "request_id", "-"), ifc_path)
+
+    # Delete the IFC file from disk after Flask has finished streaming it.
+    # Without this, files accumulate indefinitely — hundreds of requests fill
+    # the disk completely and the OS locks all services.
+    @flask_after_this_request
+    def _delete_ifc(response):
+        try:
+            if os.path.isfile(ifc_path):
+                os.remove(ifc_path)
+                logger.debug("Deleted temporary IFC file: %s", ifc_path)
+        except OSError as exc:
+            logger.warning("Could not delete IFC file %s: %s", ifc_path, exc)
+        return response
 
     return send_file(
         ifc_path,

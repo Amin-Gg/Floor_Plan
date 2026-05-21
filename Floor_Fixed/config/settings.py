@@ -25,7 +25,13 @@ class Config:
     GPU_COUNT             = 1
     IMAGES_PER_GPU        = 1
     DETECTION_MIN_CONFIDENCE = 0.15
-    IMAGE_MAX_DIM         = 1600
+    # Mask2Former Swin-Large VRAM budget:
+    # At 1600px: feature pyramid alone uses ~4-6 GB VRAM — causes CUDA OOM on
+    # most 8-12 GB cards when other processes are running.
+    # At 1024px: ~1.5-2 GB — safe on any modern GPU with ≥ 8 GB VRAM.
+    # The processor handles resizing internally; output quality loss is minimal
+    # because architectural lines are preserved at 1024px.
+    IMAGE_MAX_DIM         = 1024
 
     # ── Image processing ──────────────────────────────────────────────────────
     MAX_IMAGE_SIZE        = 2048    # pixels — prevent OOM

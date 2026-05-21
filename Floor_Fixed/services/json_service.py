@@ -21,7 +21,31 @@ def get_extended_class_name(class_id):
         return getClassName(class_id)
     return mapping.get(class_id, "Unknown")
 
-def buildEnhancedJson(model_results, image_width, image_height, original_image):
+def buildEnhancedJson(model_results, image_width, image_height, original_image,
+                      building_params: dict = None):
+    """
+    Build the enriched JSON response from model detection results.
+
+    Parameters
+    ----------
+    building_params : dict, optional
+        Height/thickness overrides from the API request. Supported keys:
+            wall_height        (mm) default 2800
+            door_height        (mm) default 2100
+            floor_thickness    (mm) default 200
+            window_sill_height (mm) default 900
+            window_height      (mm) default 1200
+        If None or a key is absent, the default is used.
+    """
+    if building_params is None:
+        building_params = {}
+
+    # Resolve heights — API params override defaults
+    WALL_HEIGHT     = float(building_params.get("wall_height",        2800.0))
+    DOOR_HEIGHT     = float(building_params.get("door_height",        2100.0))
+    FLOOR_THICKNESS = float(building_params.get("floor_thickness",     200.0))
+    SILL_HEIGHT     = float(building_params.get("window_sill_height",  900.0))
+    WIN_HEIGHT      = float(building_params.get("window_height",      1200.0))
     bboxes = model_results['rois']
     class_ids = model_results['class_ids'] 
     scores = model_results['scores']
@@ -56,7 +80,7 @@ def buildEnhancedJson(model_results, image_width, image_height, original_image):
                 "id": f"Door_{len(bim_doors)+1}",
                 "insertion_point": [float(center["x"]), float(center["y"]), 0.0],
                 "width": float(door_size),
-                "height": 2100.0,
+                "height": DOOR_HEIGHT,
                 "type": "Single-Flush"
             })
             
@@ -73,7 +97,7 @@ def buildEnhancedJson(model_results, image_width, image_height, original_image):
                     "start_point": [float(start_p[0]), float(start_p[1]), 0.0],
                     "end_point": [float(end_p[0]), float(end_p[1]), 0.0],
                     "thickness": float(avg_thickness),
-                    "height": 2800.0,
+                    "height": WALL_HEIGHT,
                     "type": f"Basic Wall - {int(avg_thickness)}px"
                 })
 
@@ -83,7 +107,7 @@ def buildEnhancedJson(model_results, image_width, image_height, original_image):
             if stair_data:
                 stair_data["id"] = f"Stair_{len(bim_stairs)+1}"
                 stair_data["base_level"] = 0.0
-                stair_data["top_level"] = 2800.0
+                stair_data["top_level"] = WALL_HEIGHT
                 bim_stairs.append(stair_data)
 
         # 4. Slabs (Parking, Balcony, Terrace) Processing
@@ -93,7 +117,7 @@ def buildEnhancedJson(model_results, image_width, image_height, original_image):
                 bim_slabs.append({
                     "id": f"Slab_{len(bim_slabs)+1}",
                     "type": get_extended_class_name(class_id),
-                    "thickness": 150.0,
+                    "thickness": FLOOR_THICKNESS,
                     "elevation": 0.0,
                     "polygon": polygon
                 })

@@ -107,7 +107,22 @@ class SpatialOCRDetector:
         # Discard very short text (likely noise)
         if len(text_upper) < 2:
             return None
-            
+
+        # SHORT WORD GUARD: fuzzy matching is unreliable for words of 3 chars
+        # or fewer. A 3-letter Persian word like "بام" scores highly against
+        # "حمام" because thefuzz normalises edit distance by total string length,
+        # not by individual word length. For short words, require an exact match
+        # against all known variants — no fuzzy tolerance.
+        if len(text_upper) <= 3:
+            if text_upper in self.all_variants:
+                return self.variant_to_standard[text_upper]
+            # Also check the original (un-uppercased) form for Farsi
+            if raw_text.strip() in self.all_variants:
+                return self.variant_to_standard[raw_text.strip()]
+            # No exact match for a short word — treat as unclassified noise
+            return {"english": text_upper, "farsi": raw_text, "category": "Unclassified"}
+
+        # For longer words, use fuzzy matching
         best_match, score = process.extractOne(text_upper, self.all_variants)
         
         if score >= self.fuzzy_threshold:

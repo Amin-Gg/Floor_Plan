@@ -37,6 +37,7 @@ from flask import Flask, g, request
 from flask_cors import CORS
 
 from config.settings import get_config
+from utils.inference_executor import InferenceExecutor
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 app_config = get_config()

@@ -13,6 +13,7 @@ from image_processing.image_loader import myImageLoader
 from utils.file_utils import getNextTestNumber, saveAccuracyAnalysis
 from utils.error_handlers import ModelNotReadyError, ImageValidationError
 from utils.validators import require_image_upload
+from utils.inference_executor import get_executor
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def analyze_accuracy():
             resize_info["original_size"], resize_info["new_size"]
         )
 
-    r = get_model().detect([image], verbose=0)[0]
+    r = get_executor().run(get_model().detect, [image], verbose=0)[0]
 
     accuracy_report = performAccuracyAnalysis(r, w, h)
 
