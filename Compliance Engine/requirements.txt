@@ -1,0 +1,24 @@
+# Core engine
+networkx>=3.0
+shapely>=2.0
+
+# RAG index (Step 2)
+sentence-transformers>=3.0.0
+psycopg2-binary>=2.9.9
+pgvector>=0.3.0
+
+# Orchestration (Step 8) — optional, falls back to sequential if absent
+langgraph>=0.2.0
+
+# Report generation (Step 11)
+weasyprint>=60.0
+
+# Web service (Step 10)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+celery>=5.3.0
+redis>=5.0.0
+
+# Classification (Step 1)
+python-docx>=1.1.0
+openai>=1.0.0
