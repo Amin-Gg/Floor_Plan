@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Mabhas compliance report — Plan_04</title>
+<style>
+  @page { size: A4; margin: 18mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         color: #1a1a1a; margin: 0; padding: 0; font-size: 13px; line-height: 1.6; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 24px; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start;
+            border-bottom: 1px solid #e5e5e5; padding-bottom: 16px; margin-bottom: 20px; }
+  .header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+  .header .sub { font-size: 13px; color: #6b6b6b; margin: 4px 0 0; }
+  .status { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 8px; white-space: nowrap; }
+  .metrics { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+  .metric { background:#f6f5f2; border-radius: 8px; padding: 12px 14px; }
+  .metric .label { font-size: 12px; color:#6b6b6b; margin:0; }
+  .metric .value { font-size: 26px; font-weight: 600; margin: 2px 0 0; }
+  .barlabel { font-size: 10px; color:#9a9a9a; text-transform:uppercase; letter-spacing:0.05em; margin: 0 0 6px; }
+  .bar { display:flex; height: 12px; border-radius: 6px; overflow:hidden; margin-bottom: 6px; }
+  .legend { font-size: 11px; color:#6b6b6b; margin: 0 0 22px; }
+  .legend span { margin-right: 14px; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align: middle; }
+  .section-label { font-size: 10px; color:#9a9a9a; text-transform:uppercase; letter-spacing:0.05em; margin: 0 0 12px; }
+  .finding { border-radius: 0; padding: 11px 14px; margin-bottom: 8px; page-break-inside: avoid; }
+  .finding-head { display:flex; justify-content:space-between; align-items:baseline; gap: 12px; }
+  .finding-title { font-size: 14px; font-weight: 600; }
+  .finding-id { font-size: 12px; font-family: "SF Mono", Menlo, Consolas, monospace; white-space: nowrap; }
+  .finding-msg { font-size: 12px; margin: 4px 0 0; }
+  .footer { border-top: 1px solid #e5e5e5; margin-top: 24px; padding-top: 14px;
+            font-size: 11px; color:#8a8a8a; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <h1>Mabhas compliance report</h1>
+      <p class="sub">Plan_04 · M-4 residential · generated 2026-05-29 18:06</p>
+    </div>
+    <span class="status" style="background:#FCEBEB; color:#A32D2D;">non-compliant</span>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><p class="label">checked</p><p class="value">348</p></div>
+    <div class="metric"><p class="label" style="color:#0F6E56;">pass</p><p class="value" style="color:#0F6E56;">13</p></div>
+    <div class="metric"><p class="label" style="color:#A32D2D;">fail</p><p class="value" style="color:#A32D2D;">13</p></div>
+    <div class="metric"><p class="label" style="color:#854F0B;">review</p><p class="value" style="color:#854F0B;">322</p></div>
+  </div>
+
+  <p class="barlabel">compliance overview</p>
+  <div class="bar">
+    <div style="width:3.7%; background:#1D9E75;"></div>
+    <div style="width:3.7%; background:#E24B4A;"></div>
+    <div style="width:92.5%; background:#EF9F27;"></div>
+  </div>
+  <p class="legend">
+    <span><span class="dot" style="background:#1D9E75;"></span>pass 3.7%</span>
+    <span><span class="dot" style="background:#E24B4A;"></span>fail 3.7%</span>
+    <span><span class="dot" style="background:#EF9F27;"></span>review 92.5%</span>
+  </p>
+
+  <p class="section-label">findings — failures first, then review, then pass</p>
+  
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#A32D2D;">1-5-1-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">D-07: clear width = 0.8 m (required &gt;= 0.9 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#A32D2D;">1-5-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">D-01: clear height = 0.9 m (required &gt;= 2.05 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#A32D2D;">1-5-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">D-07: clear height = 0.8 m (required &gt;= 2.05 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#A32D2D;">1-5-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">D-front: clear height = 1.0 m (required &gt;= 2.05 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#A32D2D;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.025</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#A32D2D;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.05</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">In dwelling spaces, in accordance with the requirements of Chapter 4-6…</span>
+          <span class="finding-id" style="color:#A32D2D;">2-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.125</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The minimum height of a dwelling space must be 40/2 meters. This minim…</span>
+          <span class="finding-id" style="color:#A32D2D;">3-2-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_01: height = 9.0 m (required &gt;= 20.0 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The height of sanitary spaces in any area where a person normally stan…</span>
+          <span class="finding-id" style="color:#A32D2D;">3-2-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_bath: minimum height = 4.0 m (required &gt;= 5.0 m) → FAIL</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">In dwelling spaces, if the upper lintel of windows (excluding skylight…</span>
+          <span class="finding-id" style="color:#A32D2D;">3-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.1667</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">The minimum glazing area in occupied spaces, in accordance with the re…</span>
+          <span class="finding-id" style="color:#A32D2D;">3-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.125</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">If it is meters, then the required glazing area shall be one fifth of …</span>
+          <span class="finding-id" style="color:#A32D2D;">4-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit: glazing ratio 0.0 fails requirement &gt;= 0.2</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #E24B4A; background:#FCEBEB;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#A32D2D;">Room_kit (room_kitchen) has no exterior window — lacks natural light</span>
+          <span class="finding-id" style="color:#A32D2D;">natural_light_presence</span>
+        </div>
+        <p class="finding-msg" style="color:#791F1F;">Room_kit (room_kitchen) has no exterior window — lacks natural light</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The free, unobstructed depth of the entrance space must be at least 1.…</span>
+          <span class="finding-id" style="color:#854F0B;">1-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The free, unobstructed depth of the entrance space must be at least 40…</span>
+          <span class="finding-id" style="color:#854F0B;">1-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Semi-open spaces installed in all occupancies must comply with the req…</span>
+          <span class="finding-id" style="color:#854F0B;">1-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_compliant_with&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Open spaces in all occupancies must comply with the requirements of th…</span>
+          <span class="finding-id" style="color:#854F0B;">1-1-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_comply_with&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In locations where level differences exceed 0.70 m, a handrail or guar…</span>
+          <span class="finding-id" style="color:#854F0B;">1-11-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;level difference&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">After the entry door of hotel rooms, suites, or apartments, a suitable…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">A- The free, unobstructed depth of the entrance space must be at least…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The permissible height of small vehicle parking areas, to reduce fire …</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-10-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;parking_area_small&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The permissible height of medium and large vehicle parking areas shall…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-10-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;parking_area_medium_large&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Occupancy spaces must have a minimum clear height of 4.2 metres from f…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-4-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;occupancy space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In sloped ceilings, where the span is 30.0 metres or more, the lowest …</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-4-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when ceiling span is ≥ 30.0 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a pre‑entry area is provided inside an independent shower space, at…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-6-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when a pre‑entry area is provided) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all buildings with more than one occupied unit, access to the exter…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_provided_as&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">External light and air ducts that are created to provide mandatory lig…</span>
+          <span class="finding-id" style="color:#854F0B;">1-2-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_used_for_other_purposes&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If there is a step, any level difference, or a wall opposite the main …</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;step_or_level_difference_or_wall&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The width of the entry passage and ramp in all large parking areas and…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: large_or_medium_public_parking) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Children&#x27;s play areas in buildings or their surroundings must be locat…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_protected_from&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Each dwelling space must have at least one door and one glazed window …</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Every occupied space that, according to labor regulations, necessarily…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;doors and glazed windows&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Every occupied space that, according to labor regulations, necessarily…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Spaces that are used both for residence and for dining must have a min…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;multi‑purpose residential space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Independent kitchens must have natural light. In open and wall kitchen…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_natural_light&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">A mandatory opening area of at least 18.0 square meters is required fo…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;opening&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In group 4 and 6 buildings, if a private courtyard does not have a dir…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_provided_by&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">At least 60 percent of the internal wall surface of a sunroom enclosur…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;internal_wall_surface_of_sunroom&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">At least 60 percent of the internal wall surface of a sunroom enclosur…</span>
+          <span class="finding-id" style="color:#854F0B;">1-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The usable free unobstructed width of internal circulation corridors t…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;circulation corridor usable width&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The floor of an independent or open kitchen and the work area opposite…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_covered_with&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-4-8-5-4 Internal courtyards enclosed as light wells, when used to pr…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;light well&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-4-8-5-4 Internal courtyards enclosed as light wells, when used to pr…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-4-8-5-4 Internal courtyards enclosed as light wells, when used to pr…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;light well&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-4-8-5-4 Internal courtyards enclosed as light wells, when used to pr…</span>
+          <span class="finding-id" style="color:#854F0B;">1-4-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Double-leaf doors without a central mullion used as main doors must ha…</span>
+          <span class="finding-id" style="color:#854F0B;">1-5-1-5-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when the active leaf is opened) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The width of each leaf of a door must not exceed 0.201 meters.</span>
+          <span class="finding-id" style="color:#854F0B;">1-5-1-5-4d</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;door leaf&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Door stopping or movement-regulating devices must not locally reduce t…</span>
+          <span class="finding-id" style="color:#854F0B;">1-5-1-5-4e</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: locally) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Attached rooms to dwelling spaces, if at least 80% of the shared wall …</span>
+          <span class="finding-id" style="color:#854F0B;">1-5-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_require_independent_light_and_ventilation_when_shared_wall_open_ge_80_percent&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">External eaves and balconies that are situated at the beginning or end…</span>
+          <span class="finding-id" style="color:#854F0B;">1-6-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;external_eave_or_balcony_surface&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Any space that necessarily requires natural light must have at least o…</span>
+          <span class="finding-id" style="color:#854F0B;">1-6-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_face&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Any space that necessarily requires natural light must have at least o…</span>
+          <span class="finding-id" style="color:#854F0B;">1-6-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building stairway, the minimum tread depth is 28.0 cm. The riser …</span>
+          <span class="finding-id" style="color:#854F0B;">1-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;stair_tread&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building stairway, the minimum tread depth is 28.0 cm. The riser …</span>
+          <span class="finding-id" style="color:#854F0B;">1-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: such that tread_depth + 2 * riser_height is between 0.63 and 0.64 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building stairway, the minimum tread depth is 28.0 cm. The riser …</span>
+          <span class="finding-id" style="color:#854F0B;">1-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building stairway, the minimum tread depth is 28.0 cm. The riser …</span>
+          <span class="finding-id" style="color:#854F0B;">1-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential occupancies where the independent or open kitchen is us…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when the kitchen is independent or open and used only for cooking) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: natural lighting provided and windows at both ends) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: natural lighting provided and windows at both ends) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: otherwise) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-10-1-5-4  In straight corridors and public spaces or those with wind…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-10-1-5-4  On stairways, where natural lighting is provided, the glaz…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: natural lighting provided) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-10-1-5-4  On stairways, where natural lighting is provided, the glaz…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-10-1-5-4  On stairways, where natural lighting is provided, the glaz…</span>
+          <span class="finding-id" style="color:#854F0B;">10-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In double-leaf entrance doors, the fixed latch must be secured with a …</span>
+          <span class="finding-id" style="color:#854F0B;">10-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_secured_and_not_easily_opened_from_outside&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When spaces of two independent uses receive light and air from the sam…</span>
+          <span class="finding-id" style="color:#854F0B;">10-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;distance_between_opposite_window_walls&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When spaces of two independent uses receive light and air from the sam…</span>
+          <span class="finding-id" style="color:#854F0B;">10-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential occupancies where the independent or open kitchen is us…</span>
+          <span class="finding-id" style="color:#854F0B;">11-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when the kitchen is independent or open and used for cooking and dining) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a building can be accessed by two or more primary or secondary traf…</span>
+          <span class="finding-id" style="color:#854F0B;">11-1-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_from_lower_performance_route&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential occupancies, an independent or open kitchen must have a…</span>
+          <span class="finding-id" style="color:#854F0B;">12-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when the kitchen is independent or open) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For kitchens used for both cooking and dining, the minimum width must …</span>
+          <span class="finding-id" style="color:#854F0B;">12-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when the kitchen is used for cooking and dining) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Throughout the full length of wall kitchens in residential occupancies…</span>
+          <span class="finding-id" style="color:#854F0B;">13-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: measured from cabinet edge, free of fixed obstacles) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum length of a wall kitchen in residential occupancies is 3.0…</span>
+          <span class="finding-id" style="color:#854F0B;">13-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;wall kitchen&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All independent kitchens in residential units must have independent na…</span>
+          <span class="finding-id" style="color:#854F0B;">14-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_independent_natural_light_and_ventilation&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In kitchens that serve living spaces, the minimum ventilation opening …</span>
+          <span class="finding-id" style="color:#854F0B;">15-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: applies to kitchens serving living spaces) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The kitchen exhaust system in residential units of building groups 6, …</span>
+          <span class="finding-id" style="color:#854F0B;">16-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_start_with_central_control_or_switch_and_connect_to_emergency_power_if_no_natural_ventilation&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For the purpose of providing low‑bodily‑effort and movement use in any…</span>
+          <span class="finding-id" style="color:#854F0B;">17-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: residential units with floor area &gt;= 75 m2) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Each independent sanitary space in residential occupancies (where disa…</span>
+          <span class="finding-id" style="color:#854F0B;">18-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a vestibule is provided within an independent shower space, one dim…</span>
+          <span class="finding-id" style="color:#854F0B;">18-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum clear height of sanitary spaces in residential occupancies…</span>
+          <span class="finding-id" style="color:#854F0B;">19-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: applies to 80% of required floor area) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The main circulation and access routes of the building must not pass t…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_pass_through&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The use of wall-mounted kitchens in residential occupancies with an ar…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-1-7-4d</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_face&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The design and placement of open or wall kitchens in residential occup…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-1-7-4e</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_visible_from&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The only access to a dwelling room must not be from another dwelling r…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;room&#x27;, object=&#x27;another_dormitory_room&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Access to an occupancy space must not be through another occupancy or …</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;access path to an occupancy space&#x27;, object=&#x27;another occupancy or residential space unless hierarchy requires it or it is an attached space per 4‑5‑4‑5&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The collection and drainage of rain and snow water in all semi-open sp…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The floor of all open spaces must have appropriate slope and a surface…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Unsupported comparator &#x27;&gt;= &#x27; — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-1-9-5-4 Suitable access for reaching and cleaning these spaces and e…</span>
+          <span class="finding-id" style="color:#854F0B;">2-1-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_access_for_cleaning&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The height of handrails on sloping stairs or ramps must be at least 0.…</span>
+          <span class="finding-id" style="color:#854F0B;">2-11-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;handrail height&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Access to independent residential rooms must not be directly from anot…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;independent residential room&#x27;, object=&#x27;another independent residential room&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The internal radius of the vehicle turning path in parking areas must …</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;turning_path&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Pools located on the lower floors of the building must not be built ag…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: on all sides) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Pools located on the lower floors of the building must not be built ag…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-13-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;pool wall&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum free height beneath door frames, shutters, pipes, channels…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;free height under door frames and similar elements&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum size of a sanitary space for use by disabled persons is 70…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;sanitary space for disabled persons&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">These ducts must have a minimum width of 0.5 meters and be provided at…</span>
+          <span class="finding-id" style="color:#854F0B;">2-2-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;external_light_and_air_duct&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the building entrance area there must be space for several people t…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Large and medium parking areas must have at least two pedestrian exit …</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: large_or_medium_parking) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Large and medium parking areas must have at least two pedestrian exit …</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Access to the play area must be through the building&#x27;s courtyard or pu…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_via&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In dwelling spaces, in accordance with the requirements of Chapter 4-6…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: if windows on single wall and opposite wall distance &lt;= 12.5 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a window opens toward a balcony, compliance with the regulations es…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_face&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Spaces used for residence, dining and cooking must have a minimum floo…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;residential kitchen/dining space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In open and wall kitchens, mechanical ventilation is mandatory.</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_mechanical_ventilation&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Exhaust air systems for sanitary spaces in buildings of groups 7, 6, a…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_configured_as&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a passage is roofed with transparent materials, providing adequate …</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">At least 50 percent of the required glass surface of a sunroom enclosu…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;required_glass_surface_of_sunroom&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">At least 50 percent of the required glass surface of a sunroom enclosu…</span>
+          <span class="finding-id" style="color:#854F0B;">2-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings or occupied units where accessibility for persons with di…</span>
+          <span class="finding-id" style="color:#854F0B;">2-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;circulation corridor usable width&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">A protrusion in passages with a width less than 12 meters and in passa…</span>
+          <span class="finding-id" style="color:#854F0B;">2-4-5-4-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;protrusion&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Walls surrounding the sink and stove in independent, open, and wall ki…</span>
+          <span class="finding-id" style="color:#854F0B;">2-4-5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;wall_surrounding_sink_and_stove&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-4-8-5-4 To provide light and air to residential and occupied spaces …</span>
+          <span class="finding-id" style="color:#854F0B;">2-4-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_sky_view_cone_45deg&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All doors located in access and egress routes must swing in the direct…</span>
+          <span class="finding-id" style="color:#854F0B;">2-5-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_swing_in_direction_of_egress&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All doors located in access and egress routes must swing in the direct…</span>
+          <span class="finding-id" style="color:#854F0B;">2-5-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In this case, when the doors are fully open, none of the required clea…</span>
+          <span class="finding-id" style="color:#854F0B;">2-5-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when doors are fully open) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When less than 80% of the shared wall of the annexed space with the ma…</span>
+          <span class="finding-id" style="color:#854F0B;">2-5-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_independent_entrances_when_shared_wall_open_lt_80_percent&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When less than 80 % of the wall shared between the attached space and …</span>
+          <span class="finding-id" style="color:#854F0B;">2-5-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;attached space and main space&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Eaves and balconies must not have a slope greater than 2 percent in an…</span>
+          <span class="finding-id" style="color:#854F0B;">2-6-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;eave_or_balcony&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All spaces used by people must have natural or mechanical air exchange…</span>
+          <span class="finding-id" style="color:#854F0B;">2-6-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;space used by people&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The total area of roof skylights and wall windows in the desired space…</span>
+          <span class="finding-id" style="color:#854F0B;">2-7-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: must be equivalent to the areas specified in Table 4-6) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The total area of roof skylights and wall windows in the desired space…</span>
+          <span class="finding-id" style="color:#854F0B;">2-7-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Each occupied unit in building groups 1 to 7 must have at least one se…</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;emergency opening&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum height is 1.30 meters.</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;emergency opening&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">It is implicit that beneath each emergency opening, an emergency acces…</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-12-9-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;emergency opening&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The main entrance of dwelling rooms must have a minimum useful width o…</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: main entrance) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In tall buildings, interior light wells (patios) may be used for light…</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: for lighting/ventilation of accommodation, workspace, and kitchen spaces) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In tall buildings, interior light wells (patios) may be used for light…</span>
+          <span class="finding-id" style="color:#854F0B;">2-8-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 6, 7, and 8 or their courtyards, at…</span>
+          <span class="finding-id" style="color:#854F0B;">21-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;play_area&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">On plots larger than 200 square meters, if the main living spaces of t…</span>
+          <span class="finding-id" style="color:#854F0B;">24-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;opposite window walls&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">On plots larger than 200 square meters, if the main living spaces of t…</span>
+          <span class="finding-id" style="color:#854F0B;">24-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In cases where kitchen and living spaces of two independent residentia…</span>
+          <span class="finding-id" style="color:#854F0B;">25-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;opposite window walls&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In cases where kitchen and living spaces of two independent residentia…</span>
+          <span class="finding-id" style="color:#854F0B;">25-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 1 to 3, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: stair_type = straight) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 1 to 3, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 1 to 3, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: stair_has_landing_or_turn) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 1 to 3, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Access to a sanitary space in occupancy units that have at most two in…</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;occupant&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Discharging surface water from semi-open spaces onto public road surfa…</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;surface water drainage from semi-open spaces&#x27;, object=&#x27;public road surface&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Open spaces adjacent to a public passage must be separated from the pu…</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_separated_by&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Open spaces adjacent to a public passage must be separated from the pu…</span>
+          <span class="finding-id" style="color:#854F0B;">3-1-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The horizontal distance between the nearest points of openings of two …</span>
+          <span class="finding-id" style="color:#854F0B;">3-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_protected_by&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The horizontal distance between the nearest points of openings of two …</span>
+          <span class="finding-id" style="color:#854F0B;">3-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Openings, doors, windows and underground entrances of all buildings mu…</span>
+          <span class="finding-id" style="color:#854F0B;">3-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_designed_to_provide_safety&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If there are two or more independent rooms in a suite or apartment wit…</span>
+          <span class="finding-id" style="color:#854F0B;">3-2-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_access_to_multiple_rooms&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Observance of a minimum area of 00/5 × 00/5 m² for a 90‑degree vehicle…</span>
+          <span class="finding-id" style="color:#854F0B;">3-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;turning_space_90deg&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Around all pools, an unobstructed and non‑slippery circulation path wi…</span>
+          <span class="finding-id" style="color:#854F0B;">3-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;circulation path around pool&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In heating or cooling systems, the return air of one occupancy unit mu…</span>
+          <span class="finding-id" style="color:#854F0B;">3-2-6-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;return air of an occupancy unit&#x27;, object=&#x27;the return-air cycle of another occupancy unit&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the entrance area, the clear height from the finished floor must no…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-1-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: over more than 50% of the entrance floor area) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the entrance area, the clear height from the finished floor must no…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: on the remaining 50% of the entrance floor area) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Providing two vehicle entry points from the public right-of-way, each …</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: plot_area &gt;= 20 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In dwelling spaces, if the upper lintel of windows (excluding skylight…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: if window lintel height &lt; 5 m and windows not on single wall or distance &lt;= 12.5 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum glazing area in occupied spaces, in accordance with the re…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;glazing&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All multi‑purpose residential spaces must be ventilated naturally or m…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;multi‑purpose residential space&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Exhaust systems of all kitchens that are required to have a hood over …</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;exhaust_system&#x27;, object=&#x27;outside_of_building&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All private courtyards and passages must have suitable access for clea…</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">To provide mandatory lighting and ventilation for a residential space …</span>
+          <span class="finding-id" style="color:#854F0B;">3-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_at_least&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Corridors that are used solely for access to electrical, mechanical, o…</span>
+          <span class="finding-id" style="color:#854F0B;">3-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;equipment access corridor&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">3-4-8-5-4 Covering a light well is not permitted.</span>
+          <span class="finding-id" style="color:#854F0B;">3-4-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_covered&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When the occupancy load or the number of users of a stair landing is 5…</span>
+          <span class="finding-id" style="color:#854F0B;">3-5-1-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when occupancy load &gt;= 50 persons) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">On each side of the main building door, the occupied unit and space mu…</span>
+          <span class="finding-id" style="color:#854F0B;">3-5-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_at_same_level_as&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The height of a landing or floor located in an accessible route for pe…</span>
+          <span class="finding-id" style="color:#854F0B;">3-5-1-5-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when landing is in accessible route for persons with disabilities or mandatory egress) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the floor of a balcony or terrace that serves as the main access an…</span>
+          <span class="finding-id" style="color:#854F0B;">3-6-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_refuge_or_guard&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the floor of a balcony or terrace that serves as the main access an…</span>
+          <span class="finding-id" style="color:#854F0B;">3-6-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all buildings, the minimum stair width is mandatory and is determin…</span>
+          <span class="finding-id" style="color:#854F0B;">3-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;stair&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all buildings, the minimum stair width is mandatory and is determin…</span>
+          <span class="finding-id" style="color:#854F0B;">3-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;ramp&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all buildings, the minimum stair width is mandatory and is determin…</span>
+          <span class="finding-id" style="color:#854F0B;">3-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">To reduce risk in accidents, a balcony may be used as a rescue opening…</span>
+          <span class="finding-id" style="color:#854F0B;">3-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;may_be_used_as&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">To reduce risk in accidents, a balcony may be used as a rescue opening…</span>
+          <span class="finding-id" style="color:#854F0B;">3-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In building groups 4 to 7, if the top floor has a sloped roof, the con…</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;emergency opening in skylight/balcony&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In building groups 4 to 7, if the top floor has a sloped roof, the con…</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">It must also have a minimum height of 1.30 meters.</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;emergency opening in skylight/balcony&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">It must also have a minimum height of 1.30 meters.</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The acceptable depth of daylighting in any room, space, or zone for li…</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: per window) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The acceptable depth of daylighting in any room, space, or zone for li…</span>
+          <span class="finding-id" style="color:#854F0B;">3-8-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 4 to 7, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: stair_type = straight) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 4 to 7, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 4 to 7, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: stair_has_landing) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential buildings of groups 4 to 7, the minimum clear width of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Intermediate floors, if they meet all the conditions below, are consid…</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-4-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;intermediate floor&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The allocation of sanitary spaces (toilets) must not be oriented towar…</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_face&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the floor of a building&#x27;s semi-open space is situated at a height g…</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when semi-open space floor is above 70.0 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the floor of a building&#x27;s semi-open space is situated at a height g…</span>
+          <span class="finding-id" style="color:#854F0B;">4-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Window openings that are accessible from public thoroughfares must be …</span>
+          <span class="finding-id" style="color:#854F0B;">4-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_protected_by&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Window openings that are accessible from public thoroughfares must be …</span>
+          <span class="finding-id" style="color:#854F0B;">4-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Underground entrances and opening windows must be designed and constru…</span>
+          <span class="finding-id" style="color:#854F0B;">4-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_prevent_entry_of&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum length of a wall wet bar (pantry) in hotel suites and apar…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: without cooking equipment) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum length of a wall kitchenette with cooking equipment in hot…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: with cooking equipment) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The required dimensions for two vehicles parked side‑by‑side are each …</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-10-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;parking_space_side_by_side&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When vehicles are parked longitudinally (one behind the other), the re…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-10-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;parking_space_longitudinal&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all pools, at least one means of egress from the pool, such as a st…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;means of egress from pool&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all pools, at least one means of egress from the pool, such as a st…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum free clearance under door frames, shutters, pipes, ducts a…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;clearance&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Basement rooms, complying with the following conditions, may be used a…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;basement_room&#x27;, object=&#x27;open_space_for_natural_light_and_ventilation&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If passage of people or wheeled equipment is possible, the upper surfa…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_level_with_ground_and_protected_by_metal_mesh&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If passage of people or wheeled equipment is possible, the upper surfa…</span>
+          <span class="finding-id" style="color:#854F0B;">4-2-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Guard/railing rule but no balcony/terrace in plan — not applicable or needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The maximum permissible height of the main entrance floor level relati…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;entrance floor level height difference&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Children&#x27;s play spaces must have access to at least one washbasin and …</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-13-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;play_space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Play spaces intended for 20 persons or more must have access to at lea…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-13-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when intended_occupancy &gt;= 20) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Any building or part of a building in which more than five persons of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-2-3-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;childcare room (children under 3)&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Any building or part of a building in which more than five persons of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-2-3-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If it is meters, then the required glazing area shall be one fifth of …</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;window&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If a window opens onto an iwan, the iwan must meet the following condi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-2-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;iwan&#x27;, object=&#x27;open_space_or_public_passage_without_obstruction&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All occupied spaces used by people must be ventilated naturally or mec…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;occupied space&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the lower floors of a building (basement or ground floor) are desig…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_extend_into&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Lighting and ventilation of a sunroom enclosure must not be provided f…</span>
+          <span class="finding-id" style="color:#854F0B;">4-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_provided_from&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum required width of straight corridors not located on the bu…</span>
+          <span class="finding-id" style="color:#854F0B;">4-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;straight non‑egress corridor&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum required width of straight corridors not located on the bu…</span>
+          <span class="finding-id" style="color:#854F0B;">4-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">No part of the building shall have a protrusion into small enclosed co…</span>
+          <span class="finding-id" style="color:#854F0B;">4-4-5-4-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_have_protrusion_into&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">4-4-8-5-4 The floor of light wells must be provided with adequate prov…</span>
+          <span class="finding-id" style="color:#854F0B;">4-4-8-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_drainage_and_access_for_cleaning&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the main access and egress routes, doors must be designed, construc…</span>
+          <span class="finding-id" style="color:#854F0B;">4-5-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_easily_openable_from_inside&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Requirements for sanitary spaces with skylight lighting: For providing…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Main living space of a residential unit — minimum required values per …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-1</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Main living space of a residential unit&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Living, cooking and dining room — minimum required values per Table 4-…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-10</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Living, cooking and dining room&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Sanitary spaces — minimum required values per Table 4-6:; minimum heig…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-11</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Sanitary spaces&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Small vehicle parking — minimum required values per Table 4-6:; minimu…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-12</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Small vehicle parking&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Medium and large vehicle parking — minimum required values per Table 4…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-13</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Medium and large vehicle parking&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Public corridors and egress access ways — minimum required values per …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-15</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Public corridors and egress access ways&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Public corridors and egress access ways — minimum required values per …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-15</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Stairwells (per floor) — minimum required values per Table 4-6:; glazi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-16</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Stairwells (per floor)&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Stairwells (per floor) — minimum required values per Table 4-6:; glazi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-16</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Basements — minimum required values per Table 4-6:; minimum height 2.4…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-17</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Basements&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Other habitable spaces — minimum required values per Table 4-6:; minim…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-2</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Other habitable spaces&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Sunshade enclosure — minimum required values per Table 4-6:; minimum h…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-21</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Sunshade enclosure&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Spaces attached to the main space — minimum required values per Table …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-3</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Spaces attached to the main space&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Spaces lit from a sunshade enclosure — minimum required values per Tab…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Spaces lit from a sunshade enclosure&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Storage spaces — minimum required values per Table 4-6:; minimum heigh…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-5</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Storage spaces&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Residential kitchen — minimum required values per Table 4-6:; minimum …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-6</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Residential kitchen&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Wall kitchen — minimum required values per Table 4-6:; minimum height …</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-7</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Wall kitchen&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Living and dining or multipurpose room — minimum required values per T…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-8</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Living and dining or multipurpose room&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Kitchen and dining room — minimum required values per Table 4-6:; mini…</span>
+          <span class="finding-id" style="color:#854F0B;">4-6-جدول-9</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;Kitchen and dining room&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum width or radius of a landing must be equal to the stair wi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_equal_to&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum width or radius of a landing must be equal to the stair wi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For daylighting through a window located in an eave for a used space, …</span>
+          <span class="finding-id" style="color:#854F0B;">4-7-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: must be at least (1/4 * covered floor area) + (2 * required light opening area)) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For daylighting through a window located in an eave for a used space, …</span>
+          <span class="finding-id" style="color:#854F0B;">4-7-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The width (depth) of an eave must not exceed twice its length (project…</span>
+          <span class="finding-id" style="color:#854F0B;">4-7-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;eave&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For every use in buildings of groups 4 to 7, a free area in the buildi…</span>
+          <span class="finding-id" style="color:#854F0B;">4-8-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_connected_to&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The installation of protective devices on the building façade must com…</span>
+          <span class="finding-id" style="color:#854F0B;">5-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_obstruct&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all occupancies and spaces, providing safe egress routes and instal…</span>
+          <span class="finding-id" style="color:#854F0B;">5-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all occupancies and spaces, providing safe egress routes and instal…</span>
+          <span class="finding-id" style="color:#854F0B;">5-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum width of the circulation path in large and medium parking …</span>
+          <span class="finding-id" style="color:#854F0B;">5-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;circulation_path_large_medium&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum width of the circulation path in large and medium parking …</span>
+          <span class="finding-id" style="color:#854F0B;">5-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;circulation_path_small&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When a floor is inserted between levels within a dwelling space as par…</span>
+          <span class="finding-id" style="color:#854F0B;">5-2-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;upper_part&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">When a floor is inserted between levels within a dwelling space as par…</span>
+          <span class="finding-id" style="color:#854F0B;">5-2-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;lower_part&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the design and construction of public buildings and residential com…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject &#x27;building entrance&#x27; to a room category</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all public parking areas and large and medium private parking areas…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;vehicle_entry_exit_door&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all public parking areas and large and medium private parking areas…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The entrance to an enclosed play area must be equipped with an appropr…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_lock_access_control&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All residential spaces must be ventilated naturally, or in combination…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_direct_connection_to&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5, courtyards or passages that provide lig…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5, courtyards or passages that provide lig…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The openings of sanitary and kitchen spaces must not open onto the sun…</span>
+          <span class="finding-id" style="color:#854F0B;">5-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_open_onto&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The height of corridors must correspond to the mandatory height of the…</span>
+          <span class="finding-id" style="color:#854F0B;">5-4-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_equal_to&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">A protrusion in passages must not be located within the area of electr…</span>
+          <span class="finding-id" style="color:#854F0B;">5-4-5-4-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_in&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The installation and use of a chain or safety lock is permitted only f…</span>
+          <span class="finding-id" style="color:#854F0B;">5-5-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: must_be_openable_from_inside_without_key) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-5-5-4 General requirements
+1-1-5-5-4 The floor area, dimensions and …</span>
+          <span class="finding-id" style="color:#854F0B;">5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;kitchen floor area&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-5-5-4 General requirements
+1-1-5-5-4 The floor area, dimensions and …</span>
+          <span class="finding-id" style="color:#854F0B;">5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;kitchen width between main walls&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-5-5-4 General requirements
+1-1-5-5-4 The floor area, dimensions and …</span>
+          <span class="finding-id" style="color:#854F0B;">5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;free work area in kitchen&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-5-5-4 General requirements
+1-1-5-5-4 The floor area, dimensions and …</span>
+          <span class="finding-id" style="color:#854F0B;">5-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;clearance from shelves&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Flooring and wall covering: In all buildings, the walls of washrooms a…</span>
+          <span class="finding-id" style="color:#854F0B;">5-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: in washrooms_and_toilets) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The maximum number of steps between two landings in buildings used by …</span>
+          <span class="finding-id" style="color:#854F0B;">5-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: for buildings used by persons with disabilities or limited mobility) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Carrying out permanent activities in rescue stations and installing us…</span>
+          <span class="finding-id" style="color:#854F0B;">5-8-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_occupied_by&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum required width of straight corridors and internal stairs o…</span>
+          <span class="finding-id" style="color:#854F0B;">6-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;corridor_or_internal_stair&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum required width of straight corridors and internal stairs o…</span>
+          <span class="finding-id" style="color:#854F0B;">6-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The entrances of buildings and occupied units must be arranged so that…</span>
+          <span class="finding-id" style="color:#854F0B;">6-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_arranged_to_ensure&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Safe egress routes in buildings must be arranged so that, in addition …</span>
+          <span class="finding-id" style="color:#854F0B;">6-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_provide&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Safe egress routes in buildings must be arranged so that, in addition …</span>
+          <span class="finding-id" style="color:#854F0B;">6-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In public parking areas, covered ramps longer than 20 meters are allow…</span>
+          <span class="finding-id" style="color:#854F0B;">6-2-10-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: length &gt; 20 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">For lengths less than 20 meters the maximum allowed slope is 17%; howe…</span>
+          <span class="finding-id" style="color:#854F0B;">6-2-10-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: length &lt;= 20 m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The maximum slope of the first and last meter must be equal to or less…</span>
+          <span class="finding-id" style="color:#854F0B;">6-2-10-5-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: first_and_last_meter) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If natural lighting cannot be provided through a regular window in the…</span>
+          <span class="finding-id" style="color:#854F0B;">6-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: if no regular window possible) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In small private parking areas, if there is a separate pedestrian entr…</span>
+          <span class="finding-id" style="color:#854F0B;">6-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: separate_pedestrian_entrance_present) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In small private parking areas, if there is a separate pedestrian entr…</span>
+          <span class="finding-id" style="color:#854F0B;">6-3-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5, if courtyards or passages are used sole…</span>
+          <span class="finding-id" style="color:#854F0B;">6-3-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5, if courtyards or passages are used sole…</span>
+          <span class="finding-id" style="color:#854F0B;">6-3-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In this sunroom enclosure, heating or cooling installations that use s…</span>
+          <span class="finding-id" style="color:#854F0B;">6-3-9-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_installed_unless&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The use of continuous glass facades on residential buildings facing st…</span>
+          <span class="finding-id" style="color:#854F0B;">6-4-4-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_face&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-6-4-5-4 For providing the required natural light and ventilation of …</span>
+          <span class="finding-id" style="color:#854F0B;">6-4-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when window area is less than the required minimum) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum clear height of steps and their landings along the entire …</span>
+          <span class="finding-id" style="color:#854F0B;">6-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;step_and_landing_clear_height&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 4 and 5, the rescue station must be at least 0.…</span>
+          <span class="finding-id" style="color:#854F0B;">6-8-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;rescue_station_width&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 4 and 5, the rescue station must be at least 0.…</span>
+          <span class="finding-id" style="color:#854F0B;">6-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: per_additional_floor_up_to_max_0.5_m) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In internal stairs of residential units that are not required to be ac…</span>
+          <span class="finding-id" style="color:#854F0B;">7-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_installed_on_one_side_if_not_accessible_or_level_difference_gt_0.70m&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In internal stairs of residential units that are not required to be ac…</span>
+          <span class="finding-id" style="color:#854F0B;">7-1-1-7-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If semi-open spaces are located within an access or egress route, in a…</span>
+          <span class="finding-id" style="color:#854F0B;">7-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_comply_with&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If semi-open spaces are located within an access or egress route, in a…</span>
+          <span class="finding-id" style="color:#854F0B;">7-1-7-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Taking security measures for the building and entrance (such as instal…</span>
+          <span class="finding-id" style="color:#854F0B;">7-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_security_measures&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the design and construction of buildings, in accordance with sectio…</span>
+          <span class="finding-id" style="color:#854F0B;">7-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_accommodate&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the design and construction of buildings, in accordance with sectio…</span>
+          <span class="finding-id" style="color:#854F0B;">7-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The maximum slope for open ramps in medium and large private parking a…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;open_ramp&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the building has a dry sauna, it must have at least one door that c…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;sauna window&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the building has a dry sauna, it must have at least one door that c…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the building has a dry sauna, it must have at least one door that c…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-13-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;sauna window&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">If the building has a dry sauna, it must have at least one door that c…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-13-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Glazing rule not in a directly checkable ratio form — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The required lighting and ventilation of the spaces, provided the cond…</span>
+          <span class="finding-id" style="color:#854F0B;">7-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;may_be_provided_via_sunroom_if_requirements_met&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites smaller than 200 square…</span>
+          <span class="finding-id" style="color:#854F0B;">7-3-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites smaller than 200 square…</span>
+          <span class="finding-id" style="color:#854F0B;">7-3-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites smaller than 200 square…</span>
+          <span class="finding-id" style="color:#854F0B;">7-3-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;courtyard&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites smaller than 200 square…</span>
+          <span class="finding-id" style="color:#854F0B;">7-3-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings with four or more above‑ground floors, at least one publi…</span>
+          <span class="finding-id" style="color:#854F0B;">7-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_extend_to&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 4 and 6 on northern plots, whenever the rescue …</span>
+          <span class="finding-id" style="color:#854F0B;">7-8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_pass_through&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 4 and 6 on northern plots, whenever the rescue …</span>
+          <span class="finding-id" style="color:#854F0B;">7-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_suitable_for&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In each residential unit with a floor area of 75 square meters or more…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: unit_floor_area &gt;= 75 m2) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential units with a floor area less than 75 square meters, tha…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: unit_floor_area &lt; 75 m2) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum width of other accommodation spaces and rooms in residenti…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-1-7-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;other_accommodation_space_or_room&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-8-1-5-4  The slope of pedestrian passages that are located in the ma…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: located in main access or egress route) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">1-8-1-5-4  The slope of pedestrian passages that are located in the ma…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-8-1-5-4  Slopes must have landings at the top and bottom, at turning…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;landing&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-8-1-5-4  Slopes must have landings at the top and bottom, at turning…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">2-8-1-5-4  Slopes must have landings at the top and bottom, at turning…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">3-8-1-5-4  The width of slopes located in the main access and egress r…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: must equal required main corridor width) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">3-8-1-5-4  The width of slopes located in the main access and egress r…</span>
+          <span class="finding-id" style="color:#854F0B;">8-1-5-4c</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: accessibility for disabled persons not mandatory) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Installation of a chain lock and eye bolt on the entrance doors of res…</span>
+          <span class="finding-id" style="color:#854F0B;">8-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_have_chain_and_eye_bolt&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In building design, emergency routes from outside the building must be…</span>
+          <span class="finding-id" style="color:#854F0B;">8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_provided_from&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In building design, emergency routes from outside the building must be…</span>
+          <span class="finding-id" style="color:#854F0B;">8-12-9-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Providing emergency routes in a building does not eliminate the mandat…</span>
+          <span class="finding-id" style="color:#854F0B;">8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_replace&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Providing emergency routes in a building does not eliminate the mandat…</span>
+          <span class="finding-id" style="color:#854F0B;">8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The maximum slope for covered ramps in small private parking areas is …</span>
+          <span class="finding-id" style="color:#854F0B;">8-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;covered_ramp&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All dwelling rooms must have at least one entrance door complying with…</span>
+          <span class="finding-id" style="color:#854F0B;">8-2-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Object &#x27;door_height&#x27; not mapped to a measurable value — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The use of sliding or folding doors between bedrooms and annexed space…</span>
+          <span class="finding-id" style="color:#854F0B;">8-2-5-4d</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_main_entrance&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites of 200 square meters or…</span>
+          <span class="finding-id" style="color:#854F0B;">8-3-8-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: if site area &gt;= 200 m2) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In buildings of groups 1 to 5 located on sites of 200 square meters or…</span>
+          <span class="finding-id" style="color:#854F0B;">8-3-8-5-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: if site area &lt; 200 m2) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All glass surfaces with a width greater than 90 m and an area greater …</span>
+          <span class="finding-id" style="color:#854F0B;">8-4-4-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: adjacent_to open_space_or_passage) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All glass surfaces with a width greater than 90 m and an area greater …</span>
+          <span class="finding-id" style="color:#854F0B;">8-4-4-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All glass surfaces with a width greater than 90 m and an area greater …</span>
+          <span class="finding-id" style="color:#854F0B;">8-4-4-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: adjacent_to open_space_or_passage) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">All glass surfaces with a width greater than 90 m and an area greater …</span>
+          <span class="finding-id" style="color:#854F0B;">8-4-4-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Window faces external open space / light well — site condition cannot be verified from a 2D plan; confirm on site</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building that has a ramp to its roof, access to the roof must be …</span>
+          <span class="finding-id" style="color:#854F0B;">8-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_provided_through&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In a building that has a ramp to its roof, access to the roof must be …</span>
+          <span class="finding-id" style="color:#854F0B;">8-7-1-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Stair-related rule but no stair element detected — confirm whether a stair is required for this plan</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum distance of group 7 buildings from adjacent boundaries, wh…</span>
+          <span class="finding-id" style="color:#854F0B;">8-8-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: vehicular_access_required_for_group_7) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">The minimum distance of group 7 buildings from adjacent boundaries, wh…</span>
+          <span class="finding-id" style="color:#854F0B;">8-8-12-9-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: pedestrian_access_required_for_group_5) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In residential occupancies, the height of any accommodation space of 1…</span>
+          <span class="finding-id" style="color:#854F0B;">9-1-1-7-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: when more than 50% of floor area and more than 75% of living room or hall area) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Door and window hinges in buildings and public and residential occupan…</span>
+          <span class="finding-id" style="color:#854F0B;">9-10-12-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_not_be_accessible_from_outside&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Providing separate vehicle entry and exit in large public parking area…</span>
+          <span class="finding-id" style="color:#854F0B;">9-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Relation &#x27;must_be_separate&#x27; not handled by topology agent — needs review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">Providing separate vehicle entry and exit in large public parking area…</span>
+          <span class="finding-id" style="color:#854F0B;">9-2-10-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all covered pools, depending on the type of use and the number of u…</span>
+          <span class="finding-id" style="color:#854F0B;">9-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Conditional rule (condition: for public covered pools) — needs human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In all covered pools, depending on the type of use and the number of u…</span>
+          <span class="finding-id" style="color:#854F0B;">9-2-13-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Egress reachability OK; specific egress details (width, signage, swing direction) need human review</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #EF9F27; background:#FAEEDA;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#854F0B;">In the vicinity of or above a false ceiling, any water, sewage, gas pi…</span>
+          <span class="finding-id" style="color:#854F0B;">9-4-9-4</span>
+        </div>
+        <p class="finding-msg" style="color:#633806;">Could not map subject/object to room categories (subject=&#x27;any water, sewage, gas pipe, canal, or similar installations&#x27;, object=&#x27;vents, supporting network and other parts of the false ceiling&#x27;)</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">Dwelling spaces must have a minimum floor area of 50/6 square meters.</span>
+          <span class="finding-id" style="color:#0F6E56;">1-2-2-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">Room_01: area = 9.0 m (required &gt;= 8.33 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">The finished horizontal dimension of the smaller side of any sanitary …</span>
+          <span class="finding-id" style="color:#0F6E56;">1-2-6-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">Room_bath: minimum horizontal dimension = 4.0 m (required &gt;= 1.0 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">Each dwelling space must have at least one door and one glazed window …</span>
+          <span class="finding-id" style="color:#0F6E56;">1-3-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">All room_bedroom rooms can reach an exit — compliant</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#0F6E56;">1-5-1-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">D-01: clear width = 0.9 m (required &gt;= 0.9 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">The main &quot;door&quot; must be of hinged type with a minimum clear width of 0…</span>
+          <span class="finding-id" style="color:#0F6E56;">1-5-1-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">D-front: clear width = 1.0 m (required &gt;= 0.9 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">The minimum free net floor area of the kitchen (excluding shelf/cabine…</span>
+          <span class="finding-id" style="color:#0F6E56;">10-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">Room_kit: free floor area = 6.0 m (required &gt;= 2.75 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">A dwelling space must have a minimum width of 15/2 meters.</span>
+          <span class="finding-id" style="color:#0F6E56;">2-2-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">Room_01: width = 9.0 m (required &gt;= 7.5 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">Requirements for sanitary spaces with skylight lighting: For providing…</span>
+          <span class="finding-id" style="color:#0F6E56;">4-6-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">All room_bathroom rooms can reach an exit — compliant</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">If natural lighting cannot be provided through a regular window in the…</span>
+          <span class="finding-id" style="color:#0F6E56;">6-2-5-4</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">All habitable rooms meet glazing ratio &lt;= 0.5 — compliant</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">All dwelling rooms must have at least one entrance door complying with…</span>
+          <span class="finding-id" style="color:#0F6E56;">8-2-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">D-01: minimum = 0.9 m (required &gt;= 0.8 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">All dwelling rooms must have at least one entrance door complying with…</span>
+          <span class="finding-id" style="color:#0F6E56;">8-2-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">D-07: minimum = 0.8 m (required &gt;= 0.8 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">All dwelling rooms must have at least one entrance door complying with…</span>
+          <span class="finding-id" style="color:#0F6E56;">8-2-5-4a</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">D-front: minimum = 1.0 m (required &gt;= 0.8 m) → PASS</p>
+      </div>
+
+      <div class="finding" style="border-left:3px solid #1D9E75; background:#E1F5EE;">
+        <div class="finding-head">
+          <span class="finding-title" style="color:#0F6E56;">Over the remaining floor area of these spaces and over the entire area…</span>
+          <span class="finding-id" style="color:#0F6E56;">9-1-1-7-4b</span>
+        </div>
+        <p class="finding-msg" style="color:#085041;">Room_01: height = 9.0 m (required &gt;= 2.4 m) → PASS</p>
+      </div>
+
+  <div class="footer">
+    <strong>Methodology.</strong> Numeric and spatial verdicts (PASS/FAIL) are produced by
+    deterministic checks against the building model. Rules that depend on information not
+    derivable from the plan — site conditions, interpretive requirements — are flagged
+    "review" for a qualified professional to confirm; they are never auto-judged.
+    Scope: M-4 residential. Engine runtime: 3.83s.
+    This report is a decision-support tool and does not replace professional certification.
+  </div>
+
+</div>
+</body>
+</html>
