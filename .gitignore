@@ -151,6 +151,8 @@ $RECYCLE.BIN/
 
 # Project specific
 outputs/
+compliance_jobs/
+review_store.json
 *.png
 *.jpg
 *.jpeg
@@ -175,6 +177,7 @@ logs/
 *.tmp
 *.temp
 *.bak
+/tmp/
 
 # Model outputs
 plan*.json
