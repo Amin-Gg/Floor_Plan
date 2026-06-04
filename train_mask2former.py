@@ -112,10 +112,10 @@ logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Multi-GPU + RTX 4090 (Ada Lovelace) performance switches
+# GPU performance switches (single A100 40 GB; multi-GPU still supported)
 # ─────────────────────────────────────────────────────────────────────────────
 # TF32 gives a large matmul/conv speed-up on Ampere and newer GPUs (incl. the
-# RTX 4090) at a precision cost that is negligible for training. Safe to leave on.
+# A100) at a precision cost that is negligible for training. Safe to leave on.
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True   # autotune conv kernels (inputs are fixed-size after the processor)
@@ -780,18 +780,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_steps",   type=int,   default=100)
     parser.add_argument("--eval_steps",   type=int,   default=100)
     parser.add_argument("--fp16",         action="store_true",
-                        help="fp16 mixed precision. Works on RTX 4090, but bf16 is "
+                        help="fp16 mixed precision. Works on the A100, but bf16 is "
                              "usually more stable for this model — see --bf16.")
     parser.add_argument("--bf16",         action="store_true",
-                        help="bf16 mixed precision. Recommended on RTX 4090 (Ada): same "
+                        help="bf16 mixed precision. Recommended on the A100 (Ampere): same "
                              "speed as fp16 but fp32 exponent range, so no gradient "
                              "overflow / NaN. Mutually exclusive with --fp16.")
     parser.add_argument("--num_workers",  type=int, default=None,
-                        help="DataLoader workers PER GPU. Default (CPU cores / 2) / num_GPUs; "
-                             "on 32 cores + 2 GPUs that is 8 workers per rank, 16 total.")
+                        help="DataLoader workers per GPU. Default (CPU cores / 2) / num_GPUs. "
+                             "On a single GPU with many cores, 8-12 is a good value.")
     parser.add_argument("--grad_checkpoint", action="store_true",
                         help="Enable gradient checkpointing: large VRAM saving (~25%% slower). "
-                             "Use it to fit per-device batch 2 on a 24 GB RTX 4090.")
+                             "NOT needed on a 40 GB A100 at batch 4; only use it if you push "
+                             "the batch size high enough to run out of memory.")
     parser.add_argument("--resume_from_checkpoint", default=None,
                         help="Path to a checkpoint directory to resume training from.")
     parser.add_argument("--no_augment",   action="store_true",
@@ -813,20 +814,20 @@ def main() -> None:
     args = parse_args()
 
     # ── Precision: fp16 vs bf16 ───────────────────────────────────────────────
-    # The RTX 4090 (Ada Lovelace) has native bf16. bf16 keeps fp32's exponent
-    # range, so it avoids the gradient-overflow / NaN failures that fp16 can
-    # trigger in Mask2Former's Hungarian matcher and large mask logits — at the
-    # same speed. For this model bf16 is the safer choice; fp16 stays supported.
+    # The A100 (Ampere) has native bf16. bf16 keeps fp32's exponent range, so it
+    # avoids the gradient-overflow / NaN failures that fp16 can trigger in
+    # Mask2Former's Hungarian matcher and large mask logits — at the same speed.
+    # For this model bf16 is the safer choice; fp16 stays supported.
     if args.fp16 and args.bf16:
         raise SystemExit("Use only one of --fp16 / --bf16, not both.")
     use_fp16 = args.fp16
     use_bf16 = args.bf16
     if use_bf16:
-        logger.info("Precision: bf16 (recommended on RTX 4090).")
+        logger.info("Precision: bf16 (recommended on the A100).")
     elif use_fp16:
         logger.info("Precision: fp16.")
     else:
-        logger.info("Precision: fp32 — consider --bf16 on RTX 4090 for ~2x throughput.")
+        logger.info("Precision: fp32 — consider --bf16 on the A100 for ~2x throughput.")
 
     dataset_dir = Path(args.dataset_dir)
     train_img   = dataset_dir / "train" / "images"
@@ -882,7 +883,8 @@ def main() -> None:
     logger.info("Model ready — %d classes: %s", num_labels, list(LABEL2ID.keys()))
 
     # Optional gradient checkpointing: trades ~25% compute for a large VRAM saving.
-    # On a 24 GB RTX 4090 this is what lets per-device batch 2 fit with Swin-Large.
+    # NOT needed on a 40 GB A100 at batch 4; only enable it if you raise the batch
+    # size enough to hit an out-of-memory error.
     if args.grad_checkpoint:
         model.gradient_checkpointing_enable()
         model.config.use_cache = False
@@ -893,10 +895,10 @@ def main() -> None:
     train_dataset = FloorPlanDataset(train_img, train_ann, processor, augment=use_augment)
     val_dataset   = FloorPlanDataset(val_img,   val_ann,   processor, augment=False)
 
-    # ── Auto worker count (DDP-aware) ─────────────────────────────────────────
-    # Under DDP each rank spawns its OWN workers, so the core budget must be split
-    # across GPUs — otherwise 2 ranks × N workers oversubscribes the 32 cores.
-    # --num_workers overrides this when you want to tune it by hand.
+    # ── Auto worker count (GPU-aware) ─────────────────────────────────────────
+    # On a single A100 this is just (CPU cores / 2). Under multi-GPU each rank
+    # spawns its own workers, so the budget is divided across GPUs to avoid
+    # oversubscribing the cores. --num_workers overrides this to tune by hand.
     if args.num_workers is not None:
         num_workers = max(0, args.num_workers)
     else:
