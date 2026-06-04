@@ -112,6 +112,22 @@ logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Multi-GPU + RTX 4090 (Ada Lovelace) performance switches
+# ─────────────────────────────────────────────────────────────────────────────
+# TF32 gives a large matmul/conv speed-up on Ampere and newer GPUs (incl. the
+# RTX 4090) at a precision cost that is negligible for training. Safe to leave on.
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+torch.backends.cudnn.benchmark = True   # autotune conv kernels (inputs are fixed-size after the processor)
+
+# WORLD_SIZE / LOCAL_RANK are injected by `torchrun` / `accelerate launch` when
+# running under DistributedDataParallel (DDP). They default to a single process.
+WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
+LOCAL_RANK = int(os.environ.get("LOCAL_RANK", "0"))
+IS_DISTRIBUTED = WORLD_SIZE > 1
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Debug mode: PyTorch anomaly detection
 # ─────────────────────────────────────────────────────────────────────────────
 # When DEBUG_EAGER=true is set in the environment, PyTorch's autograd anomaly
@@ -605,6 +621,14 @@ class PerClassIoUCallback(TrainerCallback):
     def on_evaluate(self, args, state, control, model=None, **kwargs):
         if model is None or self.num_eval_images == 0:
             return
+        # DDP-safety: under multi-GPU (torchrun / accelerate) this callback fires on
+        # EVERY rank. Running the IoU eval on all ranks duplicates the work and, worse,
+        # makes every rank append to the same per_class_iou.csv → interleaved/corrupted
+        # rows. Restrict it to the main process. The forward pass below uses the
+        # (unwrapped) model in inference_mode with no collective ops, so skipping it on
+        # the other ranks does NOT desynchronise DDP.
+        if not state.is_world_process_zero:
+            return
         try:
             self._compute_and_log(model, state)
         except Exception as exc:
@@ -756,7 +780,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_steps",   type=int,   default=100)
     parser.add_argument("--eval_steps",   type=int,   default=100)
     parser.add_argument("--fp16",         action="store_true",
-                        help="Mixed-precision training. Recommended for GPU >= 16 GB VRAM.")
+                        help="fp16 mixed precision. Works on RTX 4090, but bf16 is "
+                             "usually more stable for this model — see --bf16.")
+    parser.add_argument("--bf16",         action="store_true",
+                        help="bf16 mixed precision. Recommended on RTX 4090 (Ada): same "
+                             "speed as fp16 but fp32 exponent range, so no gradient "
+                             "overflow / NaN. Mutually exclusive with --fp16.")
+    parser.add_argument("--num_workers",  type=int, default=None,
+                        help="DataLoader workers PER GPU. Default (CPU cores / 2) / num_GPUs; "
+                             "on 32 cores + 2 GPUs that is 8 workers per rank, 16 total.")
+    parser.add_argument("--grad_checkpoint", action="store_true",
+                        help="Enable gradient checkpointing: large VRAM saving (~25%% slower). "
+                             "Use it to fit per-device batch 2 on a 24 GB RTX 4090.")
     parser.add_argument("--resume_from_checkpoint", default=None,
                         help="Path to a checkpoint directory to resume training from.")
     parser.add_argument("--no_augment",   action="store_true",
@@ -777,6 +812,22 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
+    # ── Precision: fp16 vs bf16 ───────────────────────────────────────────────
+    # The RTX 4090 (Ada Lovelace) has native bf16. bf16 keeps fp32's exponent
+    # range, so it avoids the gradient-overflow / NaN failures that fp16 can
+    # trigger in Mask2Former's Hungarian matcher and large mask logits — at the
+    # same speed. For this model bf16 is the safer choice; fp16 stays supported.
+    if args.fp16 and args.bf16:
+        raise SystemExit("Use only one of --fp16 / --bf16, not both.")
+    use_fp16 = args.fp16
+    use_bf16 = args.bf16
+    if use_bf16:
+        logger.info("Precision: bf16 (recommended on RTX 4090).")
+    elif use_fp16:
+        logger.info("Precision: fp16.")
+    else:
+        logger.info("Precision: fp32 — consider --bf16 on RTX 4090 for ~2x throughput.")
+
     dataset_dir = Path(args.dataset_dir)
     train_img   = dataset_dir / "train" / "images"
     train_ann   = dataset_dir / "train" / "annotations.json"
@@ -791,10 +842,12 @@ def main() -> None:
                 f"to regenerate the COCO dataset on local disk."
             )
 
-    effective_batch = args.batch_size * args.grad_accum
+    # Effective batch includes the data-parallel replicas (GPUs) under DDP.
+    effective_batch = args.batch_size * args.grad_accum * max(1, WORLD_SIZE)
     logger.info(
-        "Effective batch size: %d  (%d per-device × %d grad_accum steps)",
-        effective_batch, args.batch_size, args.grad_accum
+        "Effective batch size: %d  (%d per-device × %d grad_accum × %d GPU%s)",
+        effective_batch, args.batch_size, args.grad_accum,
+        max(1, WORLD_SIZE), "" if WORLD_SIZE == 1 else "s",
     )
 
     # ── Processor ────────────────────────────────────────────────────────
@@ -828,14 +881,28 @@ def main() -> None:
     )
     logger.info("Model ready — %d classes: %s", num_labels, list(LABEL2ID.keys()))
 
+    # Optional gradient checkpointing: trades ~25% compute for a large VRAM saving.
+    # On a 24 GB RTX 4090 this is what lets per-device batch 2 fit with Swin-Large.
+    if args.grad_checkpoint:
+        model.gradient_checkpointing_enable()
+        model.config.use_cache = False
+        logger.info("Gradient checkpointing ENABLED (lower VRAM, ~25%% slower).")
+
     # ── Datasets ──────────────────────────────────────────────────────────────
     use_augment = not args.no_augment
     train_dataset = FloorPlanDataset(train_img, train_ann, processor, augment=use_augment)
     val_dataset   = FloorPlanDataset(val_img,   val_ann,   processor, augment=False)
 
-    # ── Auto worker count ─────────────────────────────────────────────────────
-    num_workers = max(1, (os.cpu_count() or 4) // 2)
-    logger.info("DataLoader workers: %d", num_workers)
+    # ── Auto worker count (DDP-aware) ─────────────────────────────────────────
+    # Under DDP each rank spawns its OWN workers, so the core budget must be split
+    # across GPUs — otherwise 2 ranks × N workers oversubscribes the 32 cores.
+    # --num_workers overrides this when you want to tune it by hand.
+    if args.num_workers is not None:
+        num_workers = max(0, args.num_workers)
+    else:
+        total_cores = os.cpu_count() or 4
+        num_workers = max(1, (total_cores // 2) // max(1, WORLD_SIZE))
+    logger.info("DataLoader workers per rank: %d  (world_size=%d)", num_workers, WORLD_SIZE)
 
     # ── Auto-cap eval_steps / save_steps to total training steps ─────────────
     # With a small smoke-test dataset (e.g. 50 plans, 2 epochs) the total
@@ -844,7 +911,7 @@ def main() -> None:
     # We cap both to max(1, total_steps // 2) so at least one eval and one
     # checkpoint always occur regardless of dataset size.
     steps_per_epoch = max(1, len(train_dataset) //
-                          (args.batch_size * args.grad_accum))
+                          (args.batch_size * args.grad_accum * max(1, WORLD_SIZE)))
     total_steps     = steps_per_epoch * args.epochs
     effective_eval_steps = min(args.eval_steps, max(1, total_steps // 2))
     effective_save_steps = min(args.save_steps, max(1, total_steps // 2))
@@ -880,8 +947,15 @@ def main() -> None:
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         greater_is_better=False,
-        fp16=args.fp16,
+        fp16=use_fp16,
+        bf16=use_bf16,
         dataloader_num_workers=num_workers,
+        dataloader_pin_memory=True,
+        dataloader_persistent_workers=(num_workers > 0),
+        # DDP: every Mask2Former parameter is used in each forward pass, so the
+        # unused-parameter search is pure overhead — disable it. If a future change
+        # ever leaves params unused you'll get a clear error; flip this to True then.
+        ddp_find_unused_parameters=False,
         logging_dir=os.path.join(args.output_dir, "logs"),
         logging_steps=25,
         report_to="none",
