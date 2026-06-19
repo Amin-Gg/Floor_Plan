@@ -335,6 +335,10 @@ class FloorPlanDataset(Dataset):
         self.image_dir = Path(image_dir)
         self.processor = processor
         self.augmenter = FloorPlanAugmenter() if augment else None
+        # H2: count samples that produced no usable instances (e.g. everything
+        # shrank to nothing after the processor resize). Used to rate-limit the
+        # warning so a recurring problem is visible without spamming the log.
+        self._n_skipped = 0
 
         with open(annotation_file, "r", encoding="utf-8") as f:
             coco = json.load(f)
@@ -365,6 +369,34 @@ class FloorPlanDataset(Dataset):
         return len(self.image_ids)
 
     def __getitem__(self, idx: int) -> dict:
+        # H2 — Never let one unusable image crash the run.
+        # PyTorch's DataLoader does NOT catch exceptions raised in a worker:
+        # a single bad sample (e.g. every instance shrinks to nothing after the
+        # processor resize) would tear down the whole training run mid-epoch.
+        # Instead, _load_one() returns None for an unusable sample and we
+        # resample a different index. The attempt budget is bounded so that a
+        # genuinely broken dataset (every image unusable) still fails loudly
+        # rather than looping forever.
+        n = len(self.image_ids)
+        max_attempts = min(n, 50)
+        for attempt in range(max_attempts):
+            sample = self._load_one(idx)
+            if sample is not None:
+                return sample
+            # Pick a different index and try again. random.randrange is fine
+            # under multiple DataLoader workers (each worker is independently
+            # seeded) and the replacement is uniform over the dataset.
+            idx = random.randrange(n)
+        raise RuntimeError(
+            f"FloorPlanDataset: {max_attempts} consecutive samples were unusable "
+            f"(no instances survived preprocessing). This indicates a dataset-wide "
+            f"problem — most likely the processor is downscaling plans so far that "
+            f"all masks vanish. Check the processor `size` and the source annotations."
+        )
+
+    def _load_one(self, idx: int) -> Optional[dict]:
+        """Load a single sample. Returns None (not raises) when the sample yields
+        no usable instances, so __getitem__ can resample instead of crashing."""
         image_id    = self.image_ids[idx]
         image_info  = self.images[image_id]
         annotations = self.ann_by_image[image_id]
@@ -394,11 +426,15 @@ class FloorPlanDataset(Dataset):
 
         # This should not happen because __init__ already filtered valid images,
         # but guard defensively in case the dataset changes between init and getitem.
+        # H2: return None (caller resamples) rather than raising and killing the run.
         if not instance_masks:
-            raise RuntimeError(
-                f"Image {image_id} has no valid annotations after filtering. "
-                "This should have been caught during dataset initialization."
-            )
+            self._n_skipped += 1
+            if self._n_skipped <= 10 or self._n_skipped % 100 == 0:
+                logger.warning(
+                    "Image %s has no valid annotations after filtering — resampling "
+                    "(total skipped so far: %d).", image_id, self._n_skipped
+                )
+            return None
 
         # ── Pack per-polygon masks into one instance_map for augmentation ────
         # Using a single packed int32 array (one instance ID per pixel) keeps
@@ -454,12 +490,22 @@ class FloorPlanDataset(Dataset):
             mask_label_list.append(binary_resized)
             class_label_list.append(instance_id_to_semantic_id[int(inst_id)])
 
+        # H2: if every instance vanished during the resize, return None so the
+        # caller resamples a different image instead of crashing the worker.
+        # A high skip rate here is the signal that the processor `size` is too
+        # small for these plans (see Tier-0 item C2) — the rate-limited warning
+        # surfaces that without flooding the log.
         if not mask_label_list:
-            raise RuntimeError(
-                f"Image {image_id} has no instances left after resize to "
-                f"({target_h},{target_w}). Original instance count: "
-                f"{len(np.unique(instance_map)) - 1}."
-            )
+            self._n_skipped += 1
+            if self._n_skipped <= 10 or self._n_skipped % 100 == 0:
+                logger.warning(
+                    "Image %s had %d instance(s) but none survived resize to "
+                    "(%d,%d) — resampling (total skipped so far: %d). If this is "
+                    "frequent, the processor is downscaling plans too aggressively.",
+                    image_id, len(np.unique(instance_map)) - 1,
+                    target_h, target_w, self._n_skipped,
+                )
+            return None
 
         mask_labels  = torch.from_numpy(np.stack(mask_label_list)).float()  # (N, Hp, Wp)
         class_labels = torch.tensor(class_label_list, dtype=torch.int64)    # (N,)

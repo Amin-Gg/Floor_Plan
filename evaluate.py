@@ -25,6 +25,7 @@ import json
 import argparse
 import logging
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import torch
@@ -133,7 +134,12 @@ def evaluate(checkpoint: str, dataset_dir: str,
         len(image_ids), conf_thresh
     )
 
-    metric = MeanAveragePrecision(iou_type="segm", class_metrics=True)
+    # H1: class_metrics=True gives per-class AP; extended_summary=True additionally
+    # exposes the raw COCO `precision` tensor (T, R, K, A, M) so we can read the
+    # AP@50 slice (T index 0) per class instead of only the IoU-averaged map.
+    metric = MeanAveragePrecision(
+        iou_type="segm", class_metrics=True, extended_summary=True
+    )
 
     for image_id in tqdm(image_ids, desc="Evaluating"):
         img_info    = images_by_id[image_id]
@@ -206,16 +212,66 @@ def evaluate(checkpoint: str, dataset_dir: str,
     map_results     = metric.compute()
     overall_map50   = float(map_results.get("map_50",          0.0))
     overall_map5095 = float(map_results.get("map",             0.0))
-    per_class_ap    = map_results.get("map_per_class",         [])
 
     results = {
         "mAP@50":    round(overall_map50,   4),
         "mAP@50:95": round(overall_map5095, 4),
     }
-    for i, cls_id in enumerate(sorted(ID2LABEL.keys())):
+
+    # H1 FIX — per-class AP must be aligned by the metric's `classes` field.
+    # torchmetrics returns map_per_class / the precision tensor indexed by the
+    # set of classes ACTUALLY PRESENT in the data (e.g. length 3 if only 3 of
+    # the 15 classes appear), NOT by a dense 0..NUM_CLASSES-1 range. The old
+    # code zipped map_per_class against sorted(ID2LABEL.keys()), so whenever a
+    # class was missing from val, every later class's AP was attributed to the
+    # WRONG class name (and absent classes were silently reported as 0.0000,
+    # indistinguishable from a class the model scored zero on).
+    #
+    # We now:
+    #   1. Map results strictly by `classes[i] -> value[i]`.
+    #   2. Report true AP@50 per class from the precision tensor (T index 0 =
+    #      IoU 0.50), falling back to the IoU-averaged map_per_class if the
+    #      extended summary is unavailable in the installed torchmetrics.
+    #   3. Mark classes with no ground truth in val as present=False, so "absent
+    #      from val" is never confused with "scored 0.0".
+    present_classes = [int(c) for c in map_results.get("classes", [])]
+    map_per_class   = map_results.get("map_per_class", [])
+
+    # Per-class AP@50 from the precision tensor, if available.
+    ap50_by_class: Dict[int, float] = {}
+    precision = map_results.get("precision", None)
+    if precision is not None and getattr(precision, "ndim", 0) == 5:
+        # precision shape: (T iou, R recall, K class, A area, M maxDet)
+        # AP@50 per class = mean of precision[T=0, :, k, A=0(all), M=-1(max)]
+        # over the valid (>-1) recall entries — the COCO averaging convention.
+        try:
+            for k, cls_id in enumerate(present_classes):
+                p = precision[0, :, k, 0, -1]
+                p = p[p > -1]
+                ap50_by_class[cls_id] = float(p.mean()) if p.numel() > 0 else float("nan")
+        except Exception as exc:   # noqa: BLE001 — never let reporting crash eval
+            logger.warning("Per-class AP@50 extraction failed (%s); "
+                           "falling back to IoU-averaged per-class AP.", exc)
+            ap50_by_class = {}
+
+    # IoU-averaged per-class AP (0.50:0.95), correctly aligned — used as the
+    # fallback and reported alongside AP@50 for context.
+    map5095_by_class: Dict[int, float] = {
+        int(cls_id): float(map_per_class[i])
+        for i, cls_id in enumerate(present_classes)
+        if i < len(map_per_class)
+    }
+
+    for cls_id in sorted(ID2LABEL.keys()):
         cls_name = ID2LABEL[cls_id]
-        ap_val   = float(per_class_ap[i]) if i < len(per_class_ap) else 0.0
-        results[cls_name] = {"ap": round(ap_val, 4)}
+        present  = cls_id in present_classes
+        ap50     = ap50_by_class.get(cls_id, map5095_by_class.get(cls_id, float("nan")))
+        ap5095   = map5095_by_class.get(cls_id, float("nan"))
+        results[cls_name] = {
+            "ap":         round(ap50,   4) if present and not np.isnan(ap50)   else None,
+            "ap_50_95":   round(ap5095, 4) if present and not np.isnan(ap5095) else None,
+            "present":    present,
+        }
 
     return results
 
@@ -248,13 +304,24 @@ def main():
         "EVALUATION RESULTS  (conf=%.2f  iou=%.2f)",
         args.conf_thresh, args.iou_thresh
     )
-    logger.info("%-12s  %8s", "Class", "AP@50")
+    logger.info("%-12s  %8s  %10s", "Class", "AP@50", "AP@.5:.95")
     logger.info("-" * 56)
     for key, val in results.items():
         if key.startswith("mAP"):
             continue
-        ap = val.get("ap", 0.0) if isinstance(val, dict) else 0.0
-        logger.info("%-12s  %8.4f", key, ap)
+        if not isinstance(val, dict):
+            continue
+        # H1: a class absent from the val set is shown as "—", never as 0.0000.
+        # "absent from val" and "scored zero" are different facts and the
+        # class-omission decision depends on telling them apart.
+        if not val.get("present", True):
+            logger.info("%-12s  %8s  %10s", key, "— absent", "—")
+            continue
+        ap50   = val.get("ap")
+        ap5095 = val.get("ap_50_95")
+        ap50_s   = f"{ap50:.4f}"   if isinstance(ap50,   (int, float)) else "n/a"
+        ap5095_s = f"{ap5095:.4f}" if isinstance(ap5095, (int, float)) else "n/a"
+        logger.info("%-12s  %8s  %10s", key, ap50_s, ap5095_s)
     logger.info("-" * 56)
     logger.info("%-12s  %8.4f", "mAP@50",    results.get("mAP@50",    0.0))
     logger.info("%-12s  %8.4f", "mAP@50:95", results.get("mAP@50:95", 0.0))
