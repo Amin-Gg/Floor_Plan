@@ -38,10 +38,30 @@ class Config:
     NUM_CLASSES              = 4
     GPU_COUNT                = 1
     IMAGES_PER_GPU           = 1
-    DETECTION_MIN_CONFIDENCE = 0.15
-    # Mask R-CNN requires IMAGE_MAX_DIM divisible by 64. 1600 preserves thin
-    # architectural lines (this is the value the Simsys base ran this .h5 with).
-    IMAGE_MAX_DIM            = 1600
+
+    # ── Inference config — VALIDATED VALUES from the repo that created the .h5 ─
+    # The original FloorPlanTo3D ran this exact weights file at the Matterport
+    # library defaults below. They are the authoritative settings for this .h5.
+    #
+    # TUNING (do this against YOUR plans once you can run inference):
+    #   DETECTION_MIN_CONFIDENCE
+    #     0.7  = validated baseline (high precision; may miss faint walls)
+    #     ↓0.5 / 0.3 = raise recall if real walls/doors are being MISSED
+    #     0.15 = what your Simsys base used (high recall, but more false
+    #            positives — only go this low if recall is genuinely a problem)
+    #   IMAGE_MAX_DIM
+    #     1024 = validated (matches the model's training scale; best fidelity)
+    #     1600 = more line detail, but objects appear larger vs trained anchors
+    #            (what Simsys used). Must stay divisible by 64.
+    DETECTION_MIN_CONFIDENCE = 0.7
+    IMAGE_MAX_DIM            = 1024     # divisible by 64
+    IMAGE_MIN_DIM            = 800
+    # Cap on detections per image. Library default is 100; raised to 256 so
+    # dense plans (many wall segments) don't get silently truncated. Raising
+    # this only ALLOWS more output — it never changes which objects are found.
+    DETECTION_MAX_INSTANCES  = 256
+    # Per-class NMS IoU threshold (library/original default — set explicitly).
+    DETECTION_NMS_THRESHOLD  = 0.3
 
     # ── Image processing ──────────────────────────────────────────────────────
     MAX_IMAGE_SIZE        = 2048    # pixels — prevent OOM
@@ -83,6 +103,9 @@ class Config:
             "IMAGES_PER_GPU":           cls.IMAGES_PER_GPU,
             "DETECTION_MIN_CONFIDENCE": cls.DETECTION_MIN_CONFIDENCE,
             "IMAGE_MAX_DIM":            cls.IMAGE_MAX_DIM,
+            "IMAGE_MIN_DIM":            cls.IMAGE_MIN_DIM,
+            "DETECTION_MAX_INSTANCES":  cls.DETECTION_MAX_INSTANCES,
+            "DETECTION_NMS_THRESHOLD":  cls.DETECTION_NMS_THRESHOLD,
         }
 
     @classmethod

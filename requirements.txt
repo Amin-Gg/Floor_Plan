@@ -1,21 +1,37 @@
-# Dependencies for FloorPlanTo3D API
-# Phase 1: detector reverted to Mask R-CNN (Keras/TensorFlow).
-# torch / transformers / training stack removed; your other upgrades kept.
+# Dependencies for FloorPlanTo3D API  —  UBUNTU SERVER build
+# Detector: Mask R-CNN (Keras/TensorFlow) + Supplementary YOLO (PyTorch)
+#
+# ┌────────────────────────────────────────────────────────────────────────┐
+# │ IMPORTANT — Python version:                                             │
+# │   TensorFlow 2.13 supports Python 3.8–3.11 ONLY (NOT 3.12+).            │
+# │   YOLO (ultralytics) supports >=3.8.                                    │
+# │   Use Python 3.10 or 3.11 on the server:                               │
+# │       python3.11 -m venv venv && source venv/bin/activate              │
+# │                                                                        │
+# │ System packages (install once, before pip):                            │
+# │   sudo apt-get update                                                   │
+# │   sudo apt-get install -y libgomp1                                      │
+# │   (libgomp1 is required by paddlepaddle. opencv-python-headless below   │
+# │    needs no libGL, so no further system libs are required.)             │
+# └────────────────────────────────────────────────────────────────────────┘
 
 # ==========================================
 # Core ML  (Mask R-CNN — Keras / TensorFlow)
 # ==========================================
-# macOS / Apple Silicon (matches the Simsys base this .h5 was proven on):
-tensorflow-macos==2.13.0
-tensorflow-metal==1.0.1
-# --- Linux / Windows: comment the TWO lines above and use this one instead: ---
-# tensorflow==2.13.0
+# CPU build (works everywhere; Mask R-CNN inference ~2–5 s/image on CPU).
+tensorflow==2.13.0
 keras==2.13.1
+# --- GPU (optional): TF 2.13 needs CUDA 11.8 + cuDNN 8.6 on the host.
+#     If that toolkit is installed, the line above already enables the GPU.
+#     Set GUNICORN_PRELOAD=false (gunicorn.conf.py) so CUDA isn't forked.
 
 # ==========================================
 # Computer Vision & Image Processing
 # ==========================================
-opencv-python==4.8.1.78
+# HEADLESS opencv: no libGL.so.1 dependency — correct for a server with no
+# display. (Plain opencv-python would crash on import with
+# "libGL.so.1: cannot open shared object file" on a headless box.)
+opencv-python-headless==4.8.1.78
 scikit-image==0.21.0
 Pillow==10.0.1
 imageio==2.31.5
@@ -32,8 +48,9 @@ python-Levenshtein==0.23.0
 # ==========================================
 # Scientific Computing
 # ==========================================
-# numpy pinned to 1.24.x for TensorFlow 2.13 + Matterport Mask R-CNN
-# compatibility. (Your Mask2Former branch used 1.26.4 — too new for TF 2.13.)
+# ⚠️ CRITICAL: numpy pinned to 1.24.3 for TensorFlow 2.13 + ultralytics compatibility.
+#    (Latest ultralytics needs >=1.23.0, but TensorFlow breaks on numpy 2.x.
+#     DO NOT upgrade numpy beyond 1.24.3.)
 numpy==1.24.3
 scipy==1.11.3
 matplotlib==3.7.2
@@ -71,9 +88,27 @@ python-dateutil==2.8.2
 # ==========================================
 gunicorn>=21.2.0
 
+# ── The NumPy pin is the load-bearing line ──────────────────────────────────
+# TensorFlow 2.13 (Mask R-CNN) needs numpy ~1.24 (<1.25).
+# The latest ultralytics (8.4.x) declares `numpy>=1.23.0` with NO upper cap.
+#   → numpy 1.24.3 satisfies BOTH, so they coexist in ONE process.
+# BUT: ultralytics has no upper bound, so a fresh `pip install` would pull
+# numpy 2.x and BREAK TensorFlow. Keeping numpy==1.24.3 pinned in your main
+# requirements.txt forces pip to keep 1.24.3 (it satisfies ultralytics' >=1.23.0).
+# DO NOT let pip upgrade numpy. Verify after install:
+#   python -c "import numpy;print(numpy.__version__)"  → must print 1.24.3
+
+# CPU PyTorch — torch>=1.8 satisfies the latest ultralytics; 2.1.2 is numpy-1.24-safe.
+# (Optional: bump to torch==2.2.2 / torchvision==0.17.2 — also numpy-1.24-safe —
+#  to pair with a newer ultralytics; not required for inference.)
+torch==2.1.2
+torchvision==0.16.2
+
+# Latest YOLO runtime (8.4.x). Capped <9 to avoid a hypothetical future major break.
+# To pin the exact latest at install time: ultralytics==8.4.72
+ultralytics>=8.4.0,<9.0.0
+
 # ==========================================
-# REMOVED in Phase 1 (Mask2Former / training only):
-#   torch, torchvision, transformers, accelerate,
-#   datasets, pycocotools, torchmetrics, tqdm
-# Re-add these only if you later pursue Option B (train Mask2Former).
+# (Removed in Phase 1: Mask2Former / training-only stack)
+# NOTE: torch/torchvision were previously removed, but added back above for Phase 4 YOLO.
 # ==========================================

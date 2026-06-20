@@ -54,8 +54,12 @@ class PredictionConfig(Config):
     GPU_COUNT                = app_config.GPU_COUNT            # 1
     IMAGES_PER_GPU           = app_config.IMAGES_PER_GPU       # 1
     DETECTION_MIN_CONFIDENCE = app_config.DETECTION_MIN_CONFIDENCE
-    # Larger input preserves thin architectural lines. Must be divisible by 64.
-    IMAGE_MAX_DIM            = app_config.IMAGE_MAX_DIM        # 1600
+    # Image scaling — match the resolution the .h5 was validated at.
+    IMAGE_MAX_DIM            = app_config.IMAGE_MAX_DIM        # 1024 (divisible by 64)
+    IMAGE_MIN_DIM            = app_config.IMAGE_MIN_DIM        # 800
+    # Output cap + NMS (see config/settings.py for rationale).
+    DETECTION_MAX_INSTANCES  = app_config.DETECTION_MAX_INSTANCES
+    DETECTION_NMS_THRESHOLD  = app_config.DETECTION_NMS_THRESHOLD
 
 
 def _resolve_weights_path() -> str:
