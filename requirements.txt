@@ -1,14 +1,16 @@
 # Dependencies for FloorPlanTo3D API
-# Flask Application Requirements
-# Optimized for Mask2Former + HuggingFace Trainer
+# Phase 1: detector reverted to Mask R-CNN (Keras/TensorFlow).
+# torch / transformers / training stack removed; your other upgrades kept.
 
 # ==========================================
-# Core ML Framework (Mask2Former Engine)
+# Core ML  (Mask R-CNN — Keras / TensorFlow)
 # ==========================================
-torch==2.1.2
-torchvision==0.16.2
-transformers==4.41.0
-accelerate==0.29.3
+# macOS / Apple Silicon (matches the Simsys base this .h5 was proven on):
+tensorflow-macos==2.13.0
+tensorflow-metal==1.0.1
+# --- Linux / Windows: comment the TWO lines above and use this one instead: ---
+# tensorflow==2.13.0
+keras==2.13.1
 
 # ==========================================
 # Computer Vision & Image Processing
@@ -17,9 +19,10 @@ opencv-python==4.8.1.78
 scikit-image==0.21.0
 Pillow==10.0.1
 imageio==2.31.5
+imgaug==0.4.0
 
 # ==========================================
-# Advanced OCR & String Matching
+# OCR  (kept from your upgrade — PaddleOCR + fuzzy matching)
 # ==========================================
 paddleocr==2.7.3
 paddlepaddle==2.5.2
@@ -29,7 +32,9 @@ python-Levenshtein==0.23.0
 # ==========================================
 # Scientific Computing
 # ==========================================
-numpy==1.26.4
+# numpy pinned to 1.24.x for TensorFlow 2.13 + Matterport Mask R-CNN
+# compatibility. (Your Mask2Former branch used 1.26.4 — too new for TF 2.13.)
+numpy==1.24.3
 scipy==1.11.3
 matplotlib==3.7.2
 
@@ -41,9 +46,15 @@ Flask-Cors==4.0.0
 Werkzeug==2.3.7
 
 # ==========================================
-# Image Processing & Augmentation
+# Validation & API Documentation (kept from your upgrade)
 # ==========================================
-# (augmentation handled by PIL.ImageEnhance in train_mask2former.py)
+pydantic>=2.0.0
+flask-openapi3>=3.0.0
+
+# ==========================================
+# IFC Export (kept from your upgrade)
+# ==========================================
+ifcopenshell==0.7.0
 
 # ==========================================
 # Utilities
@@ -53,10 +64,6 @@ PyYAML==6.0.1
 requests==2.31.0
 Cython==3.0.2
 psutil>=5.9.0
-
-# ==========================================
-# Date/Time handling
-# ==========================================
 python-dateutil==2.8.2
 
 # ==========================================
@@ -65,16 +72,8 @@ python-dateutil==2.8.2
 gunicorn>=21.2.0
 
 # ==========================================
-# IFC Export (BIM standard format)
+# REMOVED in Phase 1 (Mask2Former / training only):
+#   torch, torchvision, transformers, accelerate,
+#   datasets, pycocotools, torchmetrics, tqdm
+# Re-add these only if you later pursue Option B (train Mask2Former).
 # ==========================================
-ifcopenshell==0.7.0
-datasets>=2.14.0
-pycocotools>=2.0.6
-torchmetrics==1.3.2
-tqdm==4.66.4
-
-# ==========================================
-# Validation and API Documentation
-# ==========================================
-pydantic>=2.0.0
-flask-openapi3>=3.0.0

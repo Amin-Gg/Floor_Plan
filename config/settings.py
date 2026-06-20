@@ -11,6 +11,13 @@ Set the APP_ENV environment variable before starting:
 
 Valid values: development (default), production, testing
 Note: FLASK_ENV was deprecated in Flask 2.3 — we use APP_ENV instead.
+
+NOTE (Phase 1 — Mask R-CNN restore):
+The detector is Mask R-CNN again. NUM_CLASSES below is the MODEL class count
+(4 = background + wall + window + door) and MUST match the trained weights.
+It is intentionally NOT imported from config/classes.py — that file's 15-class
+list belongs to the (shelved) Mask2Former path and to the cold-code branches in
+the analysis layer; it must not drive the Mask R-CNN head.
 """
 
 import os
@@ -20,21 +27,21 @@ from typing import Dict, Any
 class Config:
     """Base configuration — shared by all environments."""
 
-    # Class count — imported from the single source of truth.
-    # Do NOT set this to 8 (that was a legacy Mask R-CNN value that included background).
-    # Mask2Former handles background implicitly; we have 7 architectural classes.
-    from config.classes import NUM_CLASSES as _NC
-    NUM_CLASSES = _NC   # 7
-    GPU_COUNT             = 1
-    IMAGES_PER_GPU        = 1
+    # ── Model (Mask R-CNN) ────────────────────────────────────────────────────
+    MODEL_NAME         = "mask_rcnn_hq"
+    WEIGHTS_FILE_NAME  = "maskrcnn_15_epochs.h5"
+    WEIGHTS_FOLDER     = "./weights"          # resolved relative to project root
+
+    # Model class count — MUST equal what the .h5 was trained with.
+    # 4 = background + wall + window + door. Do NOT import this from
+    # config/classes.py (that file describes the 15-class Mask2Former scheme).
+    NUM_CLASSES              = 4
+    GPU_COUNT                = 1
+    IMAGES_PER_GPU           = 1
     DETECTION_MIN_CONFIDENCE = 0.15
-    # Mask2Former Swin-Large VRAM budget:
-    # At 1600px: feature pyramid alone uses ~4-6 GB VRAM — causes CUDA OOM on
-    # most 8-12 GB cards when other processes are running.
-    # At 1024px: ~1.5-2 GB — safe on any modern GPU with ≥ 8 GB VRAM.
-    # The processor handles resizing internally; output quality loss is minimal
-    # because architectural lines are preserved at 1024px.
-    IMAGE_MAX_DIM         = 1024
+    # Mask R-CNN requires IMAGE_MAX_DIM divisible by 64. 1600 preserves thin
+    # architectural lines (this is the value the Simsys base ran this .h5 with).
+    IMAGE_MAX_DIM            = 1600
 
     # ── Image processing ──────────────────────────────────────────────────────
     MAX_IMAGE_SIZE        = 2048    # pixels — prevent OOM
@@ -70,11 +77,12 @@ class Config:
     @classmethod
     def get_model_config(cls) -> Dict[str, Any]:
         return {
-            "NUM_CLASSES":            cls.NUM_CLASSES,
-            "GPU_COUNT":              cls.GPU_COUNT,
-            "IMAGES_PER_GPU":         cls.IMAGES_PER_GPU,
+            "NAME":                     cls.MODEL_NAME,
+            "NUM_CLASSES":              cls.NUM_CLASSES,
+            "GPU_COUNT":                cls.GPU_COUNT,
+            "IMAGES_PER_GPU":           cls.IMAGES_PER_GPU,
             "DETECTION_MIN_CONFIDENCE": cls.DETECTION_MIN_CONFIDENCE,
-            "IMAGE_MAX_DIM":          cls.IMAGE_MAX_DIM,
+            "IMAGE_MAX_DIM":            cls.IMAGE_MAX_DIM,
         }
 
     @classmethod
@@ -84,8 +92,8 @@ class Config:
 
 class DevelopmentConfig(Config):
     """Local development — verbose logging, debug mode on."""
-    DEBUG      = True
-    LOG_LEVEL  = "DEBUG"
+    DEBUG        = True
+    LOG_LEVEL    = "DEBUG"
     CORS_ORIGINS = "*"              # permissive during development
 
 
@@ -94,8 +102,8 @@ class ProductionConfig(Config):
     Production — strict security defaults.
     APP_CORS_ORIGINS MUST be set before starting the server.
     """
-    DEBUG      = False
-    LOG_LEVEL  = "WARNING"
+    DEBUG          = False
+    LOG_LEVEL      = "WARNING"
     ENABLE_CACHING = True
     CACHE_TIMEOUT  = 600
 
@@ -136,7 +144,6 @@ def get_config(environment: str = None) -> Config:
     Falls back to DevelopmentConfig if the variable is unset or unknown.
     """
     if environment is None:
-        # APP_ENV is our variable; FLASK_ENV kept as a legacy fallback only
         environment = os.getenv("APP_ENV") or os.getenv("FLASK_ENV", "development")
     cfg = _CONFIG_MAP.get(environment.lower(), DevelopmentConfig)
     return cfg
