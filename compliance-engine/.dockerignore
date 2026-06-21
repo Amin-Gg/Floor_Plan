@@ -1,0 +1,114 @@
+# ============================================================================
+# .dockerignore — Mabhas Compliance Engine
+# ============================================================================
+# Excludes dev-only files from `COPY . /app`.
+#
+# What stays in the image:
+#   api/              FastAPI endpoints + task queue
+#   rag/              RAG pipeline (embeddings, retriever, graph, reranker…)
+#   services/         Compliance agents (numeric, topology, opening, safety…)
+#   classification/   Clause classifier + AI_PROMPT.txt
+#   data/             Regulation JSON files + graphml (runtime data)
+#   requirements.txt  Runtime dependency list (referenced in Dockerfile)
+#   pyproject.toml    Package metadata (pip install -e . for intra-package imports)
+#
+# What is excluded (see sections below):
+#   eval/             Evaluation harness — dev only
+#   tests/            Unit/integration tests — dev only
+#   docs/             Documentation files
+#   rag/notebooks/    Jupyter notebooks
+#   scripts/          One-off utility scripts
+#   data/mabhas_eval_set.json  Evaluation set — not needed for serving
+# ============================================================================
+
+
+# ── Python bytecode and caches ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Dev / test suite — not needed to serve the API ───────────────────────────
+eval/
+tests/
+conftest.py
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+test-results/
+requirements-dev.txt
+
+# ── Jupyter notebooks ────────────────────────────────────────────────────────
+rag/notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Documentation ────────────────────────────────────────────────────────────
+docs/
+*.md
+*.rst
+TODO
+NOTES
+
+# ── Utility / one-off scripts (not imported by the API) ──────────────────────
+scripts/
+
+# ── Evaluation-only data files ────────────────────────────────────────────────
+# The main clause JSON files (mabhas_clauses*.json, regulation_graph.graphml,
+# exception_links.json) ARE included — they are loaded at startup.
+data/mabhas_eval_set.json
+data/STAGE0_NOTES.md
+eval/results/
+
+# ── Runtime-generated outputs (produced inside the container) ─────────────────
+out/
+*.pdf
+*.bcf
+compliance_report.html
+logs/
+*.log
+
+# ── Secrets and local config ─────────────────────────────────────────────────
+.env
+.env.*
+*.env
+*.local
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+credentials.json
+
+# ── Git ──────────────────────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github
+
+# ── Editor / OS ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.Trash
+.AppleDouble
+
+# ── Docker meta-files ────────────────────────────────────────────────────────
+.dockerignore
+docker-compose*.yml
