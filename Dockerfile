@@ -1,67 +1,69 @@
 # syntax=docker/dockerfile:1.6
 # ============================================================================
-# FloorPlanTo3D API — production image
+# FloorPlanTo3D API — GPU-enabled production image
 # ============================================================================
-# This Dockerfile pins the entire runtime environment (Python version, system
-# libraries, Python packages) so that the API behaves identically on every
-# machine it runs on. Without this, the team has repeatedly hit subtle bugs
-# from environment drift — most recently the transformers==4.40.2 vs.
-# processing_class mismatch that took a code change to work around.
+# Base: NVIDIA CUDA 11.8 + cuDNN 8 on Ubuntu 22.04
+#
+#   TensorFlow 2.13  (Mask R-CNN)  — uses system CUDA 11.8 + cuDNN 8
+#   PyTorch 2.1.2    (YOLO)        — uses bundled CUDA 11.8 wheels
+#   PaddlePaddle 2.5 (PaddleOCR)   — CPU only (OCR is not the throughput bottleneck)
+#
+# Host requirements:
+#   - NVIDIA driver >= 520  (CUDA 11.8 support)
+#   - nvidia-container-toolkit installed and configured
+#     https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
 #
 # Build:
-#     docker build -t floorplan3d-api:1.0 .
+#     docker build -t floorplan3d-api:2.0 .
 #
-# Run (CPU-only — slow but works on any machine):
+# Run (GPU — primary deployment):
+#     docker run -p 8080:8080 --gpus all \
+#         -e APP_ENV=production \
+#         -e APP_CORS_ORIGINS=https://yourdomain.com \
+#         -v /opt/floorplan/weights:/app/weights:ro \
+#         -v /opt/floorplan/outputs:/app/outputs \
+#         floorplan3d-api:2.0
+#
+# Run (CPU fallback — for smoke-testing without a GPU):
 #     docker run -p 8080:8080 \
 #         -e APP_ENV=development \
 #         -e APP_CORS_ORIGINS='*' \
 #         -v /path/to/weights:/app/weights:ro \
 #         -v /tmp/floorplan-outputs:/app/outputs \
-#         floorplan3d-api:1.0
+#         floorplan3d-api:2.0
 #
-# Run (GPU — requires nvidia-container-toolkit on host):
-#     docker run -p 8080:8080 --gpus all \
-#         -e APP_ENV=production \
-#         -e APP_CORS_ORIGINS=https://yourdomain.com \
-#         -e FLOORPLAN_MODEL_PATH=/app/weights/mask2former-floorplan-finetuned \
-#         -v /opt/floorplan/weights:/app/weights:ro \
-#         -v /opt/floorplan/outputs:/app/outputs \
-#         floorplan3d-api:1.0
-#
-# Model weights are NOT baked into the image — they're mounted as a read-only
-# volume. This means one image works for dev, staging, and production by
-# pointing at different weight folders, and image rebuilds don't transfer
-# multi-gigabyte model files.
+# Model weights are NOT baked into the image — mount them read-only:
+#   /app/weights/maskrcnn_15_epochs.h5   ← Mask R-CNN checkpoint
+#   /app/weights/yolo_best.pt            ← YOLO checkpoint
 # ============================================================================
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Stage 1: builder — installs Python dependencies into a virtual env
+# Stage 1: builder
 # ─────────────────────────────────────────────────────────────────────────────
-# We use a two-stage build so the final image doesn't carry compilers and
-# build tools (~400 MB). The builder installs everything; the runtime stage
-# copies only the resolved virtualenv across.
-FROM python:3.11.0-slim-bookworm AS builder
+# CUDA 11.8 devel image provides compiler headers so any C-extension wheel
+# that falls back to source compilation can build.  In practice almost
+# everything ships a pre-built wheel; the devel image is insurance.
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS builder
 
-# Environment knobs for pip — set early so they apply to all RUN steps below.
-ENV PYTHONDONTWRITEBYTECODE=1 \
+# Silence apt interactive prompts (tzdata etc.)
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=120
 
-# System packages needed to BUILD pip wheels that don't ship pre-compiled
-# binaries for our (Python 3.11, glibc, x86_64) target. Most of our deps DO
-# ship wheels — these are insurance for the few that fall back to source.
-#
-# Each package justification:
-#   build-essential — gcc/g++/make for any source-compile fallbacks
-#   libgl1, libglib2.0-0 — runtime libs OpenCV's pip wheel dynamically loads
-#   libgomp1        — runtime lib PaddlePaddle and several PyTorch ops use
-#   pkg-config      — needed by some pip wheels' setup.py to find system libs
-#   git             — pip occasionally clones VCS deps; safer to have it
+# Python 3.11 + build toolchain.
+# Ubuntu 22.04 ships Python 3.10 as default; 3.11 is in the universe repo.
+# build-essential / pkg-config / git are for any wheel that compiles from source.
+# libgl1 / libglib2.0-0 / libgomp1 are required by OpenCV and PaddlePaddle
+# at import time even during the builder's test-import phase.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        python3.11 \
+        python3.11-venv \
+        python3.11-dev \
         build-essential \
         pkg-config \
         git \
@@ -70,64 +72,66 @@ RUN apt-get update && \
         libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create an isolated virtualenv. Doing this in a venv (instead of system-wide)
-# means we can copy just /opt/venv to the runtime stage without dragging
-# along apt-managed system packages.
-RUN python -m venv /opt/venv
+# Isolated virtualenv on Python 3.11. Copying /opt/venv to the runtime
+# stage later means we get a clean separation from system packages.
+RUN python3.11 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Upgrade pip BEFORE installing requirements. Without this step, pip 22.x
-# (which ships with python:3.11.0-slim) sometimes fails to resolve modern
-# wheel filenames correctly for accelerate/torch.
+# Upgrade pip toolchain first.  pip 22.x (shipped with python3.11 on Ubuntu)
+# occasionally mis-resolves modern wheel filenames for torch and accelerate.
 RUN pip install --upgrade pip==24.0 setuptools==69.0.3 wheel==0.42.0
 
-# Copy requirements.txt FIRST. This layer is cached as long as requirements
-# don't change — so code-only edits don't trigger a 5-minute reinstall.
+# Copy requirements BEFORE code so this layer is cached on code-only edits.
 COPY requirements.txt /tmp/requirements.txt
 
-# Install PyTorch separately from the official CUDA wheel index because
-# requirements.txt doesn't pin the +cuXXX suffix — pip would otherwise grab
-# the CPU-only wheel by default. CUDA 11.8 chosen because it has the widest
-# driver compatibility (NVIDIA drivers >= 450).
-#
-# The torch wheel (~750 MB) bundles its own cuDNN and CUDA runtime libs, so
-# the runtime stage does NOT need a separate CUDA install — only the host's
-# NVIDIA driver, exposed via --gpus all.
+# Install PyTorch 2.1.2 with the CUDA 11.8 wheel index.
+# The installed version is torch-2.1.2+cu118.  PEP 440 §8.8.1 states that
+# local-version labels ("+cu118") are ignored by the == comparator, so the
+# bare "torch==2.1.2" pin in requirements.txt is already satisfied — pip will
+# leave this installation in place during the next step.
 RUN pip install \
         --index-url https://download.pytorch.org/whl/cu118 \
         torch==2.1.2 \
         torchvision==0.16.2
 
-# Then install the remaining requirements normally. They'll all find their
-# wheels on the default PyPI index. Anything that needs torch (transformers,
-# accelerate, torchmetrics) will pick up the version already installed.
+# Install the remaining requirements from PyPI.
+# torch / torchvision are already satisfied (see note above) and skipped.
+# tensorflow==2.13.0 will detect the system CUDA 11.8 + cuDNN 8 at runtime.
 RUN pip install -r /tmp/requirements.txt
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Stage 2: runtime — minimal image with only what's needed to serve requests
+# Stage 2: runtime
 # ─────────────────────────────────────────────────────────────────────────────
-FROM python:3.11.0-slim-bookworm AS runtime
+# CUDA 11.8 runtime image contains:
+#   libcudart, libcublas, libcufft, libcurand, libcusolver, libcusparse  (CUDA)
+#   libcudnn8                                                              (cuDNN)
+# TensorFlow 2.13 locates these via LD_LIBRARY_PATH set by the base image.
+# PyTorch bundles its own CUDA copies inside the wheel — it does not need them
+# from the system, but will use the GPU driver exposed by --gpus all.
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 AS runtime
 
-# Same env knobs as builder, plus a few runtime-specific ones.
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     APP_ENV=production \
     LOG_LEVEL=info \
     GUNICORN_WORKERS=1 \
-    GUNICORN_TIMEOUT=120
+    GUNICORN_TIMEOUT=120 \
+    # Prevent TensorFlow from pre-allocating all GPU VRAM on startup.
+    # Critical when GUNICORN_WORKERS > 1 because each worker loads the model
+    # into the same GPU; without this flag they fight for all available VRAM.
+    TF_FORCE_GPU_ALLOW_GROWTH=true
 
-# Same runtime libraries as the builder, MINUS the compilers. These dynamic
-# libs are loaded at runtime by OpenCV and PaddlePaddle when the application
-# starts — without them the import will fail with cryptic "shared object
-# not found" errors.
-#
-# We also install curl here ONLY because HEALTHCHECK below uses it. If you
-# don't need an in-container health check (e.g., your orchestrator probes
-# /health directly), you can remove curl to save ~5 MB.
+# Python 3.11 interpreter (runtime only, no dev headers or build tools).
+# libgl1 / libglib2.0-0 — loaded at import by opencv-python-headless.
+# libgomp1              — required by PaddlePaddle at import.
+# curl                  — used only by the HEALTHCHECK below; remove if your
+#                         orchestrator probes /health externally.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        python3.11 \
         libgl1 \
         libglib2.0-0 \
         libgomp1 \
@@ -136,64 +140,52 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Copy the resolved virtualenv from the builder stage.
+# Copy the resolved virtualenv from the builder.  This is the only artifact
+# we need; compilers and build headers stay in the builder stage.
 COPY --from=builder /opt/venv /opt/venv
 
-# Create a non-root user. Running as root in containers is a known
-# security risk: a successful exploit gives the attacker root inside the
-# container, and combined with a container escape vulnerability, root on
-# the host. UID 1000 is conventional and matches most Linux desktop users
-# so bind-mounted volumes have sane permissions.
+# Non-root user.  Running as root in a container is a security risk: a
+# container escape would give the attacker root on the host.  UID 1000 is
+# conventional and matches most Linux server users, keeping bind-mounted
+# volume permissions sensible without extra chown steps on the host.
 RUN groupadd --system --gid 1000 app && \
     useradd  --system --uid 1000 --gid app --home /app --shell /usr/sbin/nologin app
 
 WORKDIR /app
 
-# Copy application code. This layer rebuilds on every code change — but
-# because it comes AFTER the pip install layer, the slow part stays cached.
-#
-# We use --chown to set ownership during copy. Doing chown in a later RUN
-# step would create a duplicate image layer with all the files copied again,
-# inflating the image size.
+# Application code comes AFTER the pip layer so a code-only edit does not
+# bust the slow (5–15 min) dependency install cache.
+# --chown avoids a separate RUN chown that would duplicate every file in a
+# new image layer, inflating the image size.
 COPY --chown=app:app . /app
 
-# Pre-create the output directories so the app doesn't need to create them
-# at runtime (which would require write permission on /app itself). After
-# this, /app can be read-only and only /app/outputs needs to be writable.
+# Pre-create output directories so the app never needs write access to /app
+# itself at runtime.  Only /app/outputs needs to be writable.
 RUN mkdir -p /app/outputs/images /app/outputs/json /app/outputs/ifc && \
     chown -R app:app /app/outputs
 
-# Volume mount points. Declaring them with VOLUME tells operators "this
-# directory is meant to be a volume" — Docker will warn if they try to bake
-# data into it.
-#
-#   /app/weights         — model checkpoints, mounted read-only at runtime
-#   /app/outputs         — generated images/JSON/IFC, persisted across restarts
-#
-# We do NOT use VOLUME for /app/assets/icons because those are baked into the
-# image (small PNG templates checked into git).
+# Declarative mount-point hints for operators.
+#   /app/weights  — model checkpoints (mount read-only)
+#   /app/outputs  — generated images / JSON / IFC (mount writable)
 VOLUME ["/app/weights", "/app/outputs"]
 
-# Drop privileges. From here on, the container runs as `app` (UID 1000).
+# Drop to non-root for all subsequent operations.
 USER app
 
-# The port gunicorn.conf.py binds to. EXPOSE is documentation only — actual
-# port publishing is `-p 8080:8080` on docker run.
+# Informational only — actual port mapping is set with -p on docker run.
 EXPOSE 8080
 
-# In-container health probe. Calls the /health endpoint we expanded in
-# Item 3. The endpoint returns 200 only when the model is initialized, so
-# Docker (and any orchestrator) can distinguish "starting up" from "ready".
-#
-# Timing rationale:
-#   --start-period=60s — model load can take 30-50s on first request after
-#                        cold start; don't mark unhealthy during this window
-#   --interval=30s     — probe every 30s in steady state
-#   --timeout=10s      — abort the probe if it doesn't respond in 10s
-#   --retries=3        — 3 consecutive failures before marking unhealthy
-HEALTHCHECK --start-period=60s --interval=30s --timeout=10s --retries=3 \
+# In-container liveness probe.
+# --start-period=90s  cold-start load for maskrcnn_15_epochs.h5 + yolo_best.pt
+#                     on a GPU can take 45–90 s; don't mark unhealthy during
+#                     this window.
+# --interval=30s      steady-state check cadence
+# --timeout=10s       abort if /health doesn't reply in 10 s
+# --retries=3         3 consecutive failures before the container is unhealthy
+HEALTHCHECK --start-period=90s --interval=30s --timeout=10s --retries=3 \
     CMD curl --fail --silent --show-error http://localhost:8080/health || exit 1
 
-# Default command. Overridable from `docker run` for one-off operations
-# (e.g., `docker run ... python evaluate.py --checkpoint ...`).
+# Default entry point — override for one-off operations, e.g.:
+#   docker run ... python smoke_test.py
+#   docker run ... python evaluate.py --checkpoint /app/weights/maskrcnn_15_epochs.h5
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "application:application"]

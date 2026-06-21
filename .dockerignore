@@ -1,15 +1,17 @@
 # ============================================================================
-# .dockerignore — what NOT to copy into the Docker image
+# .dockerignore — what NOT to copy into the Docker build context
 # ============================================================================
-# Every file matched here is excluded from `COPY . /app` in the Dockerfile.
-# Two reasons to exclude:
+# Every path matched here is excluded from `COPY . /app` in the Dockerfile.
+# Two reasons to exclude files:
 #
-#   1. Size — model weights and datasets are huge, never bake them in.
-#   2. Security — never bake secrets, env files, or local config in.
+#   1. Size    — model weights and datasets are large; never bake them in.
+#   2. Security — never bake secrets, env files, or local config into an image.
 #
-# Test this file with:    docker build --dry-run .
-# Or after building:      docker image inspect floorplan3d-api:1.0
+# Verify what ends up in the image:
+#   docker build -t floorplan3d-api:2.0 .
+#   docker run --rm floorplan3d-api:2.0 find /app -type f | sort
 # ============================================================================
+
 
 # ── Python bytecode and caches ───────────────────────────────────────────────
 __pycache__
@@ -21,31 +23,58 @@ __pycache__
 .ruff_cache
 *.egg-info
 
-# ── Virtual environments — should be rebuilt by Docker from requirements.txt
+
+# ── Virtual environments — rebuilt by Docker from requirements.txt ────────────
 .venv
 venv
 env
 
-# ── Model weights — mounted as a volume at runtime, not baked in ─────────────
-# These can be multiple gigabytes. Baking them in would make every image
-# rebuild transfer the full weights, even when only code changed.
+
+# ── Model weights — mounted as a read-only volume at runtime ─────────────────
+# These can be multiple gigabytes.  Baking them in would force a full weight
+# transfer on every image rebuild, even when only code changed.
 weights/*
 !weights/.gitkeep
 !weights/README.md
 
-# ── Outputs — runtime-generated, mounted as a volume ─────────────────────────
+
+# ── Runtime outputs — mounted as a writable volume ───────────────────────────
 outputs/
 output/
+export/
 *.ifc
 *.json.gz
 
-# ── Training data — never goes in the production image ───────────────────────
+
+# ── Training and evaluation artifacts — never go in the serving image ─────────
+train_mask2former.py
 dataset/
 data/
 *.h5
 *.hdf5
 
-# ── Local development files ──────────────────────────────────────────────────
+
+# ── Build and distribution artifacts ─────────────────────────────────────────
+build/
+dist/
+
+
+# ── Data-preparation and conversion scripts ───────────────────────────────────
+# scripts/ contains only convert_cubicasa_to_coco.py — a one-off dataset tool.
+scripts/
+
+
+# ── Removed features — still present on disk, must not enter the image ────────
+compliance-engine/
+
+
+# ── Jupyter notebooks — useful during development, not in production ──────────
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+
+# ── Local development and IDE files ──────────────────────────────────────────
 .git
 .gitignore
 .gitattributes
@@ -58,7 +87,8 @@ data/
 .DS_Store
 Thumbs.db
 
-# ── Documentation and dev artifacts ──────────────────────────────────────────
+
+# ── Documentation ────────────────────────────────────────────────────────────
 docs/
 *.md
 !readme.md
@@ -66,10 +96,13 @@ docs/
 TODO
 NOTES
 
-# ── Secrets — never in the image ─────────────────────────────────────────────
-# Covers the common conventions. If a developer creates a file named with
-# a non-standard pattern (e.g. "my_secret.txt"), no .dockerignore can catch
-# every case — they need to use the secrets/ directory.
+
+# ── Platform-specific deploy configs ─────────────────────────────────────────
+# runtime.txt is a Heroku artifact; irrelevant in a Docker deployment.
+runtime.txt
+
+
+# ── Secrets — must never enter the image ─────────────────────────────────────
 .env
 .env.*
 *.env
@@ -84,10 +117,13 @@ credentials.json
 *.credentials
 auth.json
 
-# ── Docker itself — including the Dockerfile in the build context is fine,
-#    but other Docker artifacts shouldn't be baked in.
+
+# ── Docker meta-files ────────────────────────────────────────────────────────
+# Including the Dockerfile itself in the build context is harmless, but
+# docker-compose files and .dockerignore itself add noise without value.
 docker-compose*.yml
 .dockerignore
+
 
 # ── CI and test artifacts ────────────────────────────────────────────────────
 .coverage
@@ -97,9 +133,6 @@ test-results/
 *.log
 logs/
 
-# ── Jupyter notebooks — useful in dev, never in production ───────────────────
-*.ipynb
-.ipynb_checkpoints/
 
 # ── OS-specific files ────────────────────────────────────────────────────────
 .Trash

@@ -48,10 +48,15 @@ lock so concurrent workers don't each trigger a load.
 
 from __future__ import annotations
 
+import os
 import threading
 from typing import List
 
-MODEL_NAME = r"C:\Users\Asus\Desktop\bge_reranker"
+# Resolved once at import. Override via RERANKER_MODEL env var — required in
+# Docker where the Windows path below obviously doesn't exist.
+# Mount the model directory at the container path, e.g.:
+#   -v /opt/models/bge_reranker:/app/models/bge_reranker:ro
+MODEL_NAME: str = os.environ.get("RERANKER_MODEL", "/app/models/bge_reranker")
 
 _reranker = None
 _reranker_lock = threading.Lock()
