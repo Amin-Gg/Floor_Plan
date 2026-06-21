@@ -82,3 +82,88 @@ FA direction consistent; gaps under ~1 item (≈2.3pp) treated as ties. -->
   `mabhas_clauses_normalized.json` on the Step 5 schema if needed.
 - Reranked runs record mean cross-encoder latency in
   `aggregates.rerank_latency_sec_mean`.
+
+## Stage 3 — Graph Extension (regulation graph + exception expansion)
+
+All Stage 3 rows run on top of earlier winners; the two rows isolate the
+graph layer's contribution with and without the Stage 2 corrective loop
+underneath. The graph layer is fully deterministic — "LLM calls/100q" must
+be IDENTICAL to the row it wraps (graph_base = Stage 1 winner = 0;
+graph = CRAG row) — that identity is itself a result. Graph artifact:
+`data/regulation_graph.graphml` (393 nodes / 922 edges, commit-pinned via
+`docs/regulation_graph_report.txt`). Exception ground-truth links:
+`data/exception_links.json` — adjudicate the 4 pending entries BEFORE the
+final runs so HAS_EXCEPTION ground truth is frozen during evaluation.
+
+Run commands:
+
+```bash
+python -m rag.build_regulation_graph    # rebuild the pinned graph artifact
+python -m eval.retrieval_eval --run-name stage3_graph_base --retriever graph_base --query-lang fa
+python -m eval.retrieval_eval --run-name stage3_graph      --retriever graph      --query-lang fa
+python -m eval.retrieval_eval --run-name stage3_graph_exc  --retriever graph      --query-lang fa --rule-type exception
+```
+
+### English (primary)
+
+| Configuration | recall@1 | recall@5 | recall@10 | MRR | nDCG@10 | multi-hop recall@5 | exception recall@5 | LLM calls/100q |
+|---|---|---|---|---|---|---|---|---|
+| Stage 2 winner (CRAG) — carried for comparison | — | — | — | — | — | — | — | — |
+| graph only: GraphRetriever over hybrid+rerank (`graph_base`) | — | — | — | — | — | — | — | 0 |
+| graph + CRAG combined (`graph`) — production default | — | — | — | — | — | — | — | — |
+
+### Persian (secondary)
+
+| Configuration | recall@1 | recall@5 | recall@10 | MRR | nDCG@10 | multi-hop recall@5 | exception recall@5 | LLM calls/100q |
+|---|---|---|---|---|---|---|---|---|
+| Stage 2 winner (CRAG) — carried for comparison | — | — | — | — | — | — | — | — |
+| graph only: GraphRetriever over hybrid+rerank (`graph_base`) | — | — | — | — | — | — | — | 0 |
+| graph + CRAG combined (`graph`) — production default | — | — | — | — | — | — | — | — |
+
+> n-caveat: the exception subset is small (n=6); report the absolute hit
+> counts (x/6) next to the percentage and pair the table with the per-item
+> case traces in `eval/results/PROVENANCE.md` rather than leaning on the
+> percentage alone.
+
+## FINAL — consolidated ablation (thesis backbone)
+
+One row per stage, cumulative; each row = ONE git commit + ONE harness run
+(run JSONs record commit, EMBED_MODEL, retriever_type, timestamp).
+Primary language English; repeat the same three tables for Persian in the
+thesis appendix if space allows.
+
+### Overall
+
+| Configuration | recall@5 | MRR | nDCG@10 | LLM calls/100q | run |
+|---|---|---|---|---|---|
+| Baseline (single-vector e5, normalized text) | — | — | — | 0 | `baseline_en.json` |
+| + Stage 1 (hybrid RRF + rerank + contextual) | — | — | — | 0 | `contextual_en.json` |
+| + Stage 2 (CRAG, selective transforms) | — | — | — | — | `stage2_crag_fa.json` |
+| + Stage 3 (graph + exception expansion) | — | — | — | — | `stage3_graph_fa.json` |
+
+### multi_hop subset
+
+| Configuration | recall@5 | MRR | nDCG@10 |
+|---|---|---|---|
+| Baseline (single-vector e5, normalized text) | — | — | — |
+| + Stage 1 (hybrid RRF + rerank + contextual) | — | — | — |
+| + Stage 2 (CRAG, selective transforms) | — | — | — |
+| + Stage 3 (graph + exception expansion) | — | — | — |
+
+### exception subset (headline; report x/6 counts alongside)
+
+| Configuration | recall@5 | MRR | nDCG@10 |
+|---|---|---|---|
+| Baseline (single-vector e5, normalized text) | — | — | — |
+| + Stage 1 (hybrid RRF + rerank + contextual) | — | — | — |
+| + Stage 2 (CRAG, selective transforms) | — | — | — |
+| + Stage 3 (graph + exception expansion) | — | — | — |
+
+**Stage 3 verdict invariant:** `pytest eval/test_verdict_regression.py`
+passes on the same commit as the stage3 rows — retrieval changes never
+moved a deterministic PASS/FAIL (advisory text on NEEDS_REVIEW may differ).
+
+**Provenance figure:** `eval/results/PROVENANCE.md`
+(`python -m scripts.dump_provenance --results eval/results/stage3_graph_fa.json`)
+shows, per worked example, which final hits arrived via vector vs
+graph_element vs exception_expansion.
