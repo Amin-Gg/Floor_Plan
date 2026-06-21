@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mabhas-compliance-engine"
+version = "0.1.0"
+description = "AI-assisted compliance checking of Iranian residential floor plans against the National Building Regulations (Mabhas)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+# Runtime code lives in these packages; eval/ and tests/ are dev-only.
+packages = ["rag", "services", "api", "classification", "scripts"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.pytest.ini_options]
+# Repo root makes the `rag.*` / `services.*` / `eval.*` / `tests.*` packages importable;
+# `services` (flat) makes the engine's bare intra-package imports
+# (e.g. `from numeric_checker import Verdict`) resolve without a manual PYTHONPATH.
+pythonpath = [".", "services"]
+testpaths = ["tests", "eval"]
+addopts = "-q"

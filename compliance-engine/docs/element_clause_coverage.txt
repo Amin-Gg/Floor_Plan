@@ -1,0 +1,31 @@
+ELEMENT -> CLAUSE COVERAGE (GraphLinker on the real regulation graph)
+========================================================================
+element        spatial category  clauses  +exceptions
+------------------------------------------------------------------------
+balcony        room_balcony           14           14
+basement       —                       2            2
+bathroom       room_bathroom          13           13
+bedroom        room_bedroom           17           17
+building       —                      11           11
+corridor       —                      23           23
+courtyard      —                      13           13
+door           —                      18           18
+dwelling_unit  —                       1            1
+elevator       —                       0            0
+entrance       —                      16           16
+kitchen        room_kitchen           21           21
+landing        —                       4            4
+light_well     —                       8            8
+living_room    room_living            11           11
+parking        —                       8            8
+ramp           —                       7            7
+roof           —                       3            3
+stair          —                      13           13
+storage        —                       1            1
+window         —                      34           35  (+1 via HAS_EXCEPTION)
+------------------------------------------------------------------------
+TOTAL (clause-element links)         238          239
+
+Notes: 'clauses' counts distinct clauses with a GOVERNS edge to the
+element. '+exceptions' adds HAS_EXCEPTION children of those clauses.
+RELATES-only links are intentionally excluded (they relate, not govern).

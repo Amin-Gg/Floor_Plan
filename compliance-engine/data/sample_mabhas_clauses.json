@@ -1,0 +1,57 @@
+[
+  {
+    "mabhas_part": "4",
+    "article_id": "4-3-2-1",
+    "heading_fa": "حداقل مساحت اتاق خواب",
+    "text_fa": "حداقل مساحت یک اتاق خواب نباید کمتر از ۸ مترمربع باشد.",
+    "text_en": "The minimum area of a bedroom shall not be less than 8 square metres.",
+    "applicable_to_floor_plan": true,
+    "skip_category": null,
+    "rule_type": "numeric",
+    "entities": {"object": "bedroom", "property": "area", "comparator": ">=", "value": 8, "unit": "m2"}
+  },
+  {
+    "mabhas_part": "4",
+    "article_id": "4-5-1-3",
+    "heading_fa": "ارتباط آشپزخانه و سرویس بهداشتی",
+    "text_fa": "آشپزخانه نباید درب مستقیم به سرویس بهداشتی داشته باشد.",
+    "text_en": "A kitchen shall not have a door opening directly into a toilet or bathroom.",
+    "applicable_to_floor_plan": true,
+    "skip_category": null,
+    "rule_type": "spatial",
+    "entities": {"subject": "kitchen", "relation": "must_not_connect_to", "object": "bathroom"}
+  },
+  {
+    "mabhas_part": "4",
+    "article_id": "4-2-1-1",
+    "heading_fa": "تعریف فضای اقامتی",
+    "text_fa": "فضای اقامتی فضایی است که برای خواب، نشیمن یا غذاخوری استفاده می‌شود.",
+    "text_en": "A habitable space is a space used for sleeping, living, or dining.",
+    "applicable_to_floor_plan": true,
+    "skip_category": null,
+    "rule_type": "definition",
+    "entities": null
+  },
+  {
+    "mabhas_part": "9",
+    "article_id": "9-4-3-2",
+    "heading_fa": "نسبت آرماتور به بتن",
+    "text_fa": "نسبت آرماتور به مقطع بتن نباید از ۴ درصد تجاوز نماید.",
+    "text_en": "The ratio of reinforcement to the concrete cross-section shall not exceed 4 percent.",
+    "applicable_to_floor_plan": false,
+    "skip_category": "structural_calc",
+    "rule_type": null,
+    "entities": null
+  },
+  {
+    "mabhas_part": "13",
+    "article_id": "13-2-1-5",
+    "heading_fa": "قطر سیم برق",
+    "text_fa": "قطر سیم های برق مصرفی در مدارهای روشنایی نباید کمتر از ۱.۵ میلیمتر مربع باشد.",
+    "text_en": "The cross-section of electrical wires used in lighting circuits shall not be less than 1.5 mm2.",
+    "applicable_to_floor_plan": false,
+    "skip_category": "mep_detail",
+    "rule_type": null,
+    "entities": null
+  }
+]

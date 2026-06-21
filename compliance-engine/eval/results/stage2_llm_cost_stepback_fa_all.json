@@ -1,0 +1,7 @@
+{
+  "transform": "stepback",
+  "query_lang": "fa",
+  "hop_type": "all",
+  "llm_calls": 43,
+  "llm_total_seconds": 57.701
+}

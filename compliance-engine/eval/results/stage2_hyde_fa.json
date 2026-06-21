@@ -1,0 +1,26 @@
+{
+  "thresholds": {
+    "high_top1": 0.6,
+    "high_gap": 0.15,
+    "low_top1": 0.3,
+    "low_gap": 0.03
+  },
+  "total_items": 43,
+  "by_confidence": {
+    "HIGH": {
+      "count": 2,
+      "mean_hit@5": 1.0,
+      "mean_recall@5": 1.0
+    },
+    "MEDIUM": {
+      "count": 16,
+      "mean_hit@5": 0.625,
+      "mean_recall@5": 0.5625
+    },
+    "LOW": {
+      "count": 25,
+      "mean_hit@5": 0.6,
+      "mean_recall@5": 0.52
+    }
+  }
+}

@@ -1,0 +1,363 @@
+{
+  "elements": [
+    {
+      "article_id": "6-4-4-4",
+      "field": "spatial.object",
+      "raw": "street"
+    },
+    {
+      "article_id": "5-3-1-5-4",
+      "field": "spatial.object",
+      "raw": "persons with disabilities"
+    },
+    {
+      "article_id": "2-5-1-5-4b",
+      "field": "numeric.object",
+      "raw": "clearance dimension"
+    },
+    {
+      "article_id": "4-5-1-5-4",
+      "field": "spatial.object",
+      "raw": "no_obstructive_mechanism"
+    },
+    {
+      "article_id": "3-6-1-5-4",
+      "field": "spatial.object",
+      "raw": "as_specified_in_part_4-9-9"
+    },
+    {
+      "article_id": "8-1-5-4c",
+      "field": "numeric.object",
+      "raw": "slope_other"
+    },
+    {
+      "article_id": "1-11-1-5-4",
+      "field": "numeric.object",
+      "raw": "level difference"
+    },
+    {
+      "article_id": "4-2-2-5-4",
+      "field": "numeric.object",
+      "raw": "clearance"
+    },
+    {
+      "article_id": "5-2-2-5-4",
+      "field": "numeric.object",
+      "raw": "upper_part"
+    },
+    {
+      "article_id": "5-2-2-5-4",
+      "field": "numeric.object",
+      "raw": "lower_part"
+    },
+    {
+      "article_id": "5-3-2-5-4",
+      "field": "spatial.subject",
+      "raw": "mechanical_ventilation_system"
+    },
+    {
+      "article_id": "5-3-2-5-4",
+      "field": "spatial.object",
+      "raw": "outside_air"
+    },
+    {
+      "article_id": "1-5-2-5-4",
+      "field": "spatial.object",
+      "raw": "main_space"
+    },
+    {
+      "article_id": "2-5-2-5-4",
+      "field": "spatial.subject",
+      "raw": "annexed_space_and_main_space"
+    },
+    {
+      "article_id": "7-2-5-4",
+      "field": "spatial.subject",
+      "raw": "space_lighting_and_ventilation"
+    },
+    {
+      "article_id": "3-8-2-5-4",
+      "field": "numeric.object",
+      "raw": "daylighting_depth"
+    },
+    {
+      "article_id": "3-3-5-4",
+      "field": "spatial.object",
+      "raw": "ventilation (natural or mechanical)"
+    },
+    {
+      "article_id": "2-1-4-5-4",
+      "field": "spatial.object",
+      "raw": "another occupancy or residential space unless hierarchy requires it or it is an attached space per 4‑5‑4‑5"
+    },
+    {
+      "article_id": "4-3-4-5-4",
+      "field": "spatial.object",
+      "raw": "ventilation (natural or mechanical)"
+    },
+    {
+      "article_id": "2-5-4-5-4",
+      "field": "spatial.subject",
+      "raw": "attached space and main space"
+    },
+    {
+      "article_id": "5-5-4",
+      "field": "numeric.object",
+      "raw": "clearance from shelves"
+    },
+    {
+      "article_id": "3-3-5-5-4",
+      "field": "spatial.subject",
+      "raw": "exhaust_system"
+    },
+    {
+      "article_id": "1-4-5-5-4",
+      "field": "spatial.object",
+      "raw": "tile_or_similar_cleanable_material"
+    },
+    {
+      "article_id": "3-1-6-5-4",
+      "field": "spatial.subject",
+      "raw": "occupant"
+    },
+    {
+      "article_id": "4-1-6-5-4",
+      "field": "spatial.object",
+      "raw": "qibla_direction"
+    },
+    {
+      "article_id": "2-3-6-5-4",
+      "field": "spatial.object",
+      "raw": "central_or_independent_fans_with_individual_switches_and_emergency_power_connection"
+    },
+    {
+      "article_id": "1-1-7-5-4",
+      "field": "spatial.object",
+      "raw": "this_section_and_specific_occupancy_regulations"
+    },
+    {
+      "article_id": "3-1-7-5-4",
+      "field": "spatial.object",
+      "raw": "public road surface"
+    },
+    {
+      "article_id": "7-1-7-5-4",
+      "field": "spatial.object",
+      "raw": "section 4-5-1-6"
+    },
+    {
+      "article_id": "1-1-8-5-4",
+      "field": "spatial.object",
+      "raw": "this_section_and_specific_occupancy_regulations"
+    },
+    {
+      "article_id": "3-3-8-5-4",
+      "field": "spatial.object",
+      "raw": "suitable_cleaning_access"
+    },
+    {
+      "article_id": "4-3-8-5-4",
+      "field": "spatial.object",
+      "raw": "stop_area_unless_fully_isolated"
+    },
+    {
+      "article_id": "2-4-8-5-4",
+      "field": "spatial.object",
+      "raw": "sky"
+    },
+    {
+      "article_id": "2-1-9-5-4",
+      "field": "spatial.subject",
+      "raw": "light‑related spaces and elements"
+    },
+    {
+      "article_id": "1-2-9-5-4",
+      "field": "spatial.object",
+      "raw": "other_purposes"
+    },
+    {
+      "article_id": "4-2-9-5-4",
+      "field": "spatial.subject",
+      "raw": "upper_surface_of_external_duct"
+    },
+    {
+      "article_id": "4-2-9-5-4",
+      "field": "spatial.object",
+      "raw": "people_and_wheeled_equipment"
+    },
+    {
+      "article_id": "4-3-9-5-4",
+      "field": "spatial.object",
+      "raw": "other_enclosed_space"
+    },
+    {
+      "article_id": "6-3-9-5-4",
+      "field": "spatial.object",
+      "raw": "direct_fresh_air_supply_and_proper_exhaust"
+    },
+    {
+      "article_id": "11-1-10-5-4",
+      "field": "spatial.subject",
+      "raw": "access_path"
+    },
+    {
+      "article_id": "1-3-13-5-4",
+      "field": "spatial.object",
+      "raw": "['moving_objects', 'intense_sunlight', 'disturbing_wind', 'falling_height', 'stranger_intrusion']"
+    },
+    {
+      "article_id": "1-6-4",
+      "field": "spatial.subject",
+      "raw": "space requiring natural light"
+    },
+    {
+      "article_id": "2-6-4",
+      "field": "spatial.subject",
+      "raw": "space used by people"
+    },
+    {
+      "article_id": "2-6-4",
+      "field": "spatial.object",
+      "raw": "natural or mechanical air exchange (ventilation)"
+    },
+    {
+      "article_id": "4-6-جدول-3",
+      "field": "numeric.object",
+      "raw": "Spaces attached to the main space"
+    },
+    {
+      "article_id": "2-1-1-7-4d",
+      "field": "spatial.object",
+      "raw": "public_sitting_space_or_open_hall"
+    },
+    {
+      "article_id": "2-1-1-7-4e",
+      "field": "spatial.object",
+      "raw": "public_sitting_space_or_hall"
+    },
+    {
+      "article_id": "9-4-9-4",
+      "field": "spatial.subject",
+      "raw": "any water, sewage, gas pipe, canal, or similar installations"
+    },
+    {
+      "article_id": "3-12-9-4",
+      "field": "spatial.object",
+      "raw": "occupants_and_users"
+    },
+    {
+      "article_id": "4-12-9-4",
+      "field": "spatial.object",
+      "raw": "harmful_animals_water_surface_water"
+    },
+    {
+      "article_id": "5-12-9-4",
+      "field": "spatial.subject",
+      "raw": "all_occupancies_and_spaces"
+    },
+    {
+      "article_id": "6-12-9-4",
+      "field": "spatial.object",
+      "raw": "fire_evacuation_and_earthquake_assistance"
+    },
+    {
+      "article_id": "7-12-9-4",
+      "field": "spatial.object",
+      "raw": "persons_with_disabilities_elderly_weak"
+    },
+    {
+      "article_id": "2-8-12-9-4c",
+      "field": "spatial.object",
+      "raw": "emergency access point"
+    },
+    {
+      "article_id": "4-8-12-9-4",
+      "field": "spatial.subject",
+      "raw": "rescue_station_area"
+    },
+    {
+      "article_id": "4-8-12-9-4",
+      "field": "spatial.object",
+      "raw": "main_vehicular_access"
+    },
+    {
+      "article_id": "5-8-12-9-4",
+      "field": "spatial.subject",
+      "raw": "rescue_station_area"
+    },
+    {
+      "article_id": "5-8-12-9-4",
+      "field": "spatial.object",
+      "raw": "permanent_activities_or_installations"
+    },
+    {
+      "article_id": "6-8-12-9-4",
+      "field": "numeric.object",
+      "raw": "rescue_station_width"
+    },
+    {
+      "article_id": "6-8-12-9-4b",
+      "field": "numeric.object",
+      "raw": "rescue_station_width"
+    },
+    {
+      "article_id": "7-8-12-9-4b",
+      "field": "spatial.object",
+      "raw": "people_and_equipment_in_group_4_or_vehicles_in_group_6"
+    },
+    {
+      "article_id": "3-10-12-9-4",
+      "field": "spatial.object",
+      "raw": "railing_or_fence"
+    },
+    {
+      "article_id": "4-10-12-9-4",
+      "field": "spatial.object",
+      "raw": "railing_fence_or_other_measures"
+    },
+    {
+      "article_id": "5-10-12-9-4",
+      "field": "spatial.object",
+      "raw": "external_rescue_access"
+    },
+    {
+      "article_id": "7-10-12-9-4",
+      "field": "spatial.object",
+      "raw": "video_display_or_equivalent"
+    }
+  ],
+  "properties": [
+    {
+      "article_id": "2-5-1-5-4b",
+      "raw": "reduction amount"
+    },
+    {
+      "article_id": "1-6-1-5-4",
+      "raw": "minimum_dimension"
+    },
+    {
+      "article_id": "8-2-5-4a",
+      "raw": "minimum"
+    },
+    {
+      "article_id": "8-2-5-4b",
+      "raw": "minimum"
+    },
+    {
+      "article_id": "2-8-2-5-4",
+      "raw": "minimum"
+    },
+    {
+      "article_id": "3-8-2-5-4",
+      "raw": "maximum"
+    },
+    {
+      "article_id": "1-2-6-5-4b",
+      "raw": "minimum dimension"
+    },
+    {
+      "article_id": "2-2-10-5-4",
+      "raw": "radius"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "items_total": 43,
+  "branch_counts": {
+    "give_up_no_primary": 23,
+    "high_no_transform": 10,
+    "transform_fallback": 5,
+    "transform_primary": 5
+  },
+  "give_up_total": 23,
+  "top5_changed": 0,
+  "llm_calls": 15,
+  "llm_calls_per_100_queries": 34.9,
+  "mean_latency_s": 10.913
+}

@@ -1,0 +1,272 @@
+================================================================================
+MABHAS CLAUSE CLASSIFICATION PROMPT  —  v2.0  (scope-aware, forward-compatible)
+================================================================================
+Use this prompt with DeepSeek (or any capable LLM) to convert raw Mabhas
+article text into structured JSON for the compliance RAG pipeline.
+
+Paste your articles at the bottom where indicated. Run in batches of 10–20
+articles. Save the combined output as data/mabhas_clauses.json.
+================================================================================
+
+
+You are a building-code structuring assistant. I will give you one or more
+articles from the Iranian National Building Regulations (مقررات ملی ساختمان /
+Mabhas). For EACH article, output one JSON object with these exact fields:
+
+{
+  "mabhas_part":              "<the Mabhas part number, e.g. '4'>",
+  "article_id":               "<the article number exactly as printed, e.g. '4-3-2-1'>",
+  "heading_fa":               "<the Persian heading/title of the article, or null if none>",
+  "text_fa":                  "<the full original Persian text, verbatim, unchanged>",
+  "text_en":                  "<a faithful English translation of text_fa>",
+  "skip_category":            "<see SKIP CATEGORIES below, or null if this clause should be stored>",
+  "applicable_occupancies":   <see OCCUPANCY CODES below — a JSON array of strings, or []>,
+  "applicable_height_groups": <see HEIGHT GROUPS below — a JSON array of strings, or []>,
+  "rule_type":                "<see RULE TYPES below — or null if skip_category is not null>",
+  "entities":                 <see ENTITIES below — or null if not applicable>
+}
+
+
+────────────────────────────────────────────────────────────────────────────────
+SKIP CATEGORIES
+────────────────────────────────────────────────────────────────────────────────
+If a clause belongs entirely to one of the following categories, set
+skip_category to that string. Set applicable_occupancies and
+applicable_height_groups to [] and rule_type and entities to null.
+
+  "administrative"        Permit procedures, fees, timelines, submission rules,
+                          definitions of responsible parties (owner, contractor,
+                          designer), occupancy classification tables that only
+                          list examples without stating a requirement.
+
+  "structural_calc"       Load calculations, reinforcement ratios, seismic
+                          analysis, foundation sizing formulas, moment diagrams.
+
+  "material_spec"         Concrete grades, steel types, mortar mix ratios,
+                          material testing standards, product certifications.
+
+  "construction_method"   How to build or install something: curing procedures,
+                          formwork, waterproofing application steps, sequencing
+                          of construction activities.
+
+  "mep_detail"            Pipe diameters, wire gauges, boiler specifications,
+                          pressure ratings, duct sizing formulas, fixture
+                          flow rates.
+
+  "energy_calc"           U-values, R-values, thermal resistance calculations,
+                          energy performance modelling inputs, SHGC values.
+
+  "quality_control"       Inspection procedures during construction, lab testing
+                          protocols, acceptance criteria for materials, site
+                          supervision requirements.
+
+  "legal"                 Liability clauses, definitions of contractual parties,
+                          penalties, appeal procedures, references to other laws.
+
+  "non_residential"       Rules that apply EXCLUSIVELY to non-residential
+                          occupancies (industrial, hazardous, storage, assembly,
+                          commercial) with NO overlap with residential use.
+                          IMPORTANT: if a clause contains a spatial or numeric
+                          requirement but the occupancy it governs is exclusively
+                          non-residential (e.g. day-care only, hospital only,
+                          prison only, industrial only), classify it as
+                          non_residential — even if the clause contains a
+                          checkable rule. Only keep clauses whose requirements
+                          can apply to a standard residential building.
+
+If a clause does NOT belong to any skip category, set skip_category to null
+and fill the remaining fields.
+
+
+────────────────────────────────────────────────────────────────────────────────
+OCCUPANCY CODES  (applicable_occupancies field)
+────────────────────────────────────────────────────────────────────────────────
+When skip_category is null, list every occupancy group for which this clause
+creates a requirement or provides a definition that affects design decisions.
+
+Residential groups:
+  "M-1"              Temporary residential (hotels, motels, guesthouses)
+  "M-2"              Permanent multi-unit residential (apartment buildings,
+                     dormitories — more than two units)
+  "M-3"              24-hour residential care facilities (6–16 persons)
+  "M-4"              1–2 household residential, max 3 storeys from street level
+  "all_residential"  Use this when the clause applies to ALL residential groups
+                     without distinguishing between them, or when the article
+                     uses general terms like "residential buildings" or
+                     "habitable spaces" without specifying a sub-group.
+
+Non-residential groups (include only when the clause explicitly also covers
+residential or mixed-use buildings):
+  "A"    Educational/cultural
+  "D-1" "D-2" "D-3" "D-4"   Medical/care sub-groups
+  "T-1" "T-2" "T-3" "T-4" "T-5"   Assembly sub-groups
+  "H"    Professional/administrative
+  "K"    Commercial/mercantile
+  "I-1" "I-2"   Industrial sub-groups
+  "N-1" "N-2"   Storage sub-groups
+  "X"    Hazardous
+  "F"    Miscellaneous
+
+Special values:
+  "any"  Only use for truly universal technical clauses (e.g. a structural
+         definition that applies to every building type equally). Rare.
+
+Examples:
+  - "Bedrooms must have minimum area of 8 m²"
+    → applicable_occupancies: ["all_residential"]
+
+  - "For M-4 group buildings, a single staircase is permitted"
+    → applicable_occupancies: ["M-4"]
+
+  - "Apartment buildings must have a common corridor"
+    → applicable_occupancies: ["M-2"]
+
+  - "Space is defined as the smallest unit in the general classification"
+    → applicable_occupancies: ["all_residential"]   (contextual definition)
+
+  - A structural calculation rule
+    → skip_category: "structural_calc", applicable_occupancies: []
+
+
+────────────────────────────────────────────────────────────────────────────────
+HEIGHT GROUPS  (applicable_height_groups field)
+────────────────────────────────────────────────────────────────────────────────
+When skip_category is null, list the building height groups (from Mabhas 4-3-3)
+to which this clause applies.
+
+  "low_rise"    1–2 storey buildings (Mabhas groups 1, 2, 3)
+  "mid_rise"    3–4 storey buildings (Mabhas groups 4, 5)
+  "high_rise"   5+ storeys up to 23 m (Mabhas groups 6, 7)
+  "tall"        Above 23 m (Mabhas group 8)
+  "any"         Use when the clause applies to all height groups equally,
+                or when the article makes no distinction by height.
+
+Most residential rules apply to "any". Use specific groups only when the
+article explicitly restricts application by height (e.g. "for buildings
+exceeding 4 storeys…").
+
+
+────────────────────────────────────────────────────────────────────────────────
+RULE TYPES  (rule_type field)
+────────────────────────────────────────────────────────────────────────────────
+Only fill this when skip_category is null.
+
+  "numeric"     The clause sets a measurable threshold: a minimum area, maximum
+                height, minimum width, required distance, ratio, or count.
+                Example: minimum bedroom area must not be less than 8 m².
+
+  "spatial"     The clause describes a relationship between building elements
+                rather than a single measurement. Includes: adjacency rules
+                (what room can open into what), orientation requirements (which
+                direction a window must face), circulation/access rules (how
+                you must be able to reach somewhere), enclosure rules (what
+                must be fully enclosed).
+                Example: kitchen must not have a direct door to a bathroom.
+
+  "definition"  The clause defines a term, scope, or classification with no
+                direct requirement. Kept because it provides context needed to
+                interpret other rules.
+                Example: a habitable space is one used for sleeping, living,
+                or dining.
+
+  "exception"   The clause states an exemption or special case that modifies
+                another rule.
+                Example: the minimum corridor width may be reduced to 900 mm
+                in buildings with fewer than 4 units.
+
+If an article contains MULTIPLE DISTINCT requirements, split it into multiple
+JSON objects, each with a suffixed article_id:
+  "4-5-2-1" → "4-5-2-1a", "4-5-2-1b", etc.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ENTITIES  (entities field)
+────────────────────────────────────────────────────────────────────────────────
+Only fill this when skip_category is null and rule_type is "numeric" or
+"spatial". Set to null for "definition" and "exception".
+
+For rule_type "numeric":
+  {
+    "object":     "<the building element being measured, e.g. 'bedroom'>",
+    "property":   "<what is being measured, e.g. 'area', 'height', 'width'>",
+    "comparator": "<one of: >=, <=, >, <>",
+    "value":      <a number — no units here>,
+    "unit":       "<unit of measurement: 'm2', 'mm', 'm', 'ratio', 'count',
+                   'percent', 'lux', 'dB'>",
+    "condition":  "<optional — any condition on when this threshold applies,
+                   e.g. 'when room area > 20 m2', or null>"
+  }
+
+For rule_type "spatial":
+  {
+    "subject":  "<element A — the thing being constrained>",
+    "relation": "<the spatial relationship — use one of the standard values
+                  below, or invent a descriptive snake_case value if none fit>",
+    "object":   "<element B or the condition that must be satisfied>"
+  }
+
+  Standard relation values:
+    must_not_connect_to   must_connect_to     must_face
+    must_reach            must_not_face       must_be_enclosed
+    must_be_adjacent_to   must_not_be_adjacent_to
+    must_have_access_to   must_be_above       must_be_below
+
+
+────────────────────────────────────────────────────────────────────────────────
+OUTPUT RULES
+────────────────────────────────────────────────────────────────────────────────
+1. Output ONLY a raw JSON array — no commentary, no markdown code fences,
+   no preamble, no explanation. Just the [ ... ] array.
+
+2. Keep text_fa exactly as given in the input — do not paraphrase, correct,
+   or reorder the Persian text.
+
+3. If you are unsure whether a clause should be skipped, default to keeping it
+   (skip_category: null) — a human will review borderline cases.
+
+4. If you are unsure of rule_type, make your best guess — it will be reviewed.
+
+5. Each (mabhas_part + article_id) pair must be unique in the output. If you
+   split an article, use suffixes: "4-5-2-1a", "4-5-2-1b", etc.
+
+6. applicable_occupancies and applicable_height_groups must always be present
+   as JSON arrays — use [] when skip_category is not null, never omit the field.
+
+
+────────────────────────────────────────────────────────────────────────────────
+QUICK REFERENCE — FIELD VALUES BY CASE
+────────────────────────────────────────────────────────────────────────────────
+
+Case A — Checkable residential rule (area, adjacency, egress, light, etc.):
+  skip_category:            null
+  applicable_occupancies:   ["all_residential"]  or  ["M-4"]  etc.
+  applicable_height_groups: ["any"]  or  ["low_rise", "mid_rise"]  etc.
+  rule_type:                "numeric"  or  "spatial"
+  entities:                 { ... }
+
+Case B — Residential definition (term, scope, classification):
+  skip_category:            null
+  applicable_occupancies:   ["all_residential"]
+  applicable_height_groups: ["any"]
+  rule_type:                "definition"
+  entities:                 null
+
+Case C — Technical rule that cannot be read from a floor plan
+  (structural, material, construction method, MEP, energy, QC, legal):
+  skip_category:            "structural_calc"  (or other category)
+  applicable_occupancies:   []
+  applicable_height_groups: []
+  rule_type:                null
+  entities:                 null
+
+Case D — Non-residential occupancy definition or rule:
+  skip_category:            "non_residential"  or  "administrative"
+  applicable_occupancies:   []
+  applicable_height_groups: []
+  rule_type:                null
+  entities:                 null
+
+
+================================================================================
+PASTE YOUR MABHAS ARTICLES BELOW THIS LINE
+================================================================================

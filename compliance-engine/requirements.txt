@@ -1,0 +1,35 @@
+# ============================================================================
+# Mabhas Compliance Engine — runtime dependencies
+# Pruned and re-derived from the actual imports in rag/, services/, api/,
+# classification/ (FlagEmbedding and scikit-learn removed — neither is imported;
+# the cross-encoder reranker uses sentence-transformers' CrossEncoder).
+# ============================================================================
+
+# ---- Core: retrieval + knowledge graph + spatial engine (always required) ----
+networkx>=3.0            # regulation graph + graph-aware retrieval, spatial graph
+shapely>=2.0             # room geometry (LineString / unary_union) in spatial_graph
+numpy>=1.26              # vector math in embeddings / rag_retriever
+psycopg2-binary>=2.9.9   # Postgres driver for the pgvector store (rag_index, rag_retriever)
+pgvector>=0.3.0          # pgvector <-> psycopg2 adapter (register_vector)
+sentence-transformers>=3.0.0  # local embedding backend + bge-reranker CrossEncoder
+huggingface-hub>=0.23.0  # HuggingFace Inference API embedding backend (embeddings.py)
+torch>=2.0               # required by sentence-transformers; reranker probes torch.cuda
+
+# ---- LLM providers (each tied to one stage) ----
+anthropic>=0.39.0        # Stage 1 contextual retrieval — one-time index pass (contextualize.py)
+groq>=0.11.0             # Stage 2 query transforms — qwen/qwen3-32b (groq_client.py, query_transforms.py)
+openai>=1.0.0            # Step 1 offline Mabhas classification (classification/mabhas_classify.py)
+
+# ---- Document input (Step 1) ----
+python-docx>=1.1.0       # reads the Mabhas Word document into structured clauses
+
+# ---- Web service (optional — only to run the FastAPI app) ----
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0
+celery>=5.3.0            # optional async worker; api/tasks.py falls back to threads if no broker
+redis>=5.0.0             # optional Celery broker/result backend
+
+# ---- Optional, degrade gracefully if absent ----
+weasyprint>=60.0         # PDF rendering in report_generator (skipped cleanly if unavailable)
+langgraph>=0.2.0         # parallel agent execution in orchestrator (falls back to sequential)

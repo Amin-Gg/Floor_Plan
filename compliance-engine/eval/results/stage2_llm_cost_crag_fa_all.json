@@ -1,0 +1,7 @@
+{
+  "transform": "crag",
+  "query_lang": "fa",
+  "hop_type": "all",
+  "llm_calls": 15,
+  "llm_total_seconds": 30.14
+}

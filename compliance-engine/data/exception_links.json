@@ -1,0 +1,32 @@
+[
+  {
+    "exception_article_id": "2-5-1-4-4",
+    "base_article_id": "5-1-4-4",
+    "cited_ref": "4-4-1-5-1",
+    "note": "Text cites sub-clause 4-4-1-5-1 (basement height/area specs). Corpus stores the parent section un-split as 5-1-4-4 (heading: الزامات ارتفاع و مساحت طبقات در زیرزمین). Confirmed manually; the parent_section resolver step finds the same target — this entry pins it explicitly. REVIEW: Goodi to confirm against the printed Mabhas 4 text."
+  },
+  {
+    "exception_article_id": "1-5-4-5-4",
+    "base_article_id": null,
+    "cited_ref": null,
+    "note": "Excepts a practice (attached rooms with >=80% open shared wall need no independent light/ventilation). No article cited; candidate bases are the natural-lighting clauses of section 4-5-4. UNRESOLVED pending manual review."
+  },
+  {
+    "exception_article_id": "1-2-6-4",
+    "base_article_id": null,
+    "cited_ref": null,
+    "note": "Mechanical ventilation may replace natural where natural is not mandated. No article cited. UNRESOLVED pending manual review."
+  },
+  {
+    "exception_article_id": "1-3-6-4",
+    "base_article_id": null,
+    "cited_ref": null,
+    "note": "Low-transmission glazing must be compensated by equivalent area. No article cited. UNRESOLVED pending manual review."
+  },
+  {
+    "exception_article_id": "2-8-4b",
+    "base_article_id": null,
+    "cited_ref": null,
+    "note": "Light well with one open side: no floor-count lighting restriction. No article cited. UNRESOLVED pending manual review."
+  }
+]

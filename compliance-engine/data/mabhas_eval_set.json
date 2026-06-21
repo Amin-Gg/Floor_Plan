@@ -1,0 +1,615 @@
+[
+  {
+    "item_id": "1-2-2-5-4a_0",
+    "source_article_ids": [
+      "1-2-2-5-4a"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a living/dwelling space with a floor area of 5 m² compliant with Mabhas?",
+    "question_fa": "آیا یک فضای اقامت با مساحت زیربنای ۵ مترمربع با مقررات ملی ساختمان مطابقت دارد؟",
+    "gold_answer_en": "No. A dwelling space must have a minimum floor area of 6.50 m², so 5 m² is not permitted.",
+    "gold_answer_fa": "خیر. فضای اقامت باید حداقل ۶.۵ مترمربع زیربنا داشته باشد، بنابراین ۵ مترمربع مجاز نیست.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "The authoritative figure (6.50 m²) lives in the Persian momayyez form '50/6'; the English/entity fields mis-render it, so retrieval must trust the Persian clause."
+  },
+  {
+    "item_id": "1-2-2-5-4a_1",
+    "source_article_ids": [
+      "1-2-2-5-4a"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a living/dwelling space with a floor area of 7 m² compliant with Mabhas?",
+    "question_fa": "آیا یک فضای اقامت با مساحت زیربنای ۷ مترمربع با مقررات ملی ساختمان مطابقت دارد؟",
+    "gold_answer_en": "Yes. A dwelling space must have a minimum floor area of 6.50 m², and 7 m² meets that minimum.",
+    "gold_answer_fa": "بله. فضای اقامت باید حداقل ۶.۵ مترمربع زیربنا داشته باشد و ۷ مترمربع این حداقل را برآورده می‌کند.",
+    "rule_type": "numeric",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "PASS counterpart just above the 6.50 m² threshold; tests that the engine retrieves the same area rule for a compliant design."
+  },
+  {
+    "item_id": "1-2-2-5-4a_2",
+    "source_article_ids": [
+      "1-2-2-5-4a",
+      "4-3-1"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "A 6 m² room is labelled a 'storeroom' on the plan but is used for sleeping. Does the minimum dwelling-space area apply to it?",
+    "question_fa": "اتاقی ۶ مترمربعی در نقشه «انباری» نام‌گذاری شده اما برای خوابیدن استفاده می‌شود. آیا حداقل مساحت فضای اقامت برای آن اعمال می‌شود؟",
+    "gold_answer_en": "Yes. Spaces are categorised by use, and a space used for habitation is a dwelling space; dwelling spaces must have a minimum floor area of 6.50 m², so the 6 m² space fails.",
+    "gold_answer_fa": "بله. فضاها بر اساس کاربری دسته‌بندی می‌شوند و فضایی که برای اقامت استفاده شود فضای اقامت است؛ فضای اقامت باید حداقل ۶.۵ مترمربع باشد، بنابراین فضای ۶ مترمربعی مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Requires resolving the space-category definition first (what counts as a 'فضای اقامت') before the 6.50 m² area threshold can be applied to a mislabelled room."
+  },
+  {
+    "item_id": "2-2-2-5-4_0",
+    "source_article_ids": [
+      "2-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a dwelling space that is only 1.8 m wide compliant with Mabhas?",
+    "question_fa": "آیا فضای اقامتی که فقط ۱.۸ متر عرض دارد با مقررات ملی ساختمان مطابقت دارد؟",
+    "gold_answer_en": "No. A dwelling space must have a minimum width of 2.15 m, so 1.8 m is not permitted.",
+    "gold_answer_fa": "خیر. فضای اقامت باید حداقل ۲.۱۵ متر عرض داشته باشد، بنابراین ۱.۸ متر مجاز نیست.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Width minimum 2.15 m is stored as '15/2' in Persian; engine must not confuse the width rule with the area rule of the adjacent clause."
+  },
+  {
+    "item_id": "3-2-2-5-4_0",
+    "source_article_ids": [
+      "3-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A living room has a flat ceiling height of 2.30 m throughout. Is this compliant?",
+    "question_fa": "یک اتاق نشیمن در سراسر خود ارتفاع سقف صاف ۲.۳ متر دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. The minimum height of a dwelling space must be 2.40 m and this minimum must be met throughout the entire area, so 2.30 m fails.",
+    "gold_answer_fa": "خیر. حداقل ارتفاع فضای اقامت باید ۲.۴ متر باشد و این حداقل باید در تمام سطح رعایت شود، بنابراین ۲.۳ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Authoritative value 2.40 m ('40/2' momayyez); the English text wrongly renders it, so the engine must rely on the Persian clause for the ceiling-height threshold."
+  },
+  {
+    "item_id": "3-2-2-5-4_1",
+    "source_article_ids": [
+      "3-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Under a sloped ceiling, the lowest counted part of a dwelling room is 2.10 m high. Is that part compliant?",
+    "question_fa": "زیر سقف شیب‌دار، کوتاه‌ترین قسمت محاسبه‌شدهٔ یک اتاق اقامت ۲.۱۰ متر ارتفاع دارد. آیا این قسمت مطابق با مقررات است؟",
+    "gold_answer_en": "Yes. Under a sloped ceiling the shortest counted part must not be less than 2.05 m, and 2.10 m meets that minimum.",
+    "gold_answer_fa": "بله. زیر سقف شیب‌دار کوتاه‌ترین قسمت محاسبه‌شده نباید کمتر از ۲.۰۵ متر باشد و ۲.۱۰ متر این حداقل را برآورده می‌کند.",
+    "rule_type": "numeric",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "Second measurable property in the same clause (sloped-ceiling minimum 2.05 m); engine must distinguish it from the general 2.40 m minimum."
+  },
+  {
+    "item_id": "4-2-2-5-4_0",
+    "source_article_ids": [
+      "4-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A duct crossing a living space leaves only 1.95 m of clear height beneath it. Is this compliant?",
+    "question_fa": "یک کانال که از فضای اقامت عبور می‌کند تنها ۱.۹۵ متر ارتفاع آزاد زیر خود باقی می‌گذارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. The minimum free clearance under door frames, beams, pipes, ducts and other elements that people pass beneath in dwelling spaces must not be less than 2.05 m, so 1.95 m fails.",
+    "gold_answer_fa": "خیر. حداقل ارتفاع آزاد زیر چارچوب درها، تیرها، لوله‌ها، کانال‌ها و سایر عناصر در فضاهای اقامت که از زیر آن‌ها عبور می‌شود نباید کمتر از ۲.۰۵ متر باشد، بنابراین ۱.۹۵ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Clearance value 2.05 m ('05/2'); easily confused with the 2.40 m room-height rule, so the engine must retrieve the obstruction-clearance clause specifically."
+  },
+  {
+    "item_id": "5-2-2-5-4_0",
+    "source_article_ids": [
+      "5-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Inside a dwelling space there is a mezzanine; the upper part has 1.95 m of headroom. Is the upper level compliant?",
+    "question_fa": "داخل یک فضای اقامت یک میان‌طبقه وجود دارد؛ قسمت بالایی آن ۱.۹۵ متر ارتفاع دارد. آیا تراز بالایی مطابق با مقررات است؟",
+    "gold_answer_en": "No. Where a mezzanine is placed inside a dwelling space as part of it, the upper part must be at least 2.10 m high, so 1.95 m fails.",
+    "gold_answer_fa": "خیر. در صورت تعبیهٔ میان‌طبقه در فضای اقامت به‌عنوان بخشی از آن، قسمت بالایی باید حداقل ۲.۱۰ متر ارتفاع داشته باشد، بنابراین ۱.۹۵ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Clause states two stacked minimums (upper 2.10 m, lower 2.40 m); engine must pick the upper-part value, not the lower."
+  },
+  {
+    "item_id": "5-2-2-5-4_1",
+    "source_article_ids": [
+      "5-2-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Inside a dwelling space there is a mezzanine; the lower part is 2.45 m high. Is the lower level compliant?",
+    "question_fa": "داخل یک فضای اقامت یک میان‌طبقه وجود دارد؛ قسمت پایینی آن ۲.۴۵ متر ارتفاع دارد. آیا تراز پایینی مطابق با مقررات است؟",
+    "gold_answer_en": "Yes. Where a mezzanine is placed inside a dwelling space as part of it, the lower part must be at least 2.40 m high, and 2.45 m meets that minimum.",
+    "gold_answer_fa": "بله. در صورت تعبیهٔ میان‌طبقه در فضای اقامت به‌عنوان بخشی از آن، قسمت پایینی باید حداقل ۲.۴۰ متر ارتفاع داشته باشد و ۲.۴۵ متر این حداقل را برآورده می‌کند.",
+    "rule_type": "numeric",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "Second property (lower part 2.40 m) in the same clause; PASS-phrased to contrast with the FAIL on the upper part."
+  },
+  {
+    "item_id": "5-2-2-5-4_2",
+    "source_article_ids": [
+      "5-2-2-5-4",
+      "4-1-4-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "When does a mezzanine inside a living room count as part of that room, and what headroom must its upper and lower levels provide?",
+    "question_fa": "میان‌طبقهٔ داخل یک اتاق نشیمن چه زمانی جزئی از همان اتاق محسوب می‌شود و قسمت‌های بالا و پایین آن باید چه ارتفاعی داشته باشند؟",
+    "gold_answer_en": "A mezzanine counts as part of the space beneath it only if it meets all the stated conditions (including the area/dimension limits) and it is not counted in the number of building floors; when it is part of the dwelling space, the upper part must be at least 2.10 m and the lower part at least 2.40 m high.",
+    "gold_answer_fa": "میان‌طبقه تنها در صورتی جزئی از فضای زیرین خود محسوب می‌شود که تمام شرایط تعیین‌شده (از جمله محدودیت مساحت و ابعاد) را برآورده کند و در تعداد طبقات ساختمان منظور نمی‌شود؛ وقتی بخشی از فضای اقامت باشد، قسمت بالایی باید حداقل ۲.۱۰ متر و قسمت پایینی حداقل ۲.۴۰ متر ارتفاع داشته باشد.",
+    "rule_type": "numeric",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Two numeric clauses must be satisfied together: the qualifying conditions for a mezzanine and the upper/lower headroom minimums; whether all conditions are met needs more than the headroom figures."
+  },
+  {
+    "item_id": "2-3-2-5-4_0",
+    "source_article_ids": [
+      "2-3-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A 24 m² living room provides 2.5 m² of glazed window area. Is the natural-light provision compliant?",
+    "question_fa": "یک اتاق نشیمن ۲۴ مترمربعی، ۲.۵ مترمربع سطح پنجرهٔ شیشه‌ای دارد. آیا تأمین نور طبیعی آن مطابق با مقررات است؟",
+    "gold_answer_en": "No. In a dwelling space the mandatory glazed area must be at least one eighth of the floor area; one eighth of 24 m² is 3 m², so 2.5 m² fails.",
+    "gold_answer_fa": "خیر. در فضای اقامت سطح شیشهٔ الزامی باید حداقل یک‌هشتم سطح کف باشد؛ یک‌هشتم ۲۴ مترمربع برابر ۳ مترمربع است، بنابراین ۲.۵ مترمربع مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Ratio rule (1/8 of floor area) requires the engine to compute against floor area rather than match a fixed threshold."
+  },
+  {
+    "item_id": "2-3-2-5-4_1",
+    "source_article_ids": [
+      "2-3-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "If a dwelling space has windows only on one wall and the opposite wall is more than 4.5 m away, what fraction of the floor area must be glazed?",
+    "question_fa": "اگر یک فضای اقامت تنها در یک دیوار پنجره داشته باشد و فاصلهٔ دیوار مقابل بیش از ۴.۵ متر باشد، چه کسری از سطح کف باید شیشه‌خور باشد؟",
+    "gold_answer_en": "In that case the required glazed area increases from one eighth to one seventh of the floor area.",
+    "gold_answer_fa": "در این حالت سطح شیشهٔ الزامی از یک‌هشتم به یک‌هفتم سطح کف افزایش می‌یابد.",
+    "rule_type": "numeric",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Conditional ratio (1/7 only when windows are single-wall and opposite wall > 4.50 m); whether the layout triggers it can't be judged from area alone."
+  },
+  {
+    "item_id": "1-5-1-5-4a_0",
+    "source_article_ids": [
+      "1-5-1-5-4a"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a hinged main entrance door with a clear width of 0.80 m compliant?",
+    "question_fa": "آیا درِ اصلیِ لولاییِ ورودی با پهنای مفید ۰.۸۰ متر مطابق با مقررات است؟",
+    "gold_answer_en": "No. The main door must be hinged with a minimum clear width of 0.90 m, so 0.80 m is not permitted.",
+    "gold_answer_fa": "خیر. درِ اصلی باید از نوع لولایی با پهنای مفید حداقل ۰.۹۰ متر باشد، بنابراین ۰.۸۰ متر مجاز نیست.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Width minimum 0.90 m ('90/0'); the English/entity fields render it as '90 m', so the engine must read the Persian clause."
+  },
+  {
+    "item_id": "1-5-1-5-4a_1",
+    "source_article_ids": [
+      "1-5-1-5-4a"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a hinged main entrance door with a clear width of 0.95 m compliant?",
+    "question_fa": "آیا درِ اصلیِ لولاییِ ورودی با پهنای مفید ۰.۹۵ متر مطابق با مقررات است؟",
+    "gold_answer_en": "Yes. The main door must be hinged with a minimum clear width of 0.90 m, and 0.95 m meets that minimum.",
+    "gold_answer_fa": "بله. درِ اصلی باید از نوع لولایی با پهنای مفید حداقل ۰.۹۰ متر باشد و ۰.۹۵ متر این حداقل را برآورده می‌کند.",
+    "rule_type": "numeric",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "PASS counterpart to the door-width FAIL item, just above the 0.90 m minimum."
+  },
+  {
+    "item_id": "1-5-1-5-4b_0",
+    "source_article_ids": [
+      "1-5-1-5-4b"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a main entrance door with a clear height of 2.00 m compliant?",
+    "question_fa": "آیا درِ اصلیِ ورودی با ارتفاع مفید ۲.۰۰ متر مطابق با مقررات است؟",
+    "gold_answer_en": "No. The main door must have a minimum clear height of 2.05 m, so 2.00 m is not permitted.",
+    "gold_answer_fa": "خیر. درِ اصلی باید ارتفاع مفید حداقل ۲.۰۵ متر داشته باشد، بنابراین ۲.۰۰ متر مجاز نیست.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Same source sentence as the width rule but a different property (height 2.05 m); engine must separate clear height from clear width."
+  },
+  {
+    "item_id": "1-5-1-5-4a_2",
+    "source_article_ids": [
+      "1-5-1-5-4a",
+      "5-1-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "A door that is the mandatory exit of an apartment unit is 0.85 m wide. Does the 0.90 m clear-width rule apply to it?",
+    "question_fa": "دری که خروجِ الزامیِ یک واحد آپارتمانی است ۰.۸۵ متر عرض دارد. آیا قاعدهٔ پهنای مفید ۰.۹۰ متر برای آن اعمال می‌شود؟",
+    "gold_answer_en": "Yes. A door designed as the main entrance or mandatory exit of a building or occupancy unit must comply with the main-door requirements, which include a minimum clear width of 0.90 m; 0.85 m therefore fails.",
+    "gold_answer_fa": "بله. دری که به‌عنوان ورودی اصلی یا خروج الزامی ساختمان یا واحد تصرف طراحی شده باشد باید الزامات درِ اصلی، از جمله پهنای مفید حداقل ۰.۹۰ متر، را رعایت کند؛ بنابراین ۰.۸۵ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Must first establish (via the main/mandatory-exit-door definition) that the door qualifies as a 'main door' before the 0.90 m clear-width minimum can be applied."
+  },
+  {
+    "item_id": "1-7-1-5-4_0",
+    "source_article_ids": [
+      "1-7-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a building stair with a tread depth of 0.25 m compliant?",
+    "question_fa": "آیا پلهٔ ساختمانی با عمق کف پلهٔ ۰.۲۵ متر مطابق با مقررات است؟",
+    "gold_answer_en": "No. The minimum tread depth of a building stair is 0.28 m, so 0.25 m is not permitted.",
+    "gold_answer_fa": "خیر. حداقل عمق کف پله در راه‌پلهٔ ساختمان ۰.۲۸ متر است، بنابراین ۰.۲۵ متر مجاز نیست.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Tread minimum 0.28 m ('28/0', expressed in metres in the clause though equal to 28 cm); engine must not be thrown by the unit mismatch."
+  },
+  {
+    "item_id": "1-7-1-5-4_1",
+    "source_article_ids": [
+      "1-7-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A stair has a 0.30 m tread and a 0.18 m riser. Does it satisfy the tread-and-riser relationship required by Mabhas?",
+    "question_fa": "یک پله عمق کف ۰.۳۰ متر و ارتفاع ۰.۱۸ متر دارد. آیا رابطهٔ کف پله و ارتفاع پلهٔ مورد نیاز مقررات را برآورده می‌کند؟",
+    "gold_answer_en": "No. The sum of the tread depth and twice the riser height must be between 0.63 m and 0.64 m; here it is 0.30 + 2×0.18 = 0.66 m, which is outside the allowed range.",
+    "gold_answer_fa": "خیر. مجموع عمق کف پله و دو برابر ارتفاع آن باید بین ۰.۶۳ و ۰.۶۴ متر باشد؛ در اینجا ۰.۳۰ + ۲×۰.۱۸ = ۰.۶۶ متر است که خارج از محدودهٔ مجاز قرار دارد.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Second property: a two-sided numeric band on (tread + 2·riser); requires arithmetic, not a single-threshold match."
+  },
+  {
+    "item_id": "5-7-1-5-4_0",
+    "source_article_ids": [
+      "5-7-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "In a building designed for people with reduced mobility, a flight has 14 steps between two landings. Is this compliant?",
+    "question_fa": "در ساختمانی که برای افراد کم‌توان حرکتی طراحی شده، یک رشته‌پله بین دو پاگرد ۱۴ پله دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. In buildings used by people with disabilities and limited physical mobility, the maximum number of steps between two landings is 12, so 14 fails.",
+    "gold_answer_fa": "خیر. در ساختمان‌های مورد استفادهٔ افراد دارای معلولیت و کم‌توانان جسمی‌حرکتی، حداکثر تعداد پله بین دو پاگرد ۱۲ پله است، بنابراین ۱۴ پله مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Conditional cap (12 steps) that only applies to accessibility-relevant buildings; retrieval must surface the occupancy condition attached to the number."
+  },
+  {
+    "item_id": "6-7-1-5-4_0",
+    "source_article_ids": [
+      "6-7-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A stair flight has a clear (head) height of 1.95 m along its run. Is this compliant?",
+    "question_fa": "یک رشته‌پله در طول مسیر خود ارتفاع غیرسرگیرِ ۱.۹۵ متر دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. The minimum clear (non-head-striking) height of stairs and their landings along the whole route is 2.05 m, so 1.95 m fails.",
+    "gold_answer_fa": "خیر. حداقل ارتفاع غیرسرگیرِ پله‌ها و پاگردها در تمام طول مسیر ۲.۰۵ متر است، بنابراین ۱.۹۵ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Headroom minimum 2.05 m ('05/2'); the English field wrongly shows 0.25 m, so only the Persian clause gives the right value."
+  },
+  {
+    "item_id": "1-11-1-5-4_0",
+    "source_article_ids": [
+      "1-11-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A roof terrace has a 1.2 m drop at its edge with no guard or railing. Is this compliant?",
+    "question_fa": "یک تراس بام در لبهٔ خود اختلاف سطح ۱.۲ متری بدون دست‌انداز یا جان‌پناه دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. Where level differences exceed 0.70 m, a guard or railing must be provided to prevent people from falling, so a 1.2 m drop with no guard fails.",
+    "gold_answer_fa": "خیر. در محل‌هایی که اختلاف سطح بیش از ۰.۷۰ متر باشد، باید با دست‌انداز یا جان‌پناه از احتمال سقوط افراد جلوگیری شود، بنابراین اختلاف سطح ۱.۲ متری بدون جان‌پناه مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Trigger threshold 0.70 m ('70/0'); the rule is conditional (guard only required above the threshold), so retrieval must keep the threshold and the obligation together."
+  },
+  {
+    "item_id": "1-11-1-5-4_1",
+    "source_article_ids": [
+      "1-11-1-5-4",
+      "2-11-1-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "A 1.0 m level difference next to a ramp is protected only by a 0.80 m high railing. Is this compliant?",
+    "question_fa": "یک اختلاف سطح ۱.۰ متری در کنار یک شیب‌راه فقط با یک نرده/دست‌انداز ۰.۸۰ متری محافظت شده است. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. A level difference above 0.70 m must be protected by a guard or railing, and the railing height on sloping stairs or ramps must be at least 0.90 m; a 0.80 m railing therefore fails.",
+    "gold_answer_fa": "خیر. اختلاف سطح بیش از ۰.۷۰ متر باید با دست‌انداز یا جان‌پناه محافظت شود و ارتفاع دست‌انداز روی پله‌های شیب‌دار یا شیب‌راه‌ها باید حداقل ۰.۹۰ متر باشد؛ بنابراین دست‌انداز ۰.۸۰ متری مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Two numeric clauses must hold simultaneously: the guard-required threshold (0.70 m) and the minimum railing height (0.90 m)."
+  },
+  {
+    "item_id": "2-11-1-5-4_0",
+    "source_article_ids": [
+      "2-11-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Is a 0.85 m high handrail on a ramp compliant with Mabhas?",
+    "question_fa": "آیا دست‌انداز ۰.۸۵ متری روی یک شیب‌راه با مقررات ملی ساختمان مطابقت دارد؟",
+    "gold_answer_en": "No. The height of handrails on sloping stairs or ramps, measured from the tread or ramp surface, must be at least 0.90 m, so 0.85 m fails.",
+    "gold_answer_fa": "خیر. ارتفاع دست‌انداز پله‌های شیب‌دار یا شیب‌راه‌ها از لبهٔ پله یا سطح شیب‌راه باید حداقل ۰.۹۰ متر باشد، بنابراین ۰.۸۵ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Handrail-height minimum 0.90 m; close in topic to the guard-trigger clause (0.70 m), so the engine must not confuse the two."
+  },
+  {
+    "item_id": "1-3-1-5-4_0",
+    "source_article_ids": [
+      "1-3-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "There is a wall facing the main entrance door only 1.0 m away. Is this compliant?",
+    "question_fa": "دیواری روبه‌روی درِ ورودی اصلی تنها در فاصلهٔ ۱.۰ متری قرار دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. If there is a step, a level difference, or a wall opposite the main entrance door, a minimum distance of 1.40 m must be kept from it, so 1.0 m fails.",
+    "gold_answer_fa": "خیر. در صورت وجود پله، اختلاف سطح یا دیوار در مقابل درِ ورودی اصلی، باید حداقل ۱.۴۰ متر از آن فاصله باشد، بنابراین ۱.۰ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Clearance minimum 1.40 m ('40/1'); the English field renders it as 0.4 m, so the Persian clause is the only correct source."
+  },
+  {
+    "item_id": "1-4-1-5-4_0",
+    "source_article_ids": [
+      "1-4-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "An internal corridor on the access and egress route is 1.20 m wide. Is this compliant?",
+    "question_fa": "یک راهرو داخلی در مسیر دسترس و خروج ۱.۲۰ متر عرض دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. The usable, unobstructed width of internal circulation corridors on the access/egress route must in any case not be less than 1.40 m, so 1.20 m fails.",
+    "gold_answer_fa": "خیر. پهنای مفید و بدون مانع راهروهای ارتباطی داخلی در مسیر دسترس و خروج در هر صورت نباید کمتر از ۱.۴۰ متر باشد، بنابراین ۱.۲۰ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Floor (1.40 m, '40/1') is the 'in any case' minimum beneath an occupancy-load calculation; engine must surface the absolute floor, not the variable part."
+  },
+  {
+    "item_id": "2-4-1-5-4_0",
+    "source_article_ids": [
+      "2-4-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "In a unit where accessibility is not required, a corridor on the egress route is 1.15 m wide. Is this compliant?",
+    "question_fa": "در واحدی که دسترس‌پذیری برای معلولان الزامی نیست، راهرویی در مسیر خروج ۱.۱۵ متر عرض دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "Yes. Where accessibility is not required, a circulation corridor on the access/egress route must have a minimum usable unobstructed width of 1.10 m, and 1.15 m meets that minimum.",
+    "gold_answer_fa": "بله. در جایی که دسترس‌پذیری الزامی نیست، راهروی ارتباطی در مسیر دسترس و خروج باید حداقل پهنای مفید و بدون مانع ۱.۱۰ متر داشته باشد و ۱.۱۵ متر این حداقل را برآورده می‌کند.",
+    "rule_type": "numeric",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "Easily confused with the 1.40 m general corridor minimum; the lower 1.10 m value applies only under the no-accessibility condition."
+  },
+  {
+    "item_id": "4-4-1-5-4_0",
+    "source_article_ids": [
+      "4-4-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A straight corridor that is NOT on the egress route, serving 50 people or fewer with no accessibility requirement, is 0.80 m wide. Is this compliant?",
+    "question_fa": "راهروی مستقیمی که در مسیر خروج نیست و به ۵۰ نفر یا کمتر خدمت می‌دهد و دسترس‌پذیری برای آن الزامی نیست، ۰.۸۰ متر عرض دارد. آیا این مطابق با مقررات است؟",
+    "gold_answer_en": "No. The minimum width of such a corridor is 0.90 m, so 0.80 m fails.",
+    "gold_answer_fa": "خیر. حداقل پهنای چنین راهرویی ۰.۹۰ متر است، بنابراین ۰.۸۰ متر مردود است.",
+    "rule_type": "numeric",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Three conditions (off-egress, ≤50 occupants, no accessibility) gate the 0.90 m value; retrieval must match the most permissive corridor rule, not the egress one."
+  },
+  {
+    "item_id": "8-4-4-4a_0",
+    "source_article_ids": [
+      "8-4-4-4a"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "A glazed panel next to a public passage is 1.2 m wide and about 2 m². Must it be made of safety glass?",
+    "question_fa": "یک قاب شیشه‌ای کنار یک معبر عمومی ۱.۲ متر عرض و حدود ۲ مترمربع مساحت دارد. آیا باید از شیشهٔ ایمن ساخته شود؟",
+    "gold_answer_en": "Yes. All glass surfaces wider than 0.90 m and larger than 1.50 m² that are adjacent to open space or a passage must be made of safety, non-shattering glass.",
+    "gold_answer_fa": "بله. تمام سطوح شیشه‌ای با عرض بیش از ۰.۹۰ متر و مساحت بیش از ۱.۵۰ مترمربع که در مجاورت فضای باز یا معبر قرار دارند باید از شیشهٔ ایمن و غیرریزنده باشند.",
+    "rule_type": "numeric",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Both triggers (width > 0.90 m, area > 1.50 m²) come from a momayyez form the English field mis-renders ('90 m', '50.1 m²'); also material type (safety glass) can't be confirmed from a plan."
+  },
+  {
+    "item_id": "2-1-1-5-4_0",
+    "source_article_ids": [
+      "2-1-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Can the building's main access route pass through a bedroom?",
+    "question_fa": "آیا مسیر دسترس اصلی ساختمان می‌تواند از داخل یک اتاق خواب عبور کند؟",
+    "gold_answer_en": "No. The main circulation and access routes must not pass through rooms or other spaces, except in administrative or supervisory occupancies passing through a room for traffic control while meeting the route requirements.",
+    "gold_answer_fa": "خیر. مسیرهای ارتباط و دسترس اصلی ساختمان نباید از درون اتاق‌ها یا فضاهای دیگر عبور کنند، مگر در تصرف‌های اداری یا مراقبتی که برای کنترل رفت‌وآمد از اتاقی عبور می‌کنند مشروط بر انطباق با الزامات این مسیرها.",
+    "rule_type": "spatial",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Adjacency/connectivity rule with a narrow occupancy exception; retrieval must capture both the prohibition and its limited carve-out."
+  },
+  {
+    "item_id": "2-5-1-5-4_0",
+    "source_article_ids": [
+      "2-5-1-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "In which direction must the door of a room with an occupancy load of 50 or more people swing?",
+    "question_fa": "درِ اتاقی با بار تصرف ۵۰ نفر یا بیشتر باید در چه جهتی باز شود؟",
+    "gold_answer_en": "It must swing in the direction of egress (this also applies to doors in exit enclosures and in hazardous occupancies).",
+    "gold_answer_fa": "باید موافق جهت خروج باز شود (این الزام برای درهای واقع در دوربندهای خروج و در تصرف‌های مخاطره‌آمیز نیز برقرار است).",
+    "rule_type": "spatial",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "Egress-direction rule keyed to an occupancy-load condition; the engine must retrieve the swing-direction clause rather than a generic door clause."
+  },
+  {
+    "item_id": "1-3-2-5-4_0",
+    "source_article_ids": [
+      "1-3-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Can a bedroom with no window opening to the outside qualify as a dwelling space?",
+    "question_fa": "آیا یک اتاق خواب بدون پنجره‌ای که رو به بیرون باز شود می‌تواند به‌عنوان فضای اقامت محسوب شود؟",
+    "gold_answer_en": "No. Each dwelling space must have at least one door and one glazed window that, per urban planning rules, directly faces an open space, street, or public passage.",
+    "gold_answer_fa": "خیر. هر فضای اقامت باید حداقل یک یا چند در و پنجرهٔ شیشه‌ای داشته باشد که با رعایت ضوابط شهرسازی مستقیماً رو به فضای باز، خیابان یا معبر عمومی باشد.",
+    "rule_type": "spatial",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Connectivity-to-exterior requirement; the challenge is that the query says 'no window outside' while the clause frames it as a positive door+window-facing-open-space obligation."
+  },
+  {
+    "item_id": "2-1-2-5-4_0",
+    "source_article_ids": [
+      "2-1-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "In a multi-room apartment, can the only access to one bedroom be through another bedroom?",
+    "question_fa": "در یک آپارتمان چنداتاقه، آیا تنها دسترسی به یک اتاق خواب می‌تواند از طریق اتاق خواب دیگری باشد؟",
+    "gold_answer_en": "No. The only access to a dwelling room must not be through another dwelling room, unless the space is an annexed space under the relevant clause or the unit has no dwelling room other than these two.",
+    "gold_answer_fa": "خیر. تنها دسترسی موجود به یک اتاق اقامت نباید از اتاق اقامت دیگری باشد، مگر آنکه فضا طبق بند مربوط فضای الحاق‌شده محسوب شود یا واحد تصرف اقامتی غیر از این دو اتاق نداشته باشد.",
+    "rule_type": "spatial",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Connectivity rule with two exceptions; retrieval must distinguish the prohibition from the narrow annexed-space / two-room carve-outs."
+  },
+  {
+    "item_id": "1-5-2-5-4_0",
+    "source_article_ids": [
+      "1-5-2-5-4"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "An alcove is attached to a living room and 85% of their shared wall is open. Does the alcove need its own independent light and ventilation?",
+    "question_fa": "یک فضای کوچک به اتاق نشیمن منضم شده و ۸۵ درصد دیوار مشترک آن‌ها باز است. آیا این فضا به نور و تهویهٔ مستقل نیاز دارد؟",
+    "gold_answer_en": "No. An attached room whose shared wall with the main space is at least 80% open does not need independent light and ventilation; its area is added to the main space for the light/air calculation.",
+    "gold_answer_fa": "خیر. اتاق منضمی که حداقل ۸۰ درصد دیوار مشترک آن با فضای اصلی باز باشد به نور و تهویهٔ مستقل نیاز ندارد و مساحت آن برای محاسبهٔ نور و هوا به فضای اصلی افزوده می‌شود.",
+    "rule_type": "spatial",
+    "expected_verdict": "PASS",
+    "difficulty_notes": "80%-open spatial condition; the engine must retrieve the attached-room rule and recognise 85% satisfies the threshold."
+  },
+  {
+    "item_id": "1-5-2-5-4_1",
+    "source_article_ids": [
+      "1-5-2-5-4",
+      "2-5-2-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "An annexed space shares a wall with the main dwelling space that is only 60% open. What does Mabhas require regarding its light/ventilation and its entrance?",
+    "question_fa": "یک فضای الحاق‌شده تنها ۶۰ درصد از دیوار مشترکش با فضای اقامت اصلی باز است. مقررات ملی ساختمان دربارهٔ نور/تهویه و ورودی آن چه الزامی دارد؟",
+    "gold_answer_en": "Because less than 80% of the shared wall is open, the annexed space must have the light and ventilation required for its use, and both spaces must additionally have independent entrances.",
+    "gold_answer_fa": "چون کمتر از ۸۰ درصد دیوار مشترک باز است، فضای الحاق‌شده باید مطابق نوع کاربری از نور و تهویهٔ لازم برخوردار باشد و علاوه بر آن هر دو فضا باید ورودی مستقل داشته باشند.",
+    "rule_type": "spatial",
+    "expected_verdict": "FAIL",
+    "difficulty_notes": "Two spatial clauses combine: the 80% threshold rule and its <80% consequence (independent light/vent plus independent entrances)."
+  },
+  {
+    "item_id": "4-2_0",
+    "source_article_ids": [
+      "4-2"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Under Mabhas, what is an 'occupancy unit' (واحد تصرف)?",
+    "question_fa": "بر اساس مقررات ملی ساختمان، «واحد تصرف» چیست؟",
+    "gold_answer_en": "An occupancy unit is an independent area of a building with an occupant or occupants having a defined ownership or usage permit, separated from other occupancy units and public space by walls, roof and floor — for example residential units, independent commercial units, shops and offices.",
+    "gold_answer_fa": "واحد تصرف محدوده‌ای مستقل از یک بنا، دارای متصرف یا متصرفانی با مالکیت یا مجوز بهره‌برداری مشخص است که به‌وسیلهٔ دیوارها، سقف و کف از سایر واحدهای تصرف و فضای عمومی جدا شده است؛ مانند واحدهای مسکونی، واحدهای کسبی مستقل، مغازه‌ها و واحدهای اداری.",
+    "rule_type": "definition",
+    "expected_verdict": "N/A",
+    "difficulty_notes": "Definition lookup; the term 'واحد تصرف' must be separated from the broader term 'تصرف' defined in the same clause."
+  },
+  {
+    "item_id": "4-3-2-1_0",
+    "source_article_ids": [
+      "4-3-2-1"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "Which buildings does Mabhas classify as having a residential (مسکونی/اقامتی) occupancy?",
+    "question_fa": "مقررات ملی ساختمان چه بناهایی را دارای تصرف مسکونی/اقامتی طبقه‌بندی می‌کند؟",
+    "gold_answer_en": "Any building or part of a building in which a person or family resides and which is used for sleeping is a residential occupancy, except buildings classified under medical/care occupancies.",
+    "gold_answer_fa": "هر بنا یا بخشی از بنا که در آن شخص یا خانواده‌ای سکونت کند و برای خوابیدن استفاده شود، تصرف مسکونی است، به‌استثنای بناهایی که در گروه تصرف‌های درمانی/مراقبتی دسته‌بندی می‌شوند.",
+    "rule_type": "definition",
+    "expected_verdict": "N/A",
+    "difficulty_notes": "Definition with an embedded exclusion (medical/care occupancies); retrieval must return the residential definition rather than a care-occupancy clause."
+  },
+  {
+    "item_id": "4-3-1_0",
+    "source_article_ids": [
+      "4-3-1"
+    ],
+    "hop_type": "zero_hop",
+    "question_en": "How does Mabhas categorise the spaces that make up a building?",
+    "question_fa": "مقررات ملی ساختمان فضاهای تشکیل‌دهندهٔ یک ساختمان را چگونه دسته‌بندی می‌کند؟",
+    "gold_answer_en": "Spaces are the smallest units in the general classification of a building and are categorised into habitation (dwelling) spaces, work spaces, cooking and kitchen spaces, sanitary spaces, open spaces, semi-open spaces, and others.",
+    "gold_answer_fa": "فضاها کوچک‌ترین قسمت در تقسیم‌بندی عمومی ساختمان هستند و به فضاهای اقامت، فضاهای اشتغال، فضاهای پخت و آشپزخانه، فضاهای بهداشتی، فضاهای باز، فضاهای نیمه‌باز و غیره دسته‌بندی می‌شوند.",
+    "rule_type": "definition",
+    "expected_verdict": "N/A",
+    "difficulty_notes": "Taxonomy definition; supports interpreting later numeric rules that are keyed to a space category such as 'فضای اقامت'."
+  },
+  {
+    "item_id": "2-8-4b_0",
+    "source_article_ids": [
+      "2-8-4b",
+      "2-8-4a"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "In a tall building, can an interior light well provide natural light to floors below the top six?",
+    "question_fa": "در یک ساختمان بلند، آیا یک نورگیر/پاسیوی داخلی می‌تواند برای طبقاتِ پایین‌تر از شش طبقهٔ آخر نور طبیعی تأمین کند؟",
+    "gold_answer_en": "Normally an interior light well may serve only the top six floors of a tall building, but if the light well has one side open to open space there is no restriction and it may light all floors.",
+    "gold_answer_fa": "به‌طور معمول نورگیر داخلی تنها می‌تواند برای شش طبقهٔ آخر ساختمان بلند نور تأمین کند، اما اگر یک ضلع نورگیر به فضای آزاد باز باشد محدودیتی وجود ندارد و می‌تواند نور همهٔ طبقات را تأمین کند.",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception waives the base six-floor limit; both the base rule and the open-side condition are needed, and whether the side is truly 'open to open space' requires plan review."
+  },
+  {
+    "item_id": "10-1-5-4c_0",
+    "source_article_ids": [
+      "10-1-5-4c",
+      "10-1-5-4b"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "If a stairwell cannot receive natural light through wall windows, how may the natural-lighting requirement be met?",
+    "question_fa": "اگر یک راه‌پله نتواند از طریق پنجره‌های دیواری نور طبیعی دریافت کند، الزام نورگیری طبیعی چگونه قابل تأمین است؟",
+    "gold_answer_en": "Stairways must receive the mandatory natural-light glazing per floor; if wall windows are not possible, natural light may instead be provided from the ceiling of the stairwell in accordance with the relevant skylight requirements.",
+    "gold_answer_fa": "راه‌پله‌ها باید سطح شیشهٔ الزامی نورگیری طبیعی به ازای هر طبقه را داشته باشند؛ در صورت عدم امکان نورگیری با پنجره‌های دیواری، تأمین نور طبیعی از سقف محفظهٔ پلکان مطابق الزامات مربوط مجاز است.",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception provides an alternative path to the base stairway-lighting rule; both must be retrieved, and feasibility of wall windows is a judgment call."
+  },
+  {
+    "item_id": "1-2-6-4_0",
+    "source_article_ids": [
+      "1-2-6-4",
+      "1-3-4-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "Under what conditions may mechanical ventilation be used instead of natural ventilation in an occupied space?",
+    "question_fa": "در چه شرایطی می‌توان در یک فضای اشتغال به‌جای تهویهٔ طبیعی از تهویهٔ مکانیکی استفاده کرد؟",
+    "gold_answer_en": "An occupied space that, under labour rules, requires natural light and ventilation must have a glazed door/window facing an open space or public passage; mechanical air exchange may replace natural air exchange only in spaces that require air exchange but are not obligated to have natural air exchange.",
+    "gold_answer_fa": "فضای اشتغالی که طبق قوانین کار به نور و تهویهٔ طبیعی نیاز دارد باید در و پنجرهٔ شیشه‌ای رو به فضای باز یا معبر عمومی داشته باشد؛ تعویض هوای مکانیکی تنها در فضاهایی مجاز است که نیازمند تعویض هوا هستند اما ملزم به تعویض هوای طبیعی نشده‌اند.",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception is meaningful only against the base rule that mandates natural ventilation for certain occupied spaces; whether a space is 'obligated to have natural air exchange' needs occupancy/labour judgment."
+  },
+  {
+    "item_id": "1-3-6-4_0",
+    "source_article_ids": [
+      "1-3-6-4",
+      "2-3-2-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "A living room meets the one-eighth glazing area but uses glass block instead of clear glass. Is the lighting provision still compliant?",
+    "question_fa": "یک اتاق نشیمن سطح شیشهٔ یک‌هشتم را برآورده می‌کند اما به‌جای شیشهٔ شفاف از آجر شیشه‌ای استفاده کرده است. آیا تأمین نور همچنان مطابق با مقررات است؟",
+    "gold_answer_en": "Not necessarily. The base rule requires glazing of at least one eighth of the floor area, but if matte glass, glass block, or plastic with a lower light-transmission coefficient than clear glass is used, an area providing equivalent light must be substituted (i.e. the glazed area must be increased).",
+    "gold_answer_fa": "لزوماً خیر. قاعدهٔ پایه سطح شیشهٔ حداقل یک‌هشتم سطح کف را الزامی می‌کند، اما در صورت استفاده از شیشهٔ مات، آجر شیشه‌ای یا پلاستیک با ضریب نورگذری کمتر از شیشهٔ شفاف، باید سطحی که نور معادل را تأمین کند جایگزین شود (یعنی سطح شیشه باید افزایش یابد).",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception modifies the base glazing-ratio rule; correct retrieval needs both, and equivalence depends on the glass's light-transmission coefficient, which a plan does not show."
+  },
+  {
+    "item_id": "2-5-1-4-4_0",
+    "source_article_ids": [
+      "2-5-1-4-4",
+      "4-2-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "If a basement does not meet the conditions for habitable use, can it still be built, and may it be lived in?",
+    "question_fa": "اگر یک زیرزمین شرایط استفادهٔ اقامتی را برآورده نکند، آیا باز هم می‌توان آن را احداث کرد و آیا می‌توان در آن سکونت داشت؟",
+    "gold_answer_en": "A basement may be used as a residential space only if it meets the stated habitability conditions (natural light/ventilation, adjacency, height, area, access/egress). If it does not, but it complies with the limits of Topic 3 of the National Building Regulations, it may still be constructed but must not be used for habitation or occupation, and its area is not counted toward the total allowable building area.",
+    "gold_answer_fa": "زیرزمین تنها در صورتی می‌تواند به‌عنوان فضای اقامتی استفاده شود که شرایط اقامتی تعیین‌شده (نورگیری/تهویهٔ طبیعی، همجواری، ارتفاع، مساحت، دسترس و خروج) را برآورده کند. اگر این شرایط را نداشته باشد ولی با محدودیت‌های مبحث سوم مقررات ملی ساختمان منطبق باشد، احداث آن مجاز است اما نباید برای اقامت و اشتغال استفاده شود و مساحت آن در محاسبهٔ مساحت مجاز کل ساختمان منظور نمی‌شود.",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception pairs with the basement-habitability base rule (the true cross-reference 4-4-1-5-1 is outside the corpus); compliance hinges on conditions not visible on a single floor plan."
+  },
+  {
+    "item_id": "1-5-4-5-4_0",
+    "source_article_ids": [
+      "1-5-4-5-4",
+      "1-1-4-5-4"
+    ],
+    "hop_type": "multi_hop",
+    "question_en": "Does a small alcove attached to a workspace need its own light and ventilation?",
+    "question_fa": "آیا یک فضای کوچک منضم به یک فضای اشتغال به نور و تهویهٔ مستقل خودش نیاز دارد؟",
+    "gold_answer_en": "Occupancy spaces must meet the light and ventilation values set in the regulations; however, an attached room whose shared wall with the main space is at least 80% open does not need independent light and ventilation and its area is added to the main space, otherwise it must have the light and ventilation required for its use.",
+    "gold_answer_fa": "فضاهای اشتغال باید مقادیر نور و تهویهٔ تعیین‌شده در مقررات را رعایت کنند؛ با این حال اتاق منضمی که حداقل ۸۰ درصد دیوار مشترک آن با فضای اصلی باز باشد به نور و تهویهٔ مستقل نیاز ندارد و مساحت آن به فضای اصلی افزوده می‌شود، در غیر این صورت باید مطابق نوع کاربری از نور و تهویهٔ لازم برخوردار باشد.",
+    "rule_type": "exception",
+    "expected_verdict": "NEEDS_REVIEW",
+    "difficulty_notes": "Exception carves out the general light/ventilation obligation for occupied spaces; both must be retrieved, and the 80%-open condition is a layout judgment."
+  }
+]

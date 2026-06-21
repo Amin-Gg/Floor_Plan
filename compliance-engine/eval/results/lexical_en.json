@@ -1,0 +1,2257 @@
+{
+  "run_config": {
+    "run_name": "lexical",
+    "query_lang": "en",
+    "k_values": [
+      1,
+      3,
+      5,
+      10
+    ],
+    "model_name": "FAKE (lexical needs no embeddings)",
+    "retriever_type": "lexical_bm25",
+    "git_commit": "c0e8e4b",
+    "timestamp_utc": "2026-06-10T19:38:51.246536+00:00",
+    "index_row_count": 328,
+    "eval_file": "/home/claude/stage1_input/Compliance Engine/data/mabhas_retrieval_eval.json",
+    "n_items": 43
+  },
+  "aggregates": {
+    "overall": {
+      "n_items": 43,
+      "hit@1": 0.0465,
+      "hit@3": 0.1395,
+      "hit@5": 0.2326,
+      "hit@10": 0.3721,
+      "recall@1": 0.0465,
+      "recall@3": 0.1163,
+      "recall@5": 0.1977,
+      "recall@10": 0.3256,
+      "mrr": 0.1301,
+      "ndcg@1": 0.0465,
+      "ndcg@3": 0.0908,
+      "ndcg@5": 0.127,
+      "ndcg@10": 0.1704
+    },
+    "by_hop_type": {
+      "multi_hop": {
+        "n_items": 11,
+        "hit@1": 0.0,
+        "hit@3": 0.1818,
+        "hit@5": 0.3636,
+        "hit@10": 0.4545,
+        "recall@1": 0.0,
+        "recall@3": 0.0909,
+        "recall@5": 0.2273,
+        "recall@10": 0.2727,
+        "mrr": 0.147,
+        "ndcg@1": 0.0,
+        "ndcg@3": 0.0703,
+        "ndcg@5": 0.1375,
+        "ndcg@10": 0.1573
+      },
+      "zero_hop": {
+        "n_items": 32,
+        "hit@1": 0.0625,
+        "hit@3": 0.125,
+        "hit@5": 0.1875,
+        "hit@10": 0.3438,
+        "recall@1": 0.0625,
+        "recall@3": 0.125,
+        "recall@5": 0.1875,
+        "recall@10": 0.3438,
+        "mrr": 0.1244,
+        "ndcg@1": 0.0625,
+        "ndcg@3": 0.0978,
+        "ndcg@5": 0.1234,
+        "ndcg@10": 0.1749
+      }
+    },
+    "by_rule_type": {
+      "definition": {
+        "n_items": 3,
+        "hit@1": 0.3333,
+        "hit@3": 0.6667,
+        "hit@5": 0.6667,
+        "hit@10": 0.6667,
+        "recall@1": 0.3333,
+        "recall@3": 0.6667,
+        "recall@5": 0.6667,
+        "recall@10": 0.6667,
+        "mrr": 0.4444,
+        "ndcg@1": 0.3333,
+        "ndcg@3": 0.5,
+        "ndcg@5": 0.5,
+        "ndcg@10": 0.5
+      },
+      "exception": {
+        "n_items": 6,
+        "hit@1": 0.0,
+        "hit@3": 0.1667,
+        "hit@5": 0.3333,
+        "hit@10": 0.3333,
+        "recall@1": 0.0,
+        "recall@3": 0.0833,
+        "recall@5": 0.25,
+        "recall@10": 0.25,
+        "mrr": 0.125,
+        "ndcg@1": 0.0,
+        "ndcg@3": 0.0645,
+        "ndcg@5": 0.148,
+        "ndcg@10": 0.148
+      },
+      "numeric": {
+        "n_items": 28,
+        "hit@1": 0.0357,
+        "hit@3": 0.1071,
+        "hit@5": 0.1786,
+        "hit@10": 0.3214,
+        "recall@1": 0.0357,
+        "recall@3": 0.0893,
+        "recall@5": 0.1429,
+        "recall@10": 0.2857,
+        "mrr": 0.1055,
+        "ndcg@1": 0.0357,
+        "ndcg@3": 0.0721,
+        "ndcg@5": 0.0944,
+        "ndcg@10": 0.1413
+      },
+      "spatial": {
+        "n_items": 6,
+        "hit@1": 0.0,
+        "hit@3": 0.0,
+        "hit@5": 0.1667,
+        "hit@10": 0.5,
+        "recall@1": 0.0,
+        "recall@3": 0.0,
+        "recall@5": 0.1667,
+        "recall@10": 0.4167,
+        "mrr": 0.0933,
+        "ndcg@1": 0.0,
+        "ndcg@3": 0.0,
+        "ndcg@5": 0.0718,
+        "ndcg@10": 0.1637
+      }
+    }
+  },
+  "per_item": [
+    {
+      "item_id": "1-2-2-5-4a_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a living/dwelling space with a floor area of 5 m² compliant with Mabhas?",
+      "gold_ids": [
+        "1-2-2-5-4a"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "4-2-5-4",
+        "2-5-1-4-4",
+        "4-5-1-5-4",
+        "5-1-4-4"
+      ],
+      "retrieved_scores": [
+        3.3,
+        2.7,
+        1.8,
+        1.7,
+        1.6,
+        1.6,
+        1.5,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-2-2-5-4a_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a living/dwelling space with a floor area of 7 m² compliant with Mabhas?",
+      "gold_ids": [
+        "1-2-2-5-4a"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "4-6-جدول-1",
+        "4-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        3.3,
+        2.7,
+        1.8,
+        1.7,
+        1.6,
+        1.6,
+        1.5,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-2-2-5-4a_2",
+      "hop_type": "multi_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A 6 m² room is labelled a 'storeroom' on the plan but is used for sleeping. Does the minimum dwelling-space area apply to it?",
+      "gold_ids": [
+        "1-2-2-5-4a",
+        "4-3-1"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "2-5-1-4-4",
+        "1-5-2-5-4",
+        "3-5-1-5-4c",
+        "4-3-2-3-4",
+        "1-5-4-5-4",
+        "2-5-4-5-4"
+      ],
+      "retrieved_scores": [
+        5.3,
+        3.8,
+        2.5,
+        2.5,
+        2.4,
+        2.2,
+        2.2,
+        2.2,
+        2.1,
+        2.1
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-2-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a dwelling space that is only 1.8 m wide compliant with Mabhas?",
+      "gold_ids": [
+        "2-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "2-5-4-5-4",
+        "4-5-1-5-4",
+        "3-1-6-5-4",
+        "4-2",
+        "4-6-جدول-1",
+        "4-6-جدول-6",
+        "3-2-1-7-4"
+      ],
+      "retrieved_scores": [
+        1.9,
+        1.3,
+        1.3,
+        1.2,
+        1.2,
+        1.1,
+        1.1,
+        1.1,
+        1.1,
+        1.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "3-2-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A living room has a flat ceiling height of 2.30 m throughout. Is this compliant?",
+      "gold_ids": [
+        "3-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "1-7-1-5-4",
+        "4-3-2-3-4",
+        "4-5-1-5-4",
+        "5-1-5-4",
+        "6-8-12-9-4",
+        "6-8-12-9-4b"
+      ],
+      "retrieved_scores": [
+        2.8,
+        1.9,
+        1.8,
+        1.5,
+        1.3,
+        1.3,
+        1.2,
+        1.2,
+        1.2,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "3-2-2-5-4_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Under a sloped ceiling, the lowest counted part of a dwelling room is 2.10 m high. Is that part compliant?",
+      "gold_ids": [
+        "3-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "4-2",
+        "5-1-5-4",
+        "1-7-1-5-4",
+        "6-4-5-4",
+        "6-8-12-9-4",
+        "6-8-12-9-4b"
+      ],
+      "retrieved_scores": [
+        4.8,
+        3.8,
+        2.7,
+        2.4,
+        2.2,
+        2.1,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "4-2-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A duct crossing a living space leaves only 1.95 m of clear height beneath it. Is this compliant?",
+      "gold_ids": [
+        "4-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "2-5-4-5-4",
+        "4-2-5-4",
+        "1-7-1-5-4",
+        "4-5-1-5-4",
+        "4-1-7-5-4",
+        "4-3-2-3-4"
+      ],
+      "retrieved_scores": [
+        3.0,
+        2.4,
+        1.8,
+        1.8,
+        1.4,
+        1.4,
+        1.3,
+        1.3,
+        1.2,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "5-2-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Inside a dwelling space there is a mezzanine; the upper part has 1.95 m of headroom. Is the upper level compliant?",
+      "gold_ids": [
+        "5-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "4-2",
+        "6-4-5-4",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "1-5-2-5-4"
+      ],
+      "retrieved_scores": [
+        4.8,
+        3.5,
+        2.6,
+        2.4,
+        2.4,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.9
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "5-2-2-5-4_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Inside a dwelling space there is a mezzanine; the lower part is 2.45 m high. Is the lower level compliant?",
+      "gold_ids": [
+        "5-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-5-1-5-4",
+        "4-2-5-4",
+        "4-3-2-5-4a",
+        "3-5-1-5-4c",
+        "2-5-4-5-4",
+        "1-5-2-5-4",
+        "1-7-1-5-4",
+        "3-2-2-5-4"
+      ],
+      "retrieved_scores": [
+        3.7,
+        2.6,
+        2.1,
+        2.0,
+        1.8,
+        1.7,
+        1.6,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "5-2-2-5-4_2",
+      "hop_type": "multi_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "When does a mezzanine inside a living room count as part of that room, and what headroom must its upper and lower levels provide?",
+      "gold_ids": [
+        "4-1-4-4",
+        "5-2-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2",
+        "5-1-5-4",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "1-12-5-4",
+        "3-2-1-7-4",
+        "4-3-2-3-4",
+        "4-3-2-5-4a"
+      ],
+      "retrieved_scores": [
+        3.8,
+        3.6,
+        2.3,
+        2.2,
+        2.0,
+        1.9,
+        1.7,
+        1.6,
+        1.6,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 1.0,
+        "recall@3": 0.5,
+        "ndcg@3": 0.38685280723454163,
+        "hit@5": 1.0,
+        "recall@5": 0.5,
+        "ndcg@5": 0.38685280723454163,
+        "hit@10": 1.0,
+        "recall@10": 0.5,
+        "ndcg@10": 0.38685280723454163,
+        "mrr": 0.5
+      }
+    },
+    {
+      "item_id": "2-3-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A 24 m² living room provides 2.5 m² of glazed window area. Is the natural-light provision compliant?",
+      "gold_ids": [
+        "2-3-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "6-4-5-4",
+        "3-5-1-5-4c",
+        "4-2-5-4",
+        "4-3-2-3-4",
+        "4-5-1-5-4",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "2-5-1-4-4"
+      ],
+      "retrieved_scores": [
+        5.1,
+        3.5,
+        2.5,
+        2.3,
+        2.3,
+        2.3,
+        2.3,
+        2.2,
+        2.2,
+        2.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-3-2-5-4_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "If a dwelling space has windows only on one wall and the opposite wall is more than 4.5 m away, what fraction of the floor area must be glazed?",
+      "gold_ids": [
+        "2-3-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "4-3-2-5-4a",
+        "4-3-2-3-4",
+        "4-5-1-5-4",
+        "2-3-2-5-4",
+        "3-5-1-5-4c",
+        "2-5-1-4-4",
+        "6-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        8.6,
+        5.5,
+        4.2,
+        3.5,
+        3.4,
+        3.4,
+        3.2,
+        3.2,
+        3.1,
+        3.1
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.3333333333333333,
+        "mrr": 0.14285714285714285
+      }
+    },
+    {
+      "item_id": "1-5-1-5-4a_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a hinged main entrance door with a clear width of 0.80 m compliant?",
+      "gold_ids": [
+        "1-5-1-5-4a"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "5-1-5-4",
+        "4-5-1-5-4",
+        "4-2",
+        "3-7-1-5-4",
+        "1-5-1-5-4a",
+        "1-5-1-5-4b",
+        "4-1-4-4",
+        "6-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        2.4,
+        1.9,
+        1.8,
+        1.7,
+        1.6,
+        1.5,
+        1.4,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.3333333333333333,
+        "mrr": 0.14285714285714285
+      }
+    },
+    {
+      "item_id": "1-5-1-5-4a_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a hinged main entrance door with a clear width of 0.95 m compliant?",
+      "gold_ids": [
+        "1-5-1-5-4a"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "5-1-5-4",
+        "4-5-1-5-4",
+        "4-2",
+        "3-7-1-5-4",
+        "1-5-1-5-4a",
+        "1-5-1-5-4b",
+        "4-1-4-4",
+        "6-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        2.4,
+        1.9,
+        1.8,
+        1.7,
+        1.6,
+        1.5,
+        1.4,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.3333333333333333,
+        "mrr": 0.14285714285714285
+      }
+    },
+    {
+      "item_id": "1-5-1-5-4b_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a main entrance door with a clear height of 2.00 m compliant?",
+      "gold_ids": [
+        "1-5-1-5-4b"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "5-1-5-4",
+        "4-5-1-5-4",
+        "4-2",
+        "4-1-4-4",
+        "1-5-1-5-4a",
+        "1-5-1-5-4b",
+        "1-7-1-5-4",
+        "6-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        2.8,
+        2.3,
+        1.8,
+        1.7,
+        1.6,
+        1.5,
+        1.3,
+        1.3,
+        1.3,
+        1.3
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.31546487678572877,
+        "mrr": 0.125
+      }
+    },
+    {
+      "item_id": "1-5-1-5-4a_2",
+      "hop_type": "multi_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A door that is the mandatory exit of an apartment unit is 0.85 m wide. Does the 0.90 m clear-width rule apply to it?",
+      "gold_ids": [
+        "1-5-1-5-4a",
+        "5-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "4-1-4-4",
+        "4-5-1-5-4",
+        "5-1-5-4",
+        "4-2",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "1-7-1-5-4",
+        "7-1-1-7-4"
+      ],
+      "retrieved_scores": [
+        5.2,
+        3.3,
+        3.2,
+        3.0,
+        2.9,
+        2.8,
+        2.3,
+        2.3,
+        2.2,
+        2.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 1.0,
+        "recall@5": 0.5,
+        "ndcg@5": 0.23719771276929622,
+        "hit@10": 1.0,
+        "recall@10": 0.5,
+        "ndcg@10": 0.23719771276929622,
+        "mrr": 0.2
+      }
+    },
+    {
+      "item_id": "1-7-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a building stair with a tread depth of 0.25 m compliant?",
+      "gold_ids": [
+        "1-7-1-5-4"
+      ],
+      "retrieved_ids": [
+        "1-7-1-5-4",
+        "5-5-4",
+        "4-2",
+        "3-5-1-5-4c",
+        "4-1-4-4",
+        "5-1-5-4",
+        "4-5-1-5-4",
+        "4-3-2-3-4",
+        "6-8-12-9-4",
+        "6-8-12-9-4b"
+      ],
+      "retrieved_scores": [
+        2.2,
+        2.2,
+        1.9,
+        1.8,
+        1.6,
+        1.6,
+        1.5,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 1.0,
+        "recall@1": 1.0,
+        "ndcg@1": 1.0,
+        "hit@3": 1.0,
+        "recall@3": 1.0,
+        "ndcg@3": 1.0,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 1.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 1.0,
+        "mrr": 1.0
+      }
+    },
+    {
+      "item_id": "1-7-1-5-4_1",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A stair has a 0.30 m tread and a 0.18 m riser. Does it satisfy the tread-and-riser relationship required by Mabhas?",
+      "gold_ids": [
+        "1-7-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "1-7-1-5-4",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "4-2",
+        "4-2-5-4",
+        "4-3-2-5-4a",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "1-5-2-5-4"
+      ],
+      "retrieved_scores": [
+        4.3,
+        2.4,
+        2.4,
+        2.3,
+        1.9,
+        1.9,
+        1.9,
+        1.8,
+        1.8,
+        1.6
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 1.0,
+        "recall@3": 1.0,
+        "ndcg@3": 0.6309297535714575,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 0.6309297535714575,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.6309297535714575,
+        "mrr": 0.5
+      }
+    },
+    {
+      "item_id": "5-7-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "In a building designed for people with reduced mobility, a flight has 14 steps between two landings. Is this compliant?",
+      "gold_ids": [
+        "5-7-1-5-4"
+      ],
+      "retrieved_ids": [
+        "4-3-2-3-4",
+        "5-5-4",
+        "4-2",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "5-1-5-4",
+        "7-2-13-5-4",
+        "7-2-13-5-4b",
+        "3-7-1-5-4",
+        "4-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        2.0,
+        1.9,
+        1.8,
+        1.7,
+        1.7,
+        1.6,
+        1.5,
+        1.5,
+        1.2,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "6-7-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A stair flight has a clear (head) height of 1.95 m along its run. Is this compliant?",
+      "gold_ids": [
+        "6-7-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "4-1-4-4",
+        "4-2",
+        "1-7-1-5-4",
+        "3-1-1-7-4",
+        "3-1-1-7-4b",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "4-3-2-3-4"
+      ],
+      "retrieved_scores": [
+        2.6,
+        1.8,
+        1.6,
+        1.5,
+        1.4,
+        1.3,
+        1.3,
+        1.3,
+        1.3,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-11-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A roof terrace has a 1.2 m drop at its edge with no guard or railing. Is this compliant?",
+      "gold_ids": [
+        "1-11-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "4-2",
+        "4-2-5-4",
+        "3-2-1-7-4",
+        "3-5-1-5-4c",
+        "7-2-13-5-4",
+        "7-2-13-5-4b",
+        "8-1-5-4b",
+        "2-5-1-4-4"
+      ],
+      "retrieved_scores": [
+        2.4,
+        1.7,
+        1.6,
+        1.3,
+        1.2,
+        1.2,
+        1.2,
+        1.2,
+        1.2,
+        1.1
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-11-1-5-4_1",
+      "hop_type": "multi_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A 1.0 m level difference next to a ramp is protected only by a 0.80 m high railing. Is this compliant?",
+      "gold_ids": [
+        "1-11-1-5-4",
+        "2-11-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-2",
+        "4-6-جدول-1",
+        "7-1-1-7-4",
+        "4-2-5-4",
+        "4-3-2-3-4",
+        "4-5-1-5-4",
+        "4-6-جدول-10",
+        "4-6-جدول-2",
+        "4-6-جدول-3"
+      ],
+      "retrieved_scores": [
+        1.9,
+        1.1,
+        1.1,
+        1.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-11-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "Is a 0.85 m high handrail on a ramp compliant with Mabhas?",
+      "gold_ids": [
+        "2-11-1-5-4"
+      ],
+      "retrieved_ids": [
+        "4-5-1-5-4",
+        "5-5-4",
+        "3-7-1-5-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "7-1-1-7-4",
+        "7-2-13-5-4",
+        "7-2-13-5-4b",
+        "1-7-1-5-4",
+        "2-4-1-5-4"
+      ],
+      "retrieved_scores": [
+        1.2,
+        1.2,
+        1.1,
+        0.9,
+        0.9,
+        0.9,
+        0.8,
+        0.8,
+        0.7,
+        0.7
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-3-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "There is a wall facing the main entrance door only 1.0 m away. Is this compliant?",
+      "gold_ids": [
+        "1-3-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "2-5-4-5-4",
+        "3-5-1-5-4c",
+        "1-7-1-5-4",
+        "5-1-5-4",
+        "1-5-2-5-4",
+        "1-5-4-5-4"
+      ],
+      "retrieved_scores": [
+        3.6,
+        2.3,
+        1.8,
+        1.8,
+        1.6,
+        1.6,
+        1.5,
+        1.5,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-4-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "An internal corridor on the access and egress route is 1.20 m wide. Is this compliant?",
+      "gold_ids": [
+        "1-4-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "1-4-1-5-4",
+        "3-5-1-5-4c",
+        "6-8-12-9-4",
+        "6-8-12-9-4b",
+        "1-6-1-5-4",
+        "1-7-1-5-4"
+      ],
+      "retrieved_scores": [
+        4.8,
+        2.5,
+        2.3,
+        2.2,
+        2.0,
+        2.0,
+        1.8,
+        1.8,
+        1.7,
+        1.7
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 0.38685280723454163,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.38685280723454163,
+        "mrr": 0.2
+      }
+    },
+    {
+      "item_id": "2-4-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "In a unit where accessibility is not required, a corridor on the egress route is 1.15 m wide. Is this compliant?",
+      "gold_ids": [
+        "2-4-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "3-5-1-5-4c",
+        "7-1-1-7-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "2-5-1-4-4",
+        "1-4-1-5-4",
+        "8-1-5-4c",
+        "1-7-1-5-4"
+      ],
+      "retrieved_scores": [
+        4.8,
+        2.7,
+        2.5,
+        2.4,
+        2.3,
+        2.2,
+        2.1,
+        1.8,
+        1.8,
+        1.7
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "4-4-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A straight corridor that is NOT on the egress route, serving 50 people or fewer with no accessibility requirement, is 0.80 m wide. Is this compliant?",
+      "gold_ids": [
+        "4-4-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "7-1-1-7-4",
+        "1-4-1-5-4",
+        "4-2",
+        "4-2-5-4",
+        "1-6-1-5-4",
+        "5-1-5-4"
+      ],
+      "retrieved_scores": [
+        3.9,
+        3.2,
+        3.1,
+        2.9,
+        2.3,
+        2.2,
+        2.2,
+        2.2,
+        2.0,
+        2.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "8-4-4-4a_0",
+      "hop_type": "zero_hop",
+      "rule_type": "numeric",
+      "query_lang": "en",
+      "question": "A glazed panel next to a public passage is 1.2 m wide and about 2 m². Must it be made of safety glass?",
+      "gold_ids": [
+        "8-4-4-4a"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2",
+        "1-12-5-4",
+        "4-5-1-5-4",
+        "4-2-5-4",
+        "5-1-5-4",
+        "7-8-12-9-4a",
+        "7-8-12-9-4b",
+        "6-8-12-9-4"
+      ],
+      "retrieved_scores": [
+        6.6,
+        2.9,
+        2.8,
+        2.4,
+        2.4,
+        2.3,
+        2.1,
+        2.1,
+        2.1,
+        2.0
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-1-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "Can the building's main access route pass through a bedroom?",
+      "gold_ids": [
+        "2-1-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "1-3-8-5-4",
+        "3-5-1-5-4c",
+        "4-1-4-4",
+        "11-1-10-5-4",
+        "4-3-2-5-4a",
+        "1-7-1-5-4",
+        "2-2-13-5-4",
+        "2-2-13-5-4b"
+      ],
+      "retrieved_scores": [
+        2.9,
+        2.2,
+        1.8,
+        1.8,
+        1.7,
+        1.3,
+        1.3,
+        1.2,
+        1.2,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-5-1-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "In which direction must the door of a room with an occupancy load of 50 or more people swing?",
+      "gold_ids": [
+        "2-5-1-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "4-2",
+        "5-1-5-4",
+        "2-5-1-5-4",
+        "4-3-2-3-4",
+        "4-2-5-4",
+        "3-2-1-7-4"
+      ],
+      "retrieved_scores": [
+        5.9,
+        4.0,
+        3.6,
+        3.5,
+        3.4,
+        3.1,
+        2.9,
+        2.7,
+        2.4,
+        2.3
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.3333333333333333,
+        "mrr": 0.14285714285714285
+      }
+    },
+    {
+      "item_id": "1-3-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "Can a bedroom with no window opening to the outside qualify as a dwelling space?",
+      "gold_ids": [
+        "1-3-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-3-2-5-4a",
+        "4-5-1-5-4",
+        "3-5-1-5-4c",
+        "4-2-5-4",
+        "1-5-2-5-4",
+        "2-5-4-5-4",
+        "5-1-5-4",
+        "1-5-4-5-4"
+      ],
+      "retrieved_scores": [
+        3.5,
+        2.5,
+        2.4,
+        2.4,
+        1.8,
+        1.8,
+        1.7,
+        1.7,
+        1.7,
+        1.6
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-1-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "In a multi-room apartment, can the only access to one bedroom be through another bedroom?",
+      "gold_ids": [
+        "2-1-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "3-2-1-7-4",
+        "4-1-4-4",
+        "1-3-8-5-4",
+        "7-1-1-7-4",
+        "3-5-1-5-4c",
+        "4-2-5-4",
+        "4-3-2-5-4a",
+        "8-12-9-4a"
+      ],
+      "retrieved_scores": [
+        5.3,
+        2.8,
+        2.6,
+        2.4,
+        2.3,
+        2.1,
+        2.0,
+        2.0,
+        1.8,
+        1.7
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-5-2-5-4_0",
+      "hop_type": "zero_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "An alcove is attached to a living room and 85% of their shared wall is open. Does the alcove need its own independent light and ventilation?",
+      "gold_ids": [
+        "1-5-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "1-5-4-5-4",
+        "1-5-2-5-4",
+        "4-2",
+        "4-5-1-5-4",
+        "4-2-5-4",
+        "4-3-2-5-4a",
+        "3-5-1-5-4c",
+        "5-1-5-4"
+      ],
+      "retrieved_scores": [
+        6.3,
+        4.3,
+        3.4,
+        3.3,
+        3.2,
+        3.2,
+        2.9,
+        2.9,
+        2.7,
+        2.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 0.43067655807339306,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.43067655807339306,
+        "mrr": 0.25
+      }
+    },
+    {
+      "item_id": "1-5-2-5-4_1",
+      "hop_type": "multi_hop",
+      "rule_type": "spatial",
+      "query_lang": "en",
+      "question": "An annexed space shares a wall with the main dwelling space that is only 60% open. What does Mabhas require regarding its light/ventilation and its entrance?",
+      "gold_ids": [
+        "1-5-2-5-4",
+        "2-5-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "4-3-2-5-4a",
+        "1-5-2-5-4",
+        "1-5-4-5-4",
+        "2-5-4-5-4",
+        "3-5-1-5-4c",
+        "4-2"
+      ],
+      "retrieved_scores": [
+        5.0,
+        3.5,
+        3.4,
+        3.4,
+        3.2,
+        3.0,
+        2.8,
+        2.5,
+        2.2,
+        2.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 1.0,
+        "recall@10": 0.5,
+        "ndcg@10": 0.21840743681816419,
+        "mrr": 0.16666666666666666
+      }
+    },
+    {
+      "item_id": "4-2_0",
+      "hop_type": "zero_hop",
+      "rule_type": "definition",
+      "query_lang": "en",
+      "question": "Under Mabhas, what is an 'occupancy unit' (واحد تصرف)?",
+      "gold_ids": [
+        "4-2"
+      ],
+      "retrieved_ids": [
+        "4-2",
+        "3-2-6-4",
+        "5-5-4",
+        "1-1-6-5-4",
+        "2-1-2-5-4",
+        "2-1-4-5-4",
+        "2-4-1-5-4",
+        "22-1-1-7-4",
+        "3-7-1-5-4",
+        "4-5-1-5-4"
+      ],
+      "retrieved_scores": [
+        1.7,
+        1.0,
+        0.8,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "metrics": {
+        "hit@1": 1.0,
+        "recall@1": 1.0,
+        "ndcg@1": 1.0,
+        "hit@3": 1.0,
+        "recall@3": 1.0,
+        "ndcg@3": 1.0,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 1.0,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 1.0,
+        "mrr": 1.0
+      }
+    },
+    {
+      "item_id": "4-3-2-1_0",
+      "hop_type": "zero_hop",
+      "rule_type": "definition",
+      "query_lang": "en",
+      "question": "Which buildings does Mabhas classify as having a residential (مسکونی/اقامتی) occupancy?",
+      "gold_ids": [
+        "4-3-2-1"
+      ],
+      "retrieved_ids": [
+        "4-2",
+        "4-3-3-2",
+        "4-3-2-1",
+        "4-5-1-5-4",
+        "5-5-4",
+        "4-3-2-3-4",
+        "3-2-1-7-4",
+        "3-7-1-5-4",
+        "4-1-4-4",
+        "4-3-2-1-4"
+      ],
+      "retrieved_scores": [
+        1.4,
+        1.3,
+        1.0,
+        1.0,
+        0.9,
+        0.8,
+        0.7,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 1.0,
+        "recall@3": 1.0,
+        "ndcg@3": 0.5,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 0.5,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.5,
+        "mrr": 0.3333333333333333
+      }
+    },
+    {
+      "item_id": "4-3-1_0",
+      "hop_type": "zero_hop",
+      "rule_type": "definition",
+      "query_lang": "en",
+      "question": "How does Mabhas categorise the spaces that make up a building?",
+      "gold_ids": [
+        "4-3-1"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-5-1-5-4",
+        "3-5-1-5-4c",
+        "4-2",
+        "4-3-2-5-4a",
+        "1-7-1-5-4",
+        "2-5-1-4-4",
+        "7-1-1-7-4",
+        "1-3-8-5-4"
+      ],
+      "retrieved_scores": [
+        3.0,
+        2.0,
+        2.0,
+        1.7,
+        1.5,
+        1.5,
+        1.3,
+        1.3,
+        1.3,
+        1.2
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-8-4b_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "In a tall building, can an interior light well provide natural light to floors below the top six?",
+      "gold_ids": [
+        "2-8-4a",
+        "2-8-4b"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "4-3-2-5-4a",
+        "3-5-1-5-4c",
+        "4-2-5-4",
+        "4-2",
+        "1-3-8-5-4",
+        "7-1-1-7-4",
+        "5-1-5-4"
+      ],
+      "retrieved_scores": [
+        3.8,
+        2.6,
+        2.4,
+        2.3,
+        2.1,
+        2.1,
+        2.0,
+        1.8,
+        1.8,
+        1.7
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "10-1-5-4c_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "If a stairwell cannot receive natural light through wall windows, how may the natural-lighting requirement be met?",
+      "gold_ids": [
+        "10-1-5-4b",
+        "10-1-5-4c"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-2-5-4",
+        "4-5-1-5-4",
+        "4-1-4-4",
+        "4-3-2-5-4a",
+        "6-4-5-4",
+        "3-5-1-5-4c",
+        "1-3-8-5-4",
+        "1-5-2-5-4",
+        "1-5-4-5-4"
+      ],
+      "retrieved_scores": [
+        3.8,
+        2.8,
+        2.3,
+        2.1,
+        2.0,
+        1.8,
+        1.6,
+        1.5,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-2-6-4_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "Under what conditions may mechanical ventilation be used instead of natural ventilation in an occupied space?",
+      "gold_ids": [
+        "1-2-6-4",
+        "1-3-4-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-2-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-3-2-3-4",
+        "4-5-1-5-4",
+        "5-1-5-4",
+        "4-2",
+        "4-3-2-5-4a",
+        "6-4-5-4"
+      ],
+      "retrieved_scores": [
+        4.0,
+        2.5,
+        2.2,
+        1.6,
+        1.5,
+        1.5,
+        1.5,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "1-3-6-4_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "A living room meets the one-eighth glazing area but uses glass block instead of clear glass. Is the lighting provision still compliant?",
+      "gold_ids": [
+        "1-3-6-4",
+        "2-3-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "3-5-1-5-4c",
+        "4-5-1-5-4",
+        "1-5-2-5-4",
+        "1-5-4-5-4",
+        "1-7-1-5-4",
+        "2-5-1-4-4",
+        "6-4-5-4",
+        "4-2"
+      ],
+      "retrieved_scores": [
+        4.5,
+        3.7,
+        2.4,
+        2.3,
+        2.1,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.9
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 0.0,
+        "recall@5": 0.0,
+        "ndcg@5": 0.0,
+        "hit@10": 0.0,
+        "recall@10": 0.0,
+        "ndcg@10": 0.0,
+        "mrr": 0.0
+      }
+    },
+    {
+      "item_id": "2-5-1-4-4_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "If a basement does not meet the conditions for habitable use, can it still be built, and may it be lived in?",
+      "gold_ids": [
+        "2-5-1-4-4",
+        "4-2-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "4-1-4-4",
+        "4-5-1-5-4",
+        "4-2-5-4",
+        "2-5-1-4-4",
+        "4-2",
+        "3-5-1-5-4c",
+        "4-3-2-3-4",
+        "4-3-2-5-4a",
+        "1-3-8-5-4"
+      ],
+      "retrieved_scores": [
+        6.5,
+        3.9,
+        3.6,
+        3.4,
+        2.8,
+        2.8,
+        2.6,
+        2.4,
+        2.4,
+        2.3
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 0.0,
+        "recall@3": 0.0,
+        "ndcg@3": 0.0,
+        "hit@5": 1.0,
+        "recall@5": 1.0,
+        "ndcg@5": 0.5012658353418871,
+        "hit@10": 1.0,
+        "recall@10": 1.0,
+        "ndcg@10": 0.5012658353418871,
+        "mrr": 0.25
+      }
+    },
+    {
+      "item_id": "1-5-4-5-4_0",
+      "hop_type": "multi_hop",
+      "rule_type": "exception",
+      "query_lang": "en",
+      "question": "Does a small alcove attached to a workspace need its own light and ventilation?",
+      "gold_ids": [
+        "1-1-4-5-4",
+        "1-5-4-5-4"
+      ],
+      "retrieved_ids": [
+        "5-5-4",
+        "1-5-4-5-4",
+        "4-2",
+        "4-3-2-5-4a",
+        "1-5-2-5-4",
+        "4-3-3-2",
+        "4-5-1-5-4",
+        "1-12-5-4",
+        "4-1-4-4",
+        "4-2-5-4"
+      ],
+      "retrieved_scores": [
+        2.4,
+        1.4,
+        1.4,
+        1.4,
+        1.3,
+        1.3,
+        1.3,
+        1.1,
+        1.1,
+        1.1
+      ],
+      "metrics": {
+        "hit@1": 0.0,
+        "recall@1": 0.0,
+        "ndcg@1": 0.0,
+        "hit@3": 1.0,
+        "recall@3": 0.5,
+        "ndcg@3": 0.38685280723454163,
+        "hit@5": 1.0,
+        "recall@5": 0.5,
+        "ndcg@5": 0.38685280723454163,
+        "hit@10": 1.0,
+        "recall@10": 0.5,
+        "ndcg@10": 0.38685280723454163,
+        "mrr": 0.5
+      }
+    }
+  ]
+}
