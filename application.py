@@ -162,7 +162,7 @@ def create_app(cfg=None) -> OpenAPI:
 
     # ── AI model initialisation ───────────────────────────────────────────────
     with app.app_context():
-        logger.info("Initialising AI model (Mask2Former Swin-Large)...")
+        logger.info("Initialising AI model (Mask R-CNN, ResNet-101 backbone)...")
         try:
             from models.mask_rcnn_model import initialize_model
             initialize_model()

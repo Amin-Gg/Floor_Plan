@@ -421,7 +421,16 @@ def create_wall_visualization(original_image, model_results, wall_parameters, ju
 		
 		for space in space_names:
 			bbox = space['bbox']
-			x1, y1, x2, y2 = bbox
+			# PaddleOCR returns 4 corner points [[x1,y1],[x2,y1],[x2,y2],[x1,y2]];
+			# older callers may pass a flat [x1,y1,x2,y2]. Normalize both to scalars.
+			# (Unpacking the 4-corner form directly made x1/y1/x2/y2 lists, which
+			#  crashed on (x1 + x2) / 2 with a list-concatenation TypeError.)
+			_pts = numpy.asarray(bbox, dtype=float)
+			if _pts.ndim == 2 and _pts.shape[1] == 2:
+				x1, y1 = float(_pts[:, 0].min()), float(_pts[:, 1].min())
+				x2, y2 = float(_pts[:, 0].max()), float(_pts[:, 1].max())
+			else:
+				x1, y1, x2, y2 = (float(v) for v in _pts.ravel()[:4])
 			text = space['name']
 			confidence = space['confidence']
 			

@@ -96,12 +96,19 @@ def _ocr_status() -> dict:
 
 
 def _model_path() -> str:
-    """Return the model path string the API will use, or a fallback marker."""
+    """Return the actual weights file the model loaded, or a clear status marker."""
+    try:
+        from models.mask_rcnn_model import get_weights_path
+        loaded = get_weights_path()
+        if loaded:
+            return loaded
+    except Exception:
+        pass
+    # Loader hasn't run yet (or failed). Fall back to any explicit override.
     env_path = os.getenv("FLOORPLAN_MODEL_PATH", "").strip()
     if env_path:
         return env_path
-    # Fall back to the same default the model loader uses
-    return "coco_fallback (set FLOORPLAN_MODEL_PATH to use fine-tuned weights)"
+    return "model not initialized"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

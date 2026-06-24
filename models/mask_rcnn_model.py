@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 # ── Module-level singletons ───────────────────────────────────────────────────
 _model = None
 _cfg = None
+_weights_path = None   # the actual .h5 path loaded at startup (for /health reporting)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ def _resolve_weights_path() -> str:
 
 def initialize_model():
     """Load the Mask R-CNN model + weights once at startup. Returns (model, cfg)."""
-    global _cfg, _model
+    global _cfg, _model, _weights_path
 
     try:
         weights_path = _resolve_weights_path()
@@ -100,6 +101,7 @@ def initialize_model():
         logger.info("================= Model created =================")
 
         _model.load_weights(weights_path, by_name=True)
+        _weights_path = weights_path
         logger.info("================= Weights loaded: %s =================", weights_path)
 
         return _model, _cfg
@@ -117,6 +119,11 @@ def get_model():
 def get_model_config():
     """Return the PredictionConfig instance, or None if not yet initialized."""
     return _cfg
+
+
+def get_weights_path():
+    """Return the actual .h5 weights path that was loaded, or None."""
+    return _weights_path
 
 
 # Backwards-compatible alias (some older call sites used get_config()).

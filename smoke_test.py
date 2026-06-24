@@ -102,7 +102,9 @@ def main():
             img_bytes = fh.read()
         data = {"image": (io.BytesIO(img_bytes), "plan.png")}
         if args.scale is not None:
-            data["scale_factor"] = str(args.scale)
+            # Route reads request.form.get("scale_factor_mm_per_pixel"); sending
+            # "scale_factor" here meant --scale was silently ignored (→ default 1.0).
+            data["scale_factor_mm_per_pixel"] = str(args.scale)
         resp = client.post("/analyze", data=data, content_type="multipart/form-data")
         if resp.status_code != 200:
             # surface the server's message so a schema/field mismatch is obvious

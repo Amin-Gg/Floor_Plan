@@ -386,8 +386,23 @@ def extract_room_polygons(combined_wall_mask, scale_factor_mm_per_pixel,
                     new_num_labels, new_labeled, new_stats, new_centroids
                 )
 
-    # Minimum room size: 500 mm × 500 mm in pixel area
-    min_area_px = max(100, (500.0 / scale_factor_mm_per_pixel) ** 2)
+    # Minimum room size: 500 mm × 500 mm in pixel area.
+    # Guard: when scale_factor_mm_per_pixel is uncalibrated (default 1.0 mm/px),
+    # (500/scale)**2 explodes to 250,000 px² and silently rejects EVERY room on a
+    # normally-sized plan. Cap the floor so room extraction never wipes itself out.
+    mm_based = (500.0 / scale_factor_mm_per_pixel) ** 2
+    area_cap = 0.005 * h * w            # no single-room floor above 0.5% of image area
+    min_area_px = max(100, min(mm_based, area_cap))
+    if mm_based > area_cap:
+        logger.warning(
+            "Room min-area floor (%.0f px²) capped to %.0f px² — "
+            "scale_factor_mm_per_pixel=%.3f looks uncalibrated (default is 1.0).",
+            mm_based, area_cap, scale_factor_mm_per_pixel,
+        )
+    logger.info(
+        "Room extraction: %d raw component(s), min_area_px=%.0f",
+        num_labels - 1, min_area_px,
+    )
 
     rooms = []
 
