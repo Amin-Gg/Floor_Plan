@@ -67,37 +67,138 @@ class Verdict(str, Enum):
     NEEDS_REVIEW = "NEEDS_REVIEW"
 
 
+# ── BUILDING PARAMETERS (user-supplied, not measured from the plan) ──────────
+# Some Mabhas values cannot be read off a 2D plan — the clearest example is the
+# room CLEAR/CEILING HEIGHT. Rather than always deferring those to human review,
+# the operator supplies them once as building parameters (e.g. from the web UI),
+# the checker uses them to produce a real PASS/FAIL, and every such verdict is
+# tagged in its message as coming from a user parameter (so the report stays
+# honest about provenance — the number was asserted, not measured).
+#
+# Add a new tunable here + read it in BimAdapter + route a property to it in
+# _resolve_measure. These are the ONLY things you touch to add a knob.
+BUILDING_PARAM_DEFAULTS: Dict[str, float] = {
+    "ceiling_height_mm": 2800.0,   # clear floor-to-ceiling height (room "height")
+}
+
+
 # ── OBJECT_MAP ──────────────────────────────────────────────────────────────
-# Maps a Mabhas clause `object` phrase → how to measure it from bim_data.
+# Maps a Mabhas clause `object` phrase → WHICH element (and, for rooms, which
+# canonical category) the rule is about. It does NOT decide which property to
+# measure — that comes from the clause's own `property` field (see
+# _quantity_of + _resolve_measure below). This split fixes the class of bug
+# where two clauses sharing an `object` but differing in `property`
+# (door "clear width" vs "clear height"; dwelling "area" vs "width") were
+# measured identically.
 #
-# Each entry: object_phrase -> (measure_kind, room_category_or_element)
-#   measure_kind is one of:
-#     "room_area"      → area_m2 of every room of the given category
-#     "room_height"    → ceiling height of every room of the given category
-#     "room_dim_min"   → shorter bounding-box side (width) of the room
-#     "room_dim_max"   → longer bounding-box side (length) of the room
-#     "door_width"     → width of every door
-#     "window_dim"     → width/height of every window
+# Each entry: object_phrase -> (element_kind, room_category_or_None)
+#   element_kind is one of: "room", "door", "window".
+#   room_category is the canonical room_* string for "room" objects, else None.
 #
-# room categories use YOUR model's category strings (room_bedroom, etc.).
+# Canonical room_* vocabulary (must match ingest/category_normalizer.py):
+#   room_bedroom room_living room_kitchen room_bathroom room_toilet
+#   room_entry room_storage
+#
 # To support a new rule object, add one line here. To adapt to renamed
 # categories after training, edit the right-hand side here only.
-#
 # Anything NOT in this map → the rule is flagged NEEDS_REVIEW (never guessed).
 OBJECT_MAP: Dict[str, tuple] = {
-    # --- areas ---
-    "kitchen":          ("room_area",   "room_kitchen"),
-    "dwelling_space":   ("room_area",   "room_bedroom"),
-    "dwelling space":   ("room_area",   "room_bedroom"),
-    "sanitary_space":   ("room_area",   "room_bathroom"),
-    "sanitary space":   ("room_area",   "room_bathroom"),
-    "bedroom":          ("room_area",   "room_bedroom"),
-    "living room":      ("room_area",   "room_living"),
+    # --- rooms: living / habitable ---
+    "dwelling_space":      ("room", "room_bedroom"),
+    "dwelling space":      ("room", "room_bedroom"),
+    "habitable_space":     ("room", "room_bedroom"),
+    "habitable space":     ("room", "room_bedroom"),
+    "bedroom":             ("room", "room_bedroom"),
+    "room":                ("room", "room_bedroom"),
+    "living room":         ("room", "room_living"),
+    "living_room":         ("room", "room_living"),
+    "living space":        ("room", "room_living"),
+    # --- rooms: kitchen ---
+    "kitchen":             ("room", "room_kitchen"),
+    "wall kitchen":        ("room", "room_kitchen"),
+    "kitchen space":       ("room", "room_kitchen"),
+    # --- rooms: sanitary ---
+    "sanitary_space":      ("room", "room_bathroom"),
+    "sanitary space":      ("room", "room_bathroom"),
+    "bathroom":            ("room", "room_bathroom"),
+    "washroom":            ("room", "room_bathroom"),
+    "toilet":              ("room", "room_toilet"),
+    "water closet":        ("room", "room_toilet"),
+    "wc":                  ("room", "room_toilet"),
+    # --- rooms: circulation / service ---
+    "entrance space":      ("room", "room_entry"),
+    "entrance_space":      ("room", "room_entry"),
+    "entrance":            ("room", "room_entry"),
+    "entry":               ("room", "room_entry"),
+    "foyer":               ("room", "room_entry"),
+    "lobby":               ("room", "room_entry"),
+    "storage":             ("room", "room_storage"),
+    "storage_space":       ("room", "room_storage"),
+    "storeroom":           ("room", "room_storage"),
+    "pantry":              ("room", "room_storage"),
     # --- doors ---
-    "door_width":       ("door_width",  None),
-    "main door":        ("door_width",  None),
+    "door_width":          ("door", None),
+    "door":                ("door", None),
+    "main door":           ("door", None),
+    "main_door":           ("door", None),
+    "entrance door":       ("door", None),
+    "room door":           ("door", None),
+    # --- windows / openings (dimensional checks; ratio/site rules stay with
+    #     the opening agent, which yields length-unit window clauses to here) ---
+    "window":              ("window", None),
+    "sauna window":        ("window", None),
+    "emergency opening":   ("window", None),
+    "ventilation_opening": ("window", None),
+    "ventilation opening": ("window", None),
+    "skylight":            ("window", None),
     # --- (extend here as you validate more clauses against real plans) ---
 }
+
+
+# ── PROPERTY → canonical quantity ───────────────────────────────────────────
+# The clause `property` phrase ("area", "clear width", "ceiling height", "sill
+# height", …) is reduced to one canonical quantity. Order matters: "floor area"
+# must match `area` before the `width`/`length` substrings. Unknown phrasing →
+# None → NEEDS_REVIEW (never measured as the wrong thing).
+def _quantity_of(prop: str) -> Optional[str]:
+    p = (prop or "").lower()
+    if "area" in p:
+        return "area"
+    if "sill" in p:                           # window sill height
+        return "sill"
+    if "height" in p or "headroom" in p:      # "clear height", "ceiling height"
+        return "height"
+    if "width" in p:                          # "clear width", "min width"
+        return "width"
+    if "length" in p or "depth" in p:
+        return "length"
+    if "diameter" in p:                       # treat as a least-dimension check
+        return "width"
+    return None
+
+
+# (element_kind, canonical_quantity) → concrete measure_kind for bim_data.
+#   "room"   + area → area_m2 ; + width → shorter bbox side ; + length → longer ;
+#            + height → CLEAR HEIGHT from the ceiling_height_mm building parameter
+#                       (user-supplied; verdict is tagged as parameter-sourced).
+#   "door"   + width → opening width ; + height → opening height.
+#   "window" + width → window width ; + height → window height ; + sill → sill.
+# A pairing absent here (e.g. door + area) → None → NEEDS_REVIEW.
+def _resolve_measure(element_kind: str, quantity: Optional[str]) -> Optional[str]:
+    if quantity is None:
+        return None
+    table = {
+        ("room",   "area"):   "room_area",
+        ("room",   "width"):  "room_dim_min",
+        ("room",   "length"): "room_dim_max",
+        ("room",   "height"): "room_height",
+        ("door",   "width"):  "door_width",
+        ("door",   "height"): "door_height",
+        ("window", "width"):  "window_width",
+        ("window", "height"): "window_height",
+        ("window", "sill"):   "window_sill",
+    }
+    return table.get((element_kind, quantity))
 
 
 # ── UNIT NORMALISATION ──────────────────────────────────────────────────────
@@ -153,12 +254,52 @@ class BimAdapter:
     If your trained model renames a field, edit ONLY the methods here.
     """
 
-    def __init__(self, bim_data: Dict[str, Any], wall_height_mm: float = 2800.0):
+    def __init__(self, bim_data: Dict[str, Any],
+                 building_params: Optional[Dict[str, Any]] = None):
         self._bim = bim_data
-        # Ceiling height isn't per-room in bim_data; walls carry a height.
-        # Use the default wall height as the room clear height unless a better
-        # source appears after training. Editable in one place.
-        self._default_height_m = wall_height_mm / 1000.0
+        # Merge: explicit building_params arg > bim_data["building_params"] >
+        # defaults. These supply values that cannot be measured from a 2D plan
+        # (currently the clear ceiling height). One place to read a knob.
+        _block = dict(bim_data.get("building_params") or {})
+        # "_provided" (written by Step 1 / the IFC ingest) lists exactly which
+        # keys the OPERATOR asserted; every other value in the block is a
+        # recorded default. Legacy flat dicts without "_provided" keep the old
+        # semantics: any key present counts as supplied.
+        _provided = _block.pop("_provided", None)
+        _explicit = {k: v for k, v in (building_params or {}).items()
+                     if k != "_provided" and v is not None}
+        self.params: Dict[str, Any] = dict(BUILDING_PARAM_DEFAULTS)
+        self.params.update(_block)
+        self.params.update(_explicit)
+        # Contract alias: Step 1 calls the FFL→underside-of-slab dimension
+        # "wall_height" (the engine API's canonical spelling is
+        # "wall_height_mm"); for room clear-height checks that IS the
+        # engine's ceiling_height_mm. An explicit ceiling_height_mm wins.
+        _ceiling_explicit = ("ceiling_height_mm" in _block
+                             or "ceiling_height_mm" in _explicit)
+        _wall_val = self.params.get("wall_height_mm",
+                                    self.params.get("wall_height"))
+        if not _ceiling_explicit and _wall_val is not None:
+            self.params["ceiling_height_mm"] = float(_wall_val)
+        # Provenance: which keys the OPERATOR actually asserted (via the API
+        # or the IFC contract Pset) vs which are engine fallback defaults.
+        # A compliance report must never claim a default was a user input.
+        self.user_supplied_params = (
+            set(_provided) if _provided is not None else set(_block)
+        ) | set(_explicit)
+        if ("ceiling_height_mm" not in self.user_supplied_params
+                and self.user_supplied_params
+                & {"wall_height", "wall_height_mm"}):
+            self.user_supplied_params.add("ceiling_height_mm")
+
+    def param_is_user_supplied(self, key: str) -> bool:
+        """True if the operator asserted this parameter; False = engine default."""
+        return key in self.user_supplied_params
+
+    def ceiling_height_m(self) -> float:
+        """User-supplied clear ceiling height (metres). Not measured — asserted."""
+        return float(self.params.get("ceiling_height_mm",
+                                     BUILDING_PARAM_DEFAULTS["ceiling_height_mm"])) / 1000.0
 
     def rooms_of_category(self, category: str) -> List[Dict[str, Any]]:
         return [r for r in self._bim.get("rooms", [])
@@ -169,9 +310,10 @@ class BimAdapter:
         return float(v) if v is not None else None
 
     def room_height_m(self, room: Dict[str, Any]) -> Optional[float]:
-        # No per-room height in current bim_data → use default wall height.
-        # When the model provides real heights, read them here.
-        return self._default_height_m
+        # Per-room ceiling height is not extracted from a 2D plan; use the
+        # user-supplied building parameter (same for every room). Verdicts that
+        # use this are tagged as parameter-sourced in their message.
+        return self.ceiling_height_m()
 
     def room_dim_min_m(self, room: Dict[str, Any]) -> Optional[float]:
         dims = room.get("dimensions", {})
@@ -190,8 +332,30 @@ class BimAdapter:
         v = door.get("width")
         return float(v) / 1000.0 if v is not None else None  # bim widths are mm
 
+    def door_height_m(self, door: Dict[str, Any]) -> Optional[float]:
+        v = door.get("height")
+        return float(v) / 1000.0 if v is not None else None  # bim heights are mm
+
     def door_id(self, door: Dict[str, Any]) -> str:
         return door.get("id", "?")
+
+    def windows(self) -> List[Dict[str, Any]]:
+        return self._bim.get("windows", [])
+
+    def window_width_m(self, win: Dict[str, Any]) -> Optional[float]:
+        v = win.get("width")
+        return float(v) / 1000.0 if v is not None else None   # bim widths are mm
+
+    def window_height_m(self, win: Dict[str, Any]) -> Optional[float]:
+        v = win.get("height")
+        return float(v) / 1000.0 if v is not None else None   # bim heights are mm
+
+    def window_sill_m(self, win: Dict[str, Any]) -> Optional[float]:
+        v = win.get("sill_height")
+        return float(v) / 1000.0 if v is not None else None   # bim sill is mm
+
+    def window_id(self, win: Dict[str, Any]) -> str:
+        return win.get("id", "?")
 
     def room_id(self, room: Dict[str, Any]) -> str:
         return room.get("id", "?")
@@ -210,8 +374,9 @@ class NumericChecker:
         findings = checker.check_all(numeric_clauses)   # list[Finding]
     """
 
-    def __init__(self, bim_data: Dict[str, Any], wall_height_mm: float = 2800.0):
-        self.bim = BimAdapter(bim_data, wall_height_mm=wall_height_mm)
+    def __init__(self, bim_data: Dict[str, Any],
+                 building_params: Optional[Dict[str, Any]] = None):
+        self.bim = BimAdapter(bim_data, building_params=building_params)
 
     # ── public API ────────────────────────────────────────────────────────────
 
@@ -259,14 +424,25 @@ class NumericChecker:
             return [self._review(clause,
                 f"Unsupported comparator '{comp}' — needs review", object=obj)]
 
-        # 3. Object must be mappable to a measurable value
+        # 3. Object must map to an element (and, for rooms, a category)
         mapping = OBJECT_MAP.get(obj)
         if mapping is None:
             return [self._review(clause,
                 f"Object '{obj}' not mapped to a measurable value — needs review",
                 object=obj)]
 
-        measure_kind, category = mapping
+        element_kind, category = mapping
+
+        # 3b. The PROPERTY decides what to measure on that element. Same object
+        #     + different property (door clear-width vs clear-height; dwelling
+        #     area vs width) now resolve to different measurements instead of
+        #     silently reusing one. Unknown property → NEEDS_REVIEW.
+        quantity = _quantity_of(prop)
+        measure_kind = _resolve_measure(element_kind, quantity)
+        if measure_kind is None:
+            return [self._review(clause,
+                f"Property '{prop}' is not auto-measurable for '{obj}' "
+                f"— needs review", object=obj)]
 
         # 4. Units must be understood for this property
         canonical_value = self._to_canonical(value, unit, prop, comp)
@@ -318,6 +494,22 @@ class NumericChecker:
             for d in self.bim.doors():
                 measured_items.append((self.bim.door_id(d), self.bim.door_width_m(d)))
 
+        elif measure_kind == "door_height":
+            for d in self.bim.doors():
+                measured_items.append((self.bim.door_id(d), self.bim.door_height_m(d)))
+
+        elif measure_kind == "window_width":
+            for w in self.bim.windows():
+                measured_items.append((self.bim.window_id(w), self.bim.window_width_m(w)))
+
+        elif measure_kind == "window_height":
+            for w in self.bim.windows():
+                measured_items.append((self.bim.window_id(w), self.bim.window_height_m(w)))
+
+        elif measure_kind == "window_sill":
+            for w in self.bim.windows():
+                measured_items.append((self.bim.window_id(w), self.bim.window_sill_m(w)))
+
         else:
             return [self._review(clause,
                 f"Measure kind '{measure_kind}' not implemented — needs review",
@@ -327,6 +519,29 @@ class NumericChecker:
             return [self._review(clause,
                 f"Nothing measurable for '{obj}' in this plan — needs review",
                 object=obj)]
+
+        # Honest provenance: room "height" comes from a building parameter
+        # (asserted, not measured from the plan). Policy decision (operator
+        # sign-off, 2026-07): a defaulted parameter must NOT produce a
+        # PASS/FAIL verdict — a compliance report resting on an unconfirmed
+        # assumption is deceptive. Unasserted ceiling height → NEEDS_REVIEW
+        # per room, with the instruction to assert the real value. When the
+        # operator HAS asserted it, the verdict is real and tagged as such.
+        src_note = ""
+        if measure_kind == "room_height":
+            _mm = int(self.bim.ceiling_height_m() * 1000)
+            if self.bim.param_is_user_supplied("ceiling_height_mm"):
+                src_note = (f"  [ceiling height = {_mm} mm, "
+                            f"user building parameter — not measured]")
+            else:
+                return [self._review(clause,
+                    f"{elem_id}: ceiling height not asserted — the plan "
+                    f"cannot yield it and the engine default ({_mm} mm) is "
+                    f"not used for a verdict. Supply building_params."
+                    f"wall_height (mm) to assert the real floor-to-slab "
+                    f"height and get a PASS/FAIL verdict — needs review",
+                    object=obj, element_id=elem_id)
+                    for elem_id, _ in measured_items]
 
         # Compare each measured element against the threshold
         for elem_id, measured in measured_items:
@@ -342,7 +557,7 @@ class NumericChecker:
             out.append(Finding(
                 article_id=art, verdict=verdict,
                 message=(f"{elem_id}: {prop} = {round(measured,3)} m "
-                         f"(required {req_str} m) → {verdict.value}"),
+                         f"(required {req_str} m) → {verdict.value}{src_note}"),
                 object=obj, measured=round(measured, 3), required=required,
                 unit="m", element_id=elem_id, rule_text_en=text,
             ))

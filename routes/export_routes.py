@@ -40,6 +40,8 @@ from export.ifc_exporter import bim_json_to_ifc, DEFAULTS
 from schemas import ExportIFCRequest, BuildingParams
 from utils.error_handlers import ValidationError, NotFoundError, APIError
 from utils.validators import validate_building_params
+from validation import validate_bim_data, validate_ifc_file, merge_reports
+from validation.report import IfcContractError
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +83,14 @@ def export_ifc():
                 f"building_params field contains invalid JSON: {exc}"
             ) from exc
 
+        raw_overrides = request.form.get("window_overrides", "{}")
+        try:
+            window_overrides = json.loads(raw_overrides)
+        except json.JSONDecodeError as exc:
+            raise ValidationError(
+                f"window_overrides field contains invalid JSON: {exc}"
+            ) from exc
+
     # ── Mode A: reference a previously saved analysis file ───────────────────
     else:
         body = request.get_json(force=True, silent=True)
@@ -96,9 +106,10 @@ def export_ifc():
                 },
             )
 
-        analysis_file   = body.get("analysis_file")
-        raw_params      = body.get("building_params", {})
-        building_params = validate_building_params(raw_params)
+        analysis_file    = body.get("analysis_file")
+        raw_params       = body.get("building_params", {})
+        building_params  = validate_building_params(raw_params)
+        window_overrides = body.get("window_overrides", {})
 
         if not analysis_file:
             raise ValidationError(
@@ -137,6 +148,11 @@ def export_ifc():
             "section extracted from it.",
         )
 
+    # Per-window manual overrides (operator-asserted widths) — applied and
+    # provenance-stamped before export so the IFC carries WidthSource.
+    from services.bim_builder import apply_window_overrides
+    bim_data = apply_window_overrides(bim_data, window_overrides)
+
     n_walls   = len(bim_data.get("walls",   []))
     n_doors   = len(bim_data.get("doors",   []))
     n_windows = len(bim_data.get("windows", []))
@@ -153,6 +169,32 @@ def export_ifc():
         getattr(g, "request_id", "-"), n_walls, n_doors, n_windows, n_rooms,
     )
 
+    # ── Pre-export validation gate (model standards) ─────────────────────────
+    # Policy: block on critical, warn on minor. See validation/ for the checks
+    # (geometric sanity, BIM completeness, code-readiness).
+    # A `validate_only` flag returns the report as JSON without building a file.
+    _vo = request.form.get("validate_only")
+    if _vo is None:
+        _body_flag = request.get_json(silent=True) or {}
+        _vo = _body_flag.get("validate_only") if isinstance(_body_flag, dict) else None
+    validate_only = str(_vo).lower() in ("1", "true", "yes", "on") if _vo is not None else False
+
+    pre_report = validate_bim_data(bim_data, building_params)
+
+    if validate_only:
+        return jsonify({
+            "validation": pre_report.to_dict(),
+            "note": "validate_only=true: bim_data was checked; no IFC file was produced.",
+        }), (400 if pre_report.blocked else 200)
+
+    if pre_report.blocked:
+        raise ValidationError(
+            "Model failed pre-export validation (critical issues). "
+            "IFC was not generated. Fix the issues below or call with "
+            "validate_only=true to inspect the full report.",
+            details={"validation": pre_report.to_dict()},
+        )
+
     # ── Generate IFC file ─────────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     uid       = uuid.uuid4().hex[:8]
@@ -166,8 +208,28 @@ def export_ifc():
             "ifcopenshell is not installed on this server.",
             details={"solution": "pip install ifcopenshell"},
         ) from exc
+    except IfcContractError as exc:
+        # The exporter's §A7 contract gate refused to emit a non-conforming file.
+        raise ValidationError(
+            "Generated IFC failed the export-time contract gate (§A7); "
+            "the file was discarded. See validation for the failed assertions.",
+            details={"validation": exc.report_dict()},
+        ) from exc
 
     logger.info("[%s] IFC file generated: %s", getattr(g, "request_id", "-"), ifc_path)
+
+    # The exporter already ran the hard contract gate (§A7). This second pass is
+    # the broader report used only to surface non-blocking warnings via headers.
+    post_report = validate_ifc_file(ifc_path)
+    combined = merge_reports("export", pre_report, post_report)
+
+    if combined["counts"]["warning"]:
+        logger.warning(
+            "[%s] IFC export passed with %d warning(s): %s",
+            getattr(g, "request_id", "-"), combined["counts"]["warning"],
+            [i["code"] for i in post_report.to_dict()["issues"]
+             + pre_report.to_dict()["issues"] if i["severity"] == "warning"][:10],
+        )
 
     # Delete the IFC file from disk after Flask has finished streaming it.
     # Without this, files accumulate indefinitely — hundreds of requests fill
@@ -182,12 +244,17 @@ def export_ifc():
             logger.warning("Could not delete IFC file %s: %s", ifc_path, exc)
         return response
 
-    return send_file(
+    resp = send_file(
         ifc_path,
         mimetype="application/octet-stream",
         as_attachment=True,
         download_name=ifc_name,
     )
+    # Surface the validation outcome on the (binary) file response via headers.
+    resp.headers["X-Model-Validation-Status"]   = combined["status"]            # pass | warn
+    resp.headers["X-Model-Validation-Critical"] = str(combined["counts"]["critical"])
+    resp.headers["X-Model-Validation-Warnings"] = str(combined["counts"]["warning"])
+    return resp
 
 
 @bp.route("/export/ifc/parameters", methods=["GET"])
@@ -272,6 +339,18 @@ def get_ifc_parameters():
 
     return jsonify({
         "parameters":    parameters,
+        "window_overrides": {
+            "type": "object",
+            "description": "Per-window manual overrides keyed by window id "
+                           "(ids come from the /analyze response). Windows "
+                           "are not standardized — each may carry its own "
+                           "asserted width. Overridden widths are marked "
+                           "width_source='user' and carried into the IFC "
+                           "(Pset_SimsysProvenance.WidthSource).",
+            "fields": {"width": {"type": "number", "unit": "mm",
+                                 "min": 300, "max": 5000}},
+            "example": {"Window_3": {"width": 1400}},
+        },
         "usage_example": {
             "analysis_file":   "final5.json",
             "building_params": {
@@ -281,6 +360,7 @@ def get_ifc_parameters():
                 "window_height":      1200,
                 "door_height":        2100,
             },
+            "window_overrides": {"Window_3": {"width": 1400}},
         },
     })
 

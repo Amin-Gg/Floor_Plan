@@ -454,6 +454,19 @@ def identify_exterior_walls(wall_parameters, image_width, image_height, scale_fa
         if is_exterior:
             exterior_wall_data = wall.copy()
             exterior_wall_data["exterior_reasons"] = exterior_reasons
+            # Issue 7 — confidence in the exterior classification. Boundary-based
+            # evidence is strong; "unconnected" alone is weak (could be a detection
+            # gap, not a true perimeter wall). Low-confidence exterior walls — and
+            # the windows hosted on them — must not drive hard natural-light /
+            # ventilation PASS/FAIL verdicts.
+            strong = [r for r in exterior_reasons if r != "unconnected"]
+            if not strong:                       # only "unconnected"
+                ext_conf = 0.4
+            else:
+                ext_conf = min(1.0, 0.55 + 0.15 * len(strong))
+            exterior_wall_data["is_exterior"] = True
+            exterior_wall_data["exterior_confidence"] = round(ext_conf, 2)
+            exterior_wall_data["exterior_needs_review"] = ext_conf < 0.6
             exterior_walls.append(exterior_wall_data)
         else:
             interior_walls.append(wall)

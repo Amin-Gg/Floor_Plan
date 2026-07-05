@@ -26,16 +26,33 @@ import time
 from groq import Groq
 
 # ---------------------------------------------------------------------------
-# Key pool — read once at import time
+# Key pool — resolved LAZILY on first use, never at import time.
+#
+# Review fix (issue: import-time raise): this module is imported transitively
+# by rag.query_transforms → rag.rag_retriever, so an import-time RuntimeError
+# made even pure vector/hybrid retrieval (which never calls Groq) unimportable
+# without keys, silently stripped RAG citations from production reports via
+# the orchestrator's best-effort retriever factory, and aborted pytest
+# collection for the whole suite. Keys are now validated inside _keys() the
+# first time a Groq call is actually attempted.
 # ---------------------------------------------------------------------------
 
-_raw = os.environ.get("GROQ_API_KEYS", os.environ.get("GROQ_API_KEY", ""))
-_KEYS: list[str] = [k.strip() for k in _raw.split(",") if k.strip()]
+_KEYS: list[str] | None = None  # populated by _keys() on first Groq call
 
-if not _KEYS:
-    raise RuntimeError(
-        "Set GROQ_API_KEYS='key1,key2,...,key9' before running the eval."
-    )
+
+def _keys() -> list[str]:
+    """Return the key pool, reading the env on first call. Raises only then."""
+    global _KEYS
+    if _KEYS is None:
+        _raw = os.environ.get("GROQ_API_KEYS", os.environ.get("GROQ_API_KEY", ""))
+        parsed = [k.strip() for k in _raw.split(",") if k.strip()]
+        if not parsed:
+            raise RuntimeError(
+                "Set GROQ_API_KEYS='key1,key2,...' (or GROQ_API_KEY) before "
+                "calling the Groq-backed query transforms."
+            )
+        _KEYS = parsed
+    return _KEYS
 
 # Current key index — module-level mutable state (single process, single thread).
 _idx: int = 0
@@ -45,7 +62,8 @@ _clients: dict[str, Groq] = {}
 
 
 def _current_client() -> Groq:
-    key = _KEYS[_idx % len(_KEYS)]
+    keys = _keys()
+    key = keys[_idx % len(keys)]
     if key not in _clients:
         _clients[key] = Groq(api_key=key)
     return _clients[key]
@@ -54,8 +72,9 @@ def _current_client() -> Groq:
 def _rotate(reason: str = "") -> None:
     global _idx
     _idx += 1
-    active = _idx % len(_KEYS)
-    print(f"[groq_client] key rotated → index {active}/{len(_KEYS) - 1}"
+    keys = _keys()
+    active = _idx % len(keys)
+    print(f"[groq_client] key rotated → index {active}/{len(keys) - 1}"
           + (f"  ({reason})" if reason else ""))
 
 
@@ -79,7 +98,7 @@ def groq_chat(
     """
     last_exc: Exception | None = None
 
-    for attempt in range(len(_KEYS)):
+    for attempt in range(len(_keys())):
         try:
             stream = _current_client().chat.completions.create(
                 model=model,
@@ -120,7 +139,7 @@ def groq_chat(
             raise
 
     raise RuntimeError(
-        f"All {len(_KEYS)} Groq keys returned 429 for this request. "
+        f"All {len(_keys())} Groq keys returned 429 for this request. "
         "Daily budgets may be exhausted — try again tomorrow."
     ) from last_exc
 
@@ -133,4 +152,4 @@ def reset_key_index() -> None:
     """Reset rotation to key 0. Call between Phase 6 steps if desired."""
     global _idx
     _idx = 0
-    print(f"[groq_client] key index reset to 0 ({len(_KEYS)} keys available)")
+    print(f"[groq_client] key index reset to 0 ({len(_keys())} keys available)")

@@ -55,6 +55,7 @@ def generate_reports(
     result: Dict[str, Any],
     meta: Optional[Dict[str, Any]] = None,
     out_dir: str = ".",
+    coverage: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Optional[str]]:
     """
     Generate HTML + PDF + BCF from a ComplianceResult.to_dict().
@@ -64,6 +65,8 @@ def generate_reports(
     result : dict   — ComplianceResult.to_dict()
     meta   : dict   — optional {plan_name, occupancy, date}; sensible defaults used
     out_dir: str    — directory to write files into
+    coverage: dict  — optional honest clause-coverage table (Issue 8); when given,
+                      a coverage section is rendered above the findings.
 
     Returns
     -------
@@ -78,7 +81,7 @@ def generate_reports(
     )
 
     # 1. HTML
-    html_str = _build_html(summary, findings, meta, result.get("duration_s"))
+    html_str = _build_html(summary, findings, meta, result.get("duration_s"), coverage)
     html_path = os.path.join(out_dir, "compliance_report.html")
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html_str)
@@ -123,7 +126,51 @@ def _overall_status(summary: Dict[str, int]) -> Dict[str, str]:
 # HTML template (fixed structure, data-bound)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _build_html(summary, findings, meta, duration_s) -> str:
+def _coverage_html(coverage: Optional[Dict[str, Any]]) -> str:
+    """Render the honest clause-coverage table (Issue 8). Empty if not provided."""
+    if not coverage:
+        return ""
+    rows = [
+        ("Checked (PASS / FAIL / review)", coverage.get("checked", 0), "#0F6E56"),
+        ("· passed",                       coverage.get("passed", 0), "#0F6E56"),
+        ("· failed",                       coverage.get("failed", 0), "#A32D2D"),
+        ("· needs review",                 coverage.get("needs_review", 0), "#854F0B"),
+        ("Blocked — required element missing", coverage.get("blocked_by_missing_data", 0), "#854F0B"),
+        ("Unsupported — no automatic check",   coverage.get("unsupported", 0), "#6b6b6b"),
+    ]
+    total = coverage.get("total_clauses", 0) or 1
+    checkable = coverage.get("automatically_checkable", 0)
+    pct = round(checkable / total * 100, 1)
+    body = "\n".join(
+        f"<tr><td style='padding:4px 10px;color:{c};'>{html.escape(label)}</td>"
+        f"<td style='padding:4px 10px;text-align:right;font-weight:600;color:{c};'>{n}</td></tr>"
+        for label, n, c in rows
+    )
+    extra = ""
+    if coverage.get("corpus_total") is not None:
+        extra = (f"<p class='legend' style='margin-top:6px;'>Corpus: "
+                 f"{coverage['corpus_total']} total clauses · "
+                 f"{coverage.get('not_applicable', 0)} not applicable to this "
+                 f"occupancy (filtered).</p>")
+    return f"""
+  <p class="section-label">clause coverage — what was automatically checkable</p>
+  <table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:6px;
+                background:#f6f5f2;border-radius:8px;overflow:hidden;">
+    <tr><td style="padding:6px 10px;color:#6b6b6b;">Clauses evaluated</td>
+        <td style="padding:6px 10px;text-align:right;font-weight:600;">{coverage.get('total_clauses',0)}</td></tr>
+    <tr><td style="padding:6px 10px;color:#6b6b6b;">Automatically checkable</td>
+        <td style="padding:6px 10px;text-align:right;font-weight:600;">{checkable} ({pct}%)</td></tr>
+    {body}
+  </table>
+  {extra}
+  <p class="legend" style="margin-bottom:22px;">This system automatically checks
+    only the subset of Mabhas 4 supported by the extracted geometry and room data.
+    <strong>Unsupported</strong> and <strong>blocked</strong> clauses are listed,
+    not silently omitted; they require manual review.</p>
+"""
+
+
+def _build_html(summary, findings, meta, duration_s, coverage=None) -> str:
     n_pass = summary.get("PASS", 0)
     n_fail = summary.get("FAIL", 0)
     n_rev  = summary.get("NEEDS_REVIEW", 0)
@@ -223,7 +270,7 @@ def _build_html(summary, findings, meta, duration_s) -> str:
     <span><span class="dot" style="background:#E24B4A;"></span>fail {w_fail}%</span>
     <span><span class="dot" style="background:#EF9F27;"></span>review {w_rev}%</span>
   </p>
-
+  {_coverage_html(coverage)}
   <p class="section-label">findings — failures first, then review, then pass</p>
   {cards_html}
 
@@ -232,6 +279,8 @@ def _build_html(summary, findings, meta, duration_s) -> str:
     deterministic checks against the building model. Rules that depend on information not
     derivable from the plan — site conditions, interpretive requirements — are flagged
     "review" for a qualified professional to confirm; they are never auto-judged.
+    Retrieval (RAG) and any language-model step supply supporting clause context and
+    advisory notes on review items only — they never produce or change a PASS/FAIL verdict.
     Scope: {html.escape(meta['occupancy'])}. Engine runtime: {dur}.
     This report is a decision-support tool and does not replace professional certification.
   </div>

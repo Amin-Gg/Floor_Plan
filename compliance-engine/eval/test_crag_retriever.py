@@ -5,6 +5,16 @@ Added during Stage 2 packaging (Step 5 spec required no tests, but branch
 coverage of the orchestration is cheap and valuable). A FakeBase stands in
 for MabhasRetriever — no API calls, no DB, no models.
 
+Updated for two production design changes the original tests predated:
+  * Hits carry CROSS-ENCODER LOGITS (rag/reranker.py) and the retriever
+    evaluates confidence with score_transform="sigmoid" — so fixture scores
+    are logits, chosen so their sigmoids land in the HIGH/MEDIUM/LOW bands
+    of retrieval_evaluator.DEFAULT_THRESHOLDS (probability space).
+  * mabhas_part / rule_type filters are pushed down to the base retriever
+    at the SQL level (rag_retriever supports them natively) — there is no
+    over-fetch + post-filter layer anymore, so FakeBase honors the filter
+    kwargs the way the real SQL does.
+
 Run from the project root:  python -m pytest eval/test_crag_retriever.py -v
 """
 
@@ -22,9 +32,11 @@ def make_hits(scores, prefix="a", part_cycle=("3",)):
     ]
 
 
-HIGH_SCORES = [0.85, 0.60, 0.50, 0.45, 0.40]
-LOW_SCORES = [0.20, 0.18, 0.15, 0.10, 0.05]
-MEDIUM_SCORES = [0.55, 0.48, 0.45, 0.40, 0.35]
+# Logit fixtures (sigmoid values in comments; thresholds: HIGH needs
+# top1 >= 0.6 AND top1-top3 gap >= 0.15; LOW is top1 < 0.3 OR gap < 0.03).
+HIGH_SCORES = [2.0, 0.0, -0.5, -1.0, -1.5]      # ≈ .88/.50/.38/.27/.18 -> HIGH
+LOW_SCORES = [-1.5, -1.6, -1.7, -1.8, -1.9]     # top1 ≈ .18 < .30      -> LOW
+MEDIUM_SCORES = [0.0, -0.3, -0.6, -0.9, -1.2]   # top1 .50, gap .15     -> MEDIUM
 
 # Queries chosen to hit specific router rules deterministically:
 Q_SHORT_NUMERIC_FA = "حداقل عرض راهرو چقدر است؟"          # R3 -> hyde
@@ -33,30 +45,58 @@ Q_NEUTRAL_FA = "توضیح کلی درباره اهداف مقررات ملی س
 
 
 class FakeBase:
-    """Duck-typed stand-in for MabhasRetriever."""
+    """Duck-typed stand-in for MabhasRetriever.
+
+    Honors ``mabhas_part`` / ``rule_type`` exactly like the production SQL
+    push-down does (rag_retriever filters candidates in the WHERE clause),
+    and records the filters each leg received so tests can assert the
+    push-down happened.
+    """
 
     def __init__(self, initial, hyde=None, stepback=None, multi=None):
         self._initial = initial
         self._hyde = hyde or []
         self._stepback = stepback or []
         self._multi = multi or []
-        self.calls = []  # (method, top_k, language-or-None)
+        self.calls = []          # (method, top_k, language-or-None)
+        self.filters_seen = []   # (method, mabhas_part, rule_type)
 
-    def hybrid_retrieve(self, query, top_k=5, rerank=True, **kw):
+    @staticmethod
+    def _apply_filters(hits, mabhas_part, rule_type):
+        out = hits
+        if mabhas_part is not None:
+            out = [h for h in out if h.get("mabhas_part") == mabhas_part]
+        if rule_type is not None:
+            out = [h for h in out if h.get("rule_type") == rule_type]
+        return out
+
+    def hybrid_retrieve(self, query, top_k=5, rerank=True,
+                        mabhas_part=None, rule_type=None, **kw):
         self.calls.append(("hybrid", top_k, None))
-        return list(self._initial)[:top_k]
+        self.filters_seen.append(("hybrid", mabhas_part, rule_type))
+        return self._apply_filters(list(self._initial),
+                                   mabhas_part, rule_type)[:top_k]
 
-    def hyde_retrieve(self, query, top_k=5, rerank=True, language="fa", **kw):
+    def hyde_retrieve(self, query, top_k=5, rerank=True, language="fa",
+                      mabhas_part=None, rule_type=None, **kw):
         self.calls.append(("hyde", top_k, language))
-        return list(self._hyde)[:top_k]
+        self.filters_seen.append(("hyde", mabhas_part, rule_type))
+        return self._apply_filters(list(self._hyde),
+                                   mabhas_part, rule_type)[:top_k]
 
-    def stepback_retrieve(self, query, top_k=5, rerank=True, language="fa", **kw):
+    def stepback_retrieve(self, query, top_k=5, rerank=True, language="fa",
+                          mabhas_part=None, rule_type=None, **kw):
         self.calls.append(("stepback", top_k, language))
-        return list(self._stepback)[:top_k]
+        self.filters_seen.append(("stepback", mabhas_part, rule_type))
+        return self._apply_filters(list(self._stepback),
+                                   mabhas_part, rule_type)[:top_k]
 
-    def multi_query_retrieve(self, query, top_k=5, rerank=True, language="fa", **kw):
+    def multi_query_retrieve(self, query, top_k=5, rerank=True, language="fa",
+                             mabhas_part=None, rule_type=None, **kw):
         self.calls.append(("multi_query", top_k, language))
-        return list(self._multi)[:top_k]
+        self.filters_seen.append(("multi_query", mabhas_part, rule_type))
+        return self._apply_filters(list(self._multi),
+                                   mabhas_part, rule_type)[:top_k]
 
 
 # --- Branch C: HIGH short-circuit -------------------------------------------
@@ -153,8 +193,9 @@ def test_give_up_after_primary_when_fallback_invalid(monkeypatch):
     # the defensive branch.
     monkeypatch.setattr(
         "rag.crag_retriever.route_query",
-        lambda q, initial_hits=None: {"primary": "hyde", "fallback": "none",
-                                      "reason": "forced", "rule": "RX"},
+        lambda q, initial_hits=None, **kw: {"primary": "hyde",
+                                            "fallback": "none",
+                                            "reason": "forced", "rule": "RX"},
     )
     base = FakeBase(
         initial=make_hits(LOW_SCORES, prefix="a"),
@@ -168,37 +209,54 @@ def test_give_up_after_primary_when_fallback_invalid(monkeypatch):
     assert cr.last_trace["transforms_tried"] == ["hyde"]
 
 
-# --- Filters + over-fetch --------------------------------------------------------
+# --- Filters: SQL push-down (no over-fetch, no post-filter layer) ------------
 
-def test_filters_overfetch_and_postfilter():
-    # 25 HIGH-confidence hits alternating mabhas_part 3/4.
-    scores = [0.95, 0.70, 0.50] + [0.50 - 0.01 * i for i in range(1, 23)]
+def test_mabhas_part_filter_pushed_down_to_base():
+    # 10 hits alternating mabhas_part 3/4; scores strictly descending logits
+    # whose part-"4" subset still classifies HIGH after the base filters.
+    scores = [2.0, 1.9, 0.0, -0.1, -0.5, -0.6, -1.0, -1.1, -1.5, -1.6]
     base = FakeBase(initial=make_hits(scores, part_cycle=("3", "4")))
     cr = CorrectiveRetriever(base)
     out = cr.retrieve(Q_NEUTRAL_FA, top_k=5, mabhas_part="4")
-    # Over-fetch: hybrid was asked for max(4*5, 20) = 20 candidates.
-    assert ("hybrid", 20, None) in base.calls
+    # The filter is forwarded to the base retrieval leg (SQL push-down) …
+    assert ("hybrid", "4", None) in base.filters_seen
+    # … the fetch size is NOT inflated (no over-fetch layer anymore) …
+    assert ("hybrid", 5, None) in base.calls
+    # … and every returned hit satisfies the filter.
     assert len(out) == 5
     assert all(h["mabhas_part"] == "4" for h in out)
     assert cr.last_trace["branch"] == "high_no_transform"
 
 
-def test_rule_type_filter_applied():
-    hits = make_hits([0.95, 0.70, 0.50, 0.45, 0.40, 0.35, 0.30, 0.28,
-                      0.26, 0.24, 0.22, 0.20, 0.18, 0.16, 0.14, 0.12,
-                      0.11, 0.10, 0.09, 0.08])
+def test_rule_type_filter_pushed_down_to_base():
+    scores = [2.0, 1.9, 0.0, -0.1, -0.5, -0.6, -1.0, -1.1, -1.5, -1.6]
+    hits = make_hits(scores)
     for i, h in enumerate(hits):
         h["rule_type"] = "spatial" if i % 2 else "numeric"
-    cr = CorrectiveRetriever(FakeBase(initial=hits))
-    out = cr.retrieve(Q_NEUTRAL_FA, top_k=5, rule_type="spatial")
+    base = FakeBase(initial=hits)
+    out = CorrectiveRetriever(base).retrieve(
+        Q_NEUTRAL_FA, top_k=5, rule_type="spatial")
+    assert ("hybrid", None, "spatial") in base.filters_seen
     assert len(out) == 5
     assert all(h["rule_type"] == "spatial" for h in out)
+
+
+def test_filters_forwarded_into_transform_legs():
+    # LOW initial -> R3 primary hyde; the SAME filters must reach the
+    # transform leg, not just the initial retrieval.
+    base = FakeBase(initial=make_hits(LOW_SCORES, part_cycle=("4",)),
+                    hyde=make_hits(HIGH_SCORES, prefix="b", part_cycle=("4",)))
+    CorrectiveRetriever(base).retrieve(
+        Q_SHORT_NUMERIC_FA, top_k=5, mabhas_part="4")
+    assert ("hybrid", "4", None) in base.filters_seen
+    assert ("hyde", "4", None) in base.filters_seen
 
 
 def test_no_filter_means_exact_topk_fetch():
     base = FakeBase(initial=make_hits(HIGH_SCORES))
     CorrectiveRetriever(base).retrieve(Q_NEUTRAL_FA, top_k=5)
-    assert ("hybrid", 5, None) in base.calls  # no over-fetch without filters
+    assert ("hybrid", 5, None) in base.calls  # eval_k = max(top_k, 5) = 5
+    assert ("hybrid", None, None) in base.filters_seen
 
 
 # --- Drop-in compatibility -----------------------------------------------------

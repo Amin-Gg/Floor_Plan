@@ -22,8 +22,29 @@
 #   RERANKER_MODEL    path to bge-reranker-v2-m3 weights inside the container
 #                     (default: /app/models/bge_reranker — mount this path)
 #   CELERY_BROKER_URL redis://host:6379/0  (enables async Celery workers)
-#   RESULTS_DIR       job output directory (default: /app/jobs)
+#
+# ── Job store (Redis architecture — decision 2026-07) ───────────────────────
+#   Job status, uploaded IFCs, and finished report artifacts live in REDIS,
+#   not on a shared volume: any api replica serves any job, and workers can
+#   run in separate containers with no volume sharing at all.
+#   JOB_STORE_REDIS_URL  explicit Redis for job state (defaults to a
+#                        redis-scheme CELERY_BROKER_URL when unset)
+#   JOB_TTL_SECONDS      job/report retention (default 604800 = 7 days)
+#   JOB_STORE=local      force the dev backend (in-process + RESULTS_DIR
+#                        status.json mirror) even when a broker is set
+#   RESULTS_DIR          per-job SCRATCH directory (default: /app/jobs).
+#                        In Redis mode nothing here needs to be shared or
+#                        persisted; in local mode it is the job store.
 #   UVICORN_WORKERS   number of uvicorn workers (default: 1; see memory note)
+#
+# ── Roles: api vs worker (same image) ───────────────────────────────────────
+#   This image runs BOTH roles; docker-compose.yml wires them up:
+#     api    → the default CMD below (uvicorn)
+#     worker → override the command with:
+#              celery -A api.tasks.celery_app worker --loglevel=info \
+#                     --concurrency=1
+#   The worker needs the same CELERY_BROKER_URL / JOB_STORE_REDIS_URL /
+#   DATABASE_URL / GROQ_API_KEYS environment as the api.
 #
 # ── Build ────────────────────────────────────────────────────────────────────
 #   docker build -t mabhas-compliance:1.0 .
@@ -133,7 +154,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     RERANKER_MODEL=/app/models/bge_reranker \
     # Regulation clause corpus — included in the image under data/.
     CLAUSES_PATH=/app/data/mabhas_clauses.json \
-    # Job output directory — declare as a VOLUME below so results persist.
+    # Per-job scratch directory. In the Redis job-store architecture nothing
+    # here needs to persist or be shared (status/uploads/reports live in
+    # Redis); it only matters as the durable store when JOB_STORE=local.
     RESULTS_DIR=/app/jobs \
     # Number of uvicorn workers. Keep at 1 unless you have profiled VRAM usage.
     UVICORN_WORKERS=1
@@ -203,7 +226,9 @@ print('Both embedding models cached at /app/.cache/huggingface')
 # Declarative volume hints:
 #   /app/.cache/huggingface  — baked-in e5-large + bge-m3; mount to override
 #   /app/models              — local bge-reranker-v2-m3 weights (mount read-only)
-#   /app/jobs                — generated compliance reports + job state
+#   /app/jobs                — per-job scratch; only needs a mount when
+#                              JOB_STORE=local (Redis mode keeps job state,
+#                              uploads and reports in Redis with a TTL)
 VOLUME ["/app/.cache/huggingface", "/app/models", "/app/jobs"]
 
 USER app
@@ -218,7 +243,10 @@ HEALTHCHECK --start-period=60s --interval=30s --timeout=10s --retries=3 \
     CMD curl --fail --silent http://localhost:8000/health || exit 1
 
 # Shell form so ${UVICORN_WORKERS} is expanded at runtime.
-# Override the default entry point for admin tasks, e.g.:
+# This is the API role. The WORKER role uses the same image with the command
+# overridden (see docker-compose.yml):
+#   celery -A api.tasks.celery_app worker --loglevel=info --concurrency=1
+# Other overrides for admin tasks:
 #   docker run ... python -m rag.rag_index --input /app/data/mabhas_clauses.json
 #   docker run ... psql "$DATABASE_URL" -f /app/rag/schema.sql
 CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}"]

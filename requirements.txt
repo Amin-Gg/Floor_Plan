@@ -71,7 +71,15 @@ flask-openapi3>=3.0.0
 # ==========================================
 # IFC Export (kept from your upgrade)
 # ==========================================
-ifcopenshell==0.7.0
+# NOTE (review fix C1): export/ifc_exporter.py uses the modular high-level API
+# (ifcopenshell.api.geometry.add_wall_representation, api.root.create_entity,
+# api.feature/api.void.add_opening, ...). That API is the 0.8.x line.
+# The previous pin "ifcopenshell==0.7.0" did NOT exist on PyPI (lowest is
+# 0.7.10, current 0.8.5), so `pip install -r requirements.txt` aborted and the
+# IFC/3D export endpoint could never run. Pinned to the 0.8.x line below.
+# After install, verify with:
+#   python -c "import ifcopenshell, ifcopenshell.api.geometry; print(ifcopenshell.version)"
+ifcopenshell>=0.8.0,<0.9
 
 # ==========================================
 # Utilities

@@ -23,8 +23,12 @@ openai>=1.0.0            # Step 1 offline Mabhas classification (classification/
 # ---- Document input (Step 1) ----
 python-docx>=1.1.0       # reads the Mabhas Word document into structured clauses
 
+# ---- IFC ingestion (Step 2 entry: reconstruct bim_data from the Step-1 IFC) ----
+ifcopenshell>=0.8.0,<0.9   # ingest/ifc_to_bim_data.py reads the enriched plan.ifc
+
 # ---- Web service (optional — only to run the FastAPI app) ----
 fastapi>=0.110.0
+python-multipart>=0.0.9   # REQUIRED: api/main.py /analyze-ifc uses File()/Form(); FastAPI raises at import without it
 uvicorn[standard]>=0.27.0
 pydantic>=2.0
 celery>=5.3.0            # optional async worker; api/tasks.py falls back to threads if no broker

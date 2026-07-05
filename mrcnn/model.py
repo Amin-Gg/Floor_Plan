@@ -2134,7 +2134,23 @@ class MaskRCNN():
             if saving:
                 saving.load_weights_from_hdf5_group_by_name(f, layers)
             else:
-                # For newer Keras versions, use the model's built-in method
+                # For newer Keras versions (e.g. Keras 2.13 with TF 2.13, where
+                # keras.engine.saving/topology no longer exist), fall back to the
+                # model's built-in by-name loader. This DOES load the weights.
+                #
+                # Review note (C2): skip_mismatch=True is required here because the
+                # .h5 may contain training-only layers absent from the inference
+                # graph. The side effect is that a genuine head-shape mismatch
+                # (e.g. NUM_CLASSES != the value the .h5 was trained with) is
+                # skipped SILENTLY — those heads then run on random init and emit
+                # garbage class predictions with no error. The warning below makes
+                # that path visible in the logs so it can be diagnosed. The
+                # NUM_CLASSES==4 assertion lives in config/settings.py + PredictionConfig.
+                logging.getLogger(__name__).warning(
+                    "load_weights: using Keras built-in by-name loader "
+                    "(keras.engine.saving unavailable) with skip_mismatch=True. "
+                    "If detections look random, verify NUM_CLASSES matches the .h5."
+                )
                 self.keras_model.load_weights(filepath, by_name=True, skip_mismatch=True)
                 return
         else:

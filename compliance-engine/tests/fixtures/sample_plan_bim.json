@@ -1,0 +1,235 @@
+{
+  "walls": [
+    {
+      "id": "WT",
+      "start_point": [
+        0,
+        3000,
+        0
+      ],
+      "end_point": [
+        9000,
+        3000,
+        0
+      ],
+      "thickness": 150,
+      "height": 2800,
+      "is_exterior": true
+    },
+    {
+      "id": "WL",
+      "start_point": [
+        0,
+        0,
+        0
+      ],
+      "end_point": [
+        0,
+        3000,
+        0
+      ],
+      "thickness": 150,
+      "height": 2800,
+      "is_exterior": true
+    },
+    {
+      "id": "Wbk",
+      "start_point": [
+        3000,
+        0,
+        0
+      ],
+      "end_point": [
+        3000,
+        3000,
+        0
+      ],
+      "thickness": 100,
+      "height": 2800,
+      "is_exterior": false
+    },
+    {
+      "id": "Wkb",
+      "start_point": [
+        6000,
+        0,
+        0
+      ],
+      "end_point": [
+        6000,
+        3000,
+        0
+      ],
+      "thickness": 100,
+      "height": 2800,
+      "is_exterior": false
+    }
+  ],
+  "rooms": [
+    {
+      "id": "Rbed",
+      "category": "room_bedroom",
+      "area_m2": 9.0,
+      "polygon": [
+        [
+          0,
+          0
+        ],
+        [
+          3000,
+          0
+        ],
+        [
+          3000,
+          3000
+        ],
+        [
+          0,
+          3000
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "dimensions": {
+        "width_mm": 3000,
+        "length_mm": 3000
+      },
+      "name": "Bedroom",
+      "name_source": "ocr",
+      "needs_review": false,
+      "centroid_mm": [
+        1500.0,
+        1500.0
+      ]
+    },
+    {
+      "id": "Rkit",
+      "category": "room_kitchen",
+      "area_m2": 6.0,
+      "polygon": [
+        [
+          3000,
+          0
+        ],
+        [
+          6000,
+          0
+        ],
+        [
+          6000,
+          3000
+        ],
+        [
+          3000,
+          3000
+        ],
+        [
+          3000,
+          0
+        ]
+      ],
+      "dimensions": {
+        "width_mm": 3000,
+        "length_mm": 3000
+      },
+      "name": "Kitchen",
+      "name_source": "ocr",
+      "needs_review": false,
+      "centroid_mm": [
+        4500.0,
+        1500.0
+      ]
+    },
+    {
+      "id": "Rbath",
+      "category": "room_bathroom",
+      "area_m2": 4.0,
+      "polygon": [
+        [
+          6000,
+          0
+        ],
+        [
+          9000,
+          0
+        ],
+        [
+          9000,
+          3000
+        ],
+        [
+          6000,
+          3000
+        ],
+        [
+          6000,
+          0
+        ]
+      ],
+      "dimensions": {
+        "width_mm": 3000,
+        "length_mm": 3000
+      },
+      "name": "Bathroom",
+      "name_source": "ocr",
+      "needs_review": false,
+      "centroid_mm": [
+        7500.0,
+        1500.0
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "id": "Dbk",
+      "host_wall_id": "Wbk",
+      "insertion_point": [
+        3000,
+        1500,
+        0
+      ],
+      "width": 900,
+      "height": 2100
+    },
+    {
+      "id": "Dkb",
+      "host_wall_id": "Wkb",
+      "insertion_point": [
+        6000,
+        1500,
+        0
+      ],
+      "width": 800,
+      "height": 2100
+    },
+    {
+      "id": "Df",
+      "host_wall_id": "WT",
+      "insertion_point": [
+        4500,
+        3000,
+        0
+      ],
+      "width": 1000,
+      "height": 2100
+    }
+  ],
+  "windows": [
+    {
+      "id": "Wb",
+      "host_wall_id": "WL",
+      "insertion_point": [
+        0,
+        1500,
+        0
+      ],
+      "width": 1500,
+      "height": 1500,
+      "sill_height": 900
+    }
+  ],
+  "stairs": [],
+  "slabs": []
+}

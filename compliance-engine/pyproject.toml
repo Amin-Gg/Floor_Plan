@@ -13,7 +13,7 @@ dynamic = ["dependencies"]
 
 [tool.setuptools]
 # Runtime code lives in these packages; eval/ and tests/ are dev-only.
-packages = ["rag", "services", "api", "classification", "scripts"]
+packages = ["rag", "services", "api", "classification", "scripts", "ingest"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

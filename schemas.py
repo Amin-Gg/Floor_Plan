@@ -26,7 +26,7 @@ Usage in a route
 """
 
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +88,29 @@ class BuildingParams(BaseModel):
         examples=[1000, 1200, 1400]
     )
 
+    @model_validator(mode="after")
+    def _elements_fit_within_wall(self) -> "BuildingParams":
+        """Cross-field consistency: openings must fit under the wall height.
+
+        wall_height is defined as finished floor level → underside of the
+        slab/ceiling above, so a window head (sill + window height) or a door
+        taller than the wall is physically impossible and would produce a
+        geometrically invalid IFC.
+        """
+        head = self.window_sill_height + self.window_height
+        if head > self.wall_height:
+            raise ValueError(
+                f"window_sill_height + window_height ({head:.0f} mm) exceeds "
+                f"wall_height ({self.wall_height:.0f} mm) — the window head "
+                f"would be above the ceiling."
+            )
+        if self.door_height > self.wall_height:
+            raise ValueError(
+                f"door_height ({self.door_height:.0f} mm) exceeds wall_height "
+                f"({self.wall_height:.0f} mm)."
+            )
+        return self
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Request schemas
@@ -105,6 +128,15 @@ class AnalyzeFormRequest(BaseModel):
                     "Calculated as: (known dimension in mm) / (dimension in pixels). "
                     "Example: a wall known to be 5000 mm spanning 200 px → factor = 25.0",
         examples=[1.0, 0.5, 25.0]
+    )
+    scale_source: Optional[str] = Field(
+        default=None,
+        description="Where the scale came from: 'user' (typed in), 'ocr' (parsed from "
+                    "the drawing's scale text / dimension lines), or 'calibration' "
+                    "(picked a known dimension on the plan). Recorded in the BIM/IFC "
+                    "so the compliance engine can weight dimensional checks; an "
+                    "uncalibrated default scale is flagged for review.",
+        examples=["user", "ocr", "calibration"]
     )
     building_params: Optional[BuildingParams] = Field(
         default=None,

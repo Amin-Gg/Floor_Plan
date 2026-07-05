@@ -63,7 +63,7 @@ class AnalysisReport:
     # ── Public recording API ──────────────────────────────────────────────────
 
     def set_model_mode(self, mode: str) -> None:
-        """Record which model is serving this request, e.g. 'fine_tuned' or 'coco_fallback'."""
+        """Record which model is serving this request, e.g. 'mask_rcnn_4class'."""
         try:
             self._model_mode = str(mode)
         except Exception:
@@ -133,7 +133,7 @@ class AnalysisReport:
 
         Shape:
           {
-            "model_mode": "fine_tuned",
+            "model_mode": "mask_rcnn_4class",
             "ocr_used": True,
             "elements": {"walls": 10, "doors": 4, ...},
             "stages":   {"ocr": {"status": "ok"}, "rooms": {"status": "ok"}, ...},

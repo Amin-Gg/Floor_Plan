@@ -3,6 +3,17 @@ config/classes.py
 =================
 Single source of truth for class/label definitions across the entire project.
 
+⚠ REVIEW NOTE (M2) — THIS FILE DOES NOT DRIVE THE CURRENTLY RUNNING MODEL.
+------------------------------------------------------------------------
+The live detector is Mask R-CNN with NUM_CLASSES = 4 (background + wall +
+window + door), configured in config/settings.py. The 15-class taxonomy below
+belongs to the (shelved) Mask2Former path and to the cold-code branches in the
+analysis layer (room/stair/railing/closet capture). It is kept intact for the
+future Mask2Former phase. DO NOT import these IDs expecting them to match the
+runtime detections — the live model only ever emits class_ids 1=wall, 2=window,
+3=door. The authoritative runtime class count is config/settings.py:NUM_CLASSES.
+------------------------------------------------------------------------
+
 Import this file in every script that needs class information:
     from config.classes import PROJECT_ID_TO_NAME, TRAIN_ID_TO_PROJECT_ID, NUM_CLASSES
 

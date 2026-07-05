@@ -161,6 +161,14 @@ class OpeningAgent:
         if unit == "ratio" and comp in (">=", "<=", ">", "<") and value is not None:
             return self._check_glazing_ratio(clause, ent, comp, float(value))
 
+        # Dimensional window rule in a length unit (e.g. window/skylight clear
+        # width or height in metres) → owned by the numeric checker, which
+        # measures the actual window geometry. Yield it so the same clause is
+        # not double-counted (a NEEDS_REVIEW here would also mask a real
+        # PASS/FAIL there in the coverage merge).
+        if unit in ("mm", "cm", "m"):
+            return None
+
         # Recognised as glazing but not in a checkable numeric form.
         return self._review(clause,
             "Glazing rule not in a directly checkable ratio form — needs review",

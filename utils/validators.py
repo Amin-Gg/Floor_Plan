@@ -236,4 +236,27 @@ def validate_building_params(raw: dict) -> dict:
     if unknown:
         logger.warning("building_params contains unknown keys (ignored): %s", unknown)
 
+    # Cross-field consistency (mirrors schemas.BuildingParams): openings must
+    # fit under the wall height. Absent keys resolve to the exporter defaults,
+    # because those are exactly the values the exporter will use.
+    from export.ifc_exporter import DEFAULTS as _D
+    wall = cleaned.get("wall_height",        _D["wall_height"])
+    sill = cleaned.get("window_sill_height", _D["window_sill_height"])
+    winh = cleaned.get("window_height",      _D["window_height"])
+    dh   = cleaned.get("door_height",        _D["door_height"])
+    if sill + winh > wall:
+        raise ValidationError(
+            f"building_params inconsistent: window_sill_height + window_height "
+            f"({sill + winh:.0f} mm) exceeds wall_height ({wall:.0f} mm) — the "
+            f"window head would be above the ceiling.",
+            details={"window_sill_height": sill, "window_height": winh,
+                     "wall_height": wall},
+        )
+    if dh > wall:
+        raise ValidationError(
+            f"building_params inconsistent: door_height ({dh:.0f} mm) exceeds "
+            f"wall_height ({wall:.0f} mm).",
+            details={"door_height": dh, "wall_height": wall},
+        )
+
     return cleaned

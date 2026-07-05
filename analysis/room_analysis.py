@@ -95,6 +95,65 @@ MIN_ROOM_AREA_M2 = 0.5
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Issue 5 — room-extraction confidence / suspicious-room detection
+# ─────────────────────────────────────────────────────────────────────────────
+# Plausibility ranges for a residential room. Outside these, the extracted
+# polygon is treated as suspicious and routed to NEEDS_REVIEW instead of being
+# trusted as compliance evidence. Tune to your building stock.
+ROOM_PLAUSIBLE_AREA_M2 = (1.5, 120.0)
+ROOM_MAX_ASPECT_RATIO  = 8.0     # long-side / short-side above this ⇒ sliver
+ROOM_BORDER_FRAC       = 0.01    # within 1% of an image edge ⇒ may be cropped
+
+
+def _assess_room_quality(name_source, area_m2, bbox_w_mm, bbox_h_mm,
+                         polygon_mm, img_w_mm, img_h_mm):
+    """Return (confidence, needs_review, review_reasons) for one extracted room.
+
+    Combines OCR-name provenance with geometric plausibility (area, aspect ratio,
+    image-border contact) so that a brittle extraction cannot silently become a
+    hard compliance verdict.
+    """
+    reasons = []
+    # Base confidence from how the room TYPE was determined.
+    confidence = 1.0 if name_source == "ocr" else 0.6
+    if name_source != "ocr":
+        reasons.append("room type unknown (no OCR label matched inside the polygon)")
+
+    lo, hi = ROOM_PLAUSIBLE_AREA_M2
+    if area_m2 < lo:
+        confidence = min(confidence, 0.4)
+        reasons.append(f"area {area_m2:.1f} m² below the plausible {lo} m² minimum")
+    elif area_m2 > hi:
+        confidence = min(confidence, 0.5)
+        reasons.append(f"area {area_m2:.1f} m² above the plausible {int(hi)} m² maximum")
+
+    short = max(min(bbox_w_mm, bbox_h_mm), 1.0)
+    aspect = max(bbox_w_mm, bbox_h_mm) / short
+    if aspect > ROOM_MAX_ASPECT_RATIO:
+        confidence = min(confidence, 0.45)
+        reasons.append(f"thin/elongated polygon (aspect {aspect:.1f}:1) — likely a "
+                       f"corridor sliver or a mask artifact")
+
+    if img_w_mm and img_h_mm:
+        mx = img_w_mm * ROOM_BORDER_FRAC
+        my = img_h_mm * ROOM_BORDER_FRAC
+        xs = [p[0] for p in polygon_mm]
+        ys = [p[1] for p in polygon_mm]
+        if min(xs) <= mx or max(xs) >= img_w_mm - mx or \
+           min(ys) <= my or max(ys) >= img_h_mm - my:
+            confidence = min(confidence, 0.5)
+            reasons.append("polygon touches the image border (room may be cropped)")
+
+    if (len(polygon_mm) - 1) < 4:
+        confidence = min(confidence, 0.4)
+        reasons.append("degenerate polygon (fewer than 4 vertices)")
+
+    needs_review = bool(reasons) or confidence < 0.6
+    return round(confidence, 2), needs_review, reasons
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Watershed refinement helper
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -465,6 +524,12 @@ def extract_room_polygons(combined_wall_mask, scale_factor_mm_per_pixel,
         room_name       = "Room"
         room_local_name = ""
         room_category   = "Unknown"
+        # Review fix (H2): the running 4-class model does NOT predict room types.
+        # A room's type comes ONLY from an OCR text label matched inside its
+        # polygon. Track the provenance so a downstream code-checker can route
+        # untyped rooms to NEEDS_REVIEW instead of silently treating "Unknown"
+        # as a checkable type (min bedroom area, kitchen/bath rules, etc.).
+        name_source     = "none"   # "ocr" once a label is bound
 
         if space_names:
             matched = _match_ocr_name(cx_px, cy_px, room_mask, space_names)
@@ -472,12 +537,26 @@ def extract_room_polygons(combined_wall_mask, scale_factor_mm_per_pixel,
                 room_name       = matched.get("name",       "Room")
                 room_local_name = matched.get("local_name", "")
                 room_category   = matched.get("category",   "Unknown")
+                name_source     = "ocr"
+
+        # ── 8. Quality / confidence assessment (Issue 5) ──────────────────
+        # A brittle extraction (implausible area, sliver, cropped at the image
+        # edge, or no OCR type) must NOT be trusted as a hard compliance verdict.
+        _conf, _needs_review, _review_reasons = _assess_room_quality(
+            name_source, area_m2, bbox_w_mm, bbox_h_mm, polygon_mm,
+            w * scale_factor_mm_per_pixel, h * scale_factor_mm_per_pixel,
+        )
 
         rooms.append({
             "id":         f"Room_{len(rooms) + 1}",
             "name":       room_name,
             "local_name": room_local_name,
             "category":   room_category,
+            # Additive provenance flags (do not break existing consumers):
+            "name_source": name_source,                # "ocr" | "none"
+            "confidence":  _conf,                      # 0–1 extraction confidence
+            "needs_review": _needs_review,             # True ⇒ defer code checks
+            "review_reasons": _review_reasons,         # why review is needed
             "polygon":    polygon_mm,
             "area_m2":    round(area_m2, 2),
             "perimeter_m": round(perimeter_m, 2),
@@ -550,6 +629,68 @@ def find_host_wall_id(insertion_point_mm, wall_parameters):
         return None
 
     return host_id
+
+
+def assess_host_wall(insertion_point_mm, wall_parameters):
+    """Issue 6 — host-wall binding with a confidence score and candidate list.
+
+    Like find_host_wall_id(), but returns the binding quality so unreliable
+    openings can be flagged before IFC export and downgraded in compliance:
+
+        {host_wall_id, host_wall_confidence, host_wall_distance_mm,
+         candidate_host_walls, needs_review, review_reason}
+
+    Confidence falls with distance from the host wall centerline, and is
+    penalised when two or more walls are nearly equidistant (ambiguous host).
+    """
+    px, py = float(insertion_point_mm[0]), float(insertion_point_mm[1])
+
+    dists = []   # (distance_mm, wall_id)
+    for wall in wall_parameters:
+        cl = wall.get("centerline", [])
+        if len(cl) < 2:
+            continue
+        best = float("inf")
+        for i in range(len(cl) - 1):
+            d = _point_to_segment_distance(px, py,
+                                           float(cl[i][0]), float(cl[i][1]),
+                                           float(cl[i + 1][0]), float(cl[i + 1][1]))
+            best = min(best, d)
+        dists.append((best, wall["wall_id"]))
+
+    if not dists:
+        return {"host_wall_id": None, "host_wall_confidence": 0.0,
+                "host_wall_distance_mm": None, "candidate_host_walls": [],
+                "needs_review": True,
+                "review_reason": "no walls available to host this opening"}
+
+    dists.sort(key=lambda t: t[0])
+    min_dist, host_id = dists[0]
+    AMBIG_MM = 150.0
+    candidates = [wid for d, wid in dists if d <= min_dist + AMBIG_MM]
+
+    # Too far ⇒ no reliable host (same guard as find_host_wall_id).
+    if min_dist > 1000.0:
+        return {"host_wall_id": None, "host_wall_confidence": 0.0,
+                "host_wall_distance_mm": round(min_dist, 1),
+                "candidate_host_walls": candidates, "needs_review": True,
+                "review_reason": (f"nearest wall is {min_dist:.0f} mm away — no "
+                                  f"reliable host (check scale_factor_mm_per_pixel)")}
+
+    confidence = max(0.0, 1.0 - min_dist / 600.0)   # 0 mm→1.0, 600 mm→0.0
+    reasons = []
+    if min_dist > 300.0:
+        reasons.append(f"opening is {min_dist:.0f} mm from its host wall centerline")
+    if len(candidates) > 1:
+        confidence *= 0.6
+        reasons.append(f"{len(candidates)} walls are nearly equidistant — host wall "
+                       f"is ambiguous")
+
+    needs_review = confidence < 0.5 or len(candidates) > 1
+    return {"host_wall_id": host_id, "host_wall_confidence": round(confidence, 2),
+            "host_wall_distance_mm": round(min_dist, 1),
+            "candidate_host_walls": candidates, "needs_review": needs_review,
+            "review_reason": "; ".join(reasons)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

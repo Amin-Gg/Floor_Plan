@@ -23,7 +23,7 @@ from utils.conversions import (
     pixels_to_mm, pixels_sq_to_mm_sq, convert_junction_position_to_mm, save_wall_analysis)
 from utils.polygon_geometry import polygon_area_m2, polygon_perimeter_m
 
-from analysis.room_analysis import extract_room_polygons, find_host_wall_id
+from analysis.room_analysis import extract_room_polygons, find_host_wall_id, assess_host_wall
 from utils.file_utils import getNextTestNumber
 from schemas import AnalyzeFormRequest
 from services.analysis_report import AnalysisReport
@@ -92,12 +92,23 @@ def analyze_floor_plan():
     # additive metadata. If anything inside the tracker fails it swallows
     # its own errors (see services/analysis_report.py).
     report = AnalysisReport()
-    report.set_model_mode("fine_tuned" if os.getenv("FLOORPLAN_MODEL_PATH") else "coco_fallback")
+    # Review fix (M3): the live detector is always Mask R-CNN loaded from the
+    # .h5. The previous "fine_tuned"/"coco_fallback" split keyed off
+    # FLOORPLAN_MODEL_PATH, which is a Mask2Former-era env var the Mask R-CNN
+    # loader (models/mask_rcnn_model.py) never reads — so the reported mode was
+    # misleading. Report the actual detector instead.
+    report.set_model_mode("mask_rcnn_4class")
 
     imagefile = require_image_upload("image")
     scale_factor_mm_per_pixel = validate_scale_factor(
         request.form.get("scale_factor_mm_per_pixel", 1.0)
     )
+    # Issue 4 — track where the scale came from so the BIM/IFC can record its
+    # provenance and the compliance engine can downgrade dimensional checks when
+    # the scale is untrusted. An explicit scale_source wins; otherwise infer.
+    scale_source = (request.form.get("scale_source")
+                    or ("user" if request.form.get("scale_factor_mm_per_pixel")
+                        not in (None, "") else "default"))
 
     # Parse optional building height parameters from the request.
     # These override the hardcoded defaults in buildEnhancedJson and ifc_exporter.
@@ -433,9 +444,14 @@ def analyze_floor_plan():
         doors_without_host = 0
         for i, door in enumerate(detailed_doors):
             ip = [door["location"]["center"]["x"], door["location"]["center"]["y"]]
-            host_id = find_host_wall_id(ip, wall_parameters)
-            door["host_wall_id"] = host_id
-            if host_id is None:
+            hb = assess_host_wall(ip, wall_parameters)        # Issue 6
+            door["host_wall_id"] = hb["host_wall_id"]
+            door["host_wall_confidence"] = hb["host_wall_confidence"]
+            door["host_wall_distance_mm"] = hb["host_wall_distance_mm"]
+            door["candidate_host_walls"] = hb["candidate_host_walls"]
+            door["needs_review"] = hb["needs_review"]
+            door["review_reason"] = hb["review_reason"]
+            if hb["host_wall_id"] is None:
                 doors_without_host += 1
                 report.add_skipped("door", "no host wall could be assigned",
                                    element_id=f"Door_{i+1}")
@@ -443,9 +459,14 @@ def analyze_floor_plan():
         windows_without_host = 0
         for i, win in enumerate(detailed_windows):
             ip = [win["location"]["center"]["x"], win["location"]["center"]["y"]]
-            host_id = find_host_wall_id(ip, wall_parameters)
-            win["host_wall_id"] = host_id
-            if host_id is None:
+            hb = assess_host_wall(ip, wall_parameters)        # Issue 6
+            win["host_wall_id"] = hb["host_wall_id"]
+            win["host_wall_confidence"] = hb["host_wall_confidence"]
+            win["host_wall_distance_mm"] = hb["host_wall_distance_mm"]
+            win["candidate_host_walls"] = hb["candidate_host_walls"]
+            win["needs_review"] = hb["needs_review"]
+            win["review_reason"] = hb["review_reason"]
+            if hb["host_wall_id"] is None:
                 windows_without_host += 1
                 report.add_skipped("window", "no host wall could be assigned",
                                    element_id=f"Window_{i+1}")
@@ -744,6 +765,8 @@ def analyze_floor_plan():
                 bim_stairs       = bim_stairs,
                 bim_slabs        = bim_slabs,
                 exterior_walls   = exterior_walls,
+                scale            = {"mm_per_pixel": scale_factor_mm_per_pixel,
+                                    "source": scale_source},
             ),
             # New ML-detected element buckets — separate from bim_data so the
             # existing client integration doesn't break. Empty lists are normal

@@ -1,411 +1,183 @@
-# Floor Plan to Mabhas Compliance
+# FloorPlanTo3D API — Section 1 (Mask R-CNN → BIM → IFC)
 
-An end-to-end system that turns a photograph of a residential floor plan into a
-formal Iranian building-code compliance report. The pipeline runs in two
-connected stages: a Mask2Former-based vision model that produces structured
-`bim_data` and an IFC4 file, and a deterministic compliance engine that checks
-that data against the digitised National Building Regulations (مقررات ملی
-ساختمان / Mabhas) and issues a Persian-RTL municipal control letter.
+Turns a **photograph of a residential floor plan** into structured `bim_data`
+(walls, doors, windows, rooms — all in millimetres) and a downloadable **IFC4**
+file that opens in Revit, ArchiCAD, FreeCAD/Bonsai, Solibri, and any IFC4 viewer.
+The IFC output is the input to a **separate** downstream project that checks the
+model against the Iranian National Building Regulations (Mabhas).
 
-The project was developed as a master's thesis and is designed for both
-academic defence and a downstream SaaS product. Scope: residential occupancy
-group **M-4** (1–2 household, max 3 storeys).
-
----
-
-## Architecture
-
-```
-              ┌────────────────────────────────────────────────────────────┐
-              │                  STAGE 1 — Vision + BIM                    │
-              │                                                            │
-   photograph │      Mask2Former (Swin-Large, fine-tuned)                  │
-   ─────────► │            ↓                                               │
-              │      bim_data JSON  (walls, doors, windows, rooms,         │
-              │                     stairs, balconies, terraces — all mm)  │
-              │            ↓                                               │
-              │      IFC4 export  (Revit / ArchiCAD / FreeCAD)             │
-              └─────────────────────────────┬──────────────────────────────┘
-                                            │
-                                            ▼  bim_data
-              ┌────────────────────────────────────────────────────────────┐
-              │              STAGE 2 — Mabhas Compliance Engine            │
-              │                                                            │
-              │   ┌───────────────┐                                        │
-              │   │ Spatial graph │  (NetworkX, Shapely)                   │
-              │   └──────┬────────┘                                        │
-              │          │           ┌──── numeric checker  ────┐          │
-              │          ├──────────►│      topology agent      │          │
-              │          │           │      opening agent       │          │
-              │          │           │      safety agent        │          │
-              │          │           └──────────┬───────────────┘          │
-              │          ▼                      ▼                          │
-              │   RAG (pgvector)  ──►  Orchestrator (LangGraph)            │
-              │   324 Mabhas clauses           │                           │
-              │                                ▼                           │
-              │            Human review queue ──► Final findings           │
-              │                                ▼                           │
-              │      Municipal compliance letter (HTML + PDF + BCF)        │
-              └────────────────────────────────────────────────────────────┘
-```
-
-### Design principle — deterministic spine, AI on the wings
-
-Every PASS / FAIL verdict in the compliance engine is produced by deterministic
-Python. The LLM is restricted to three roles: offline classification of the
-Mabhas corpus (once, with human review), optional advisory notes on
-NEEDS_REVIEW items, and the narrative paragraph of the report. **The LLM cannot
-override a deterministic verdict.** This keeps every result reproducible,
-traceable to a specific Mabhas article, and defensible — three properties
-non-negotiable in a compliance context.
-
-When a clause cannot be verified from the plan alone (site conditions,
-interpretive requirements), the engine returns `NEEDS_REVIEW` and routes the
-item to a human review queue. It never guesses.
+> **Scope of this repository = Section 1 only:** the vision API that produces
+> the 3D/BIM data. The Mabhas compliance engine and the supplementary YOLO
+> detector are **separate phases** and are not part of this running service
+> (see *Project phases* below).
 
 ---
 
-## Repository structure
+## What the running model actually detects
+
+The live detector is **Mask R-CNN** (Matterport, Keras/TensorFlow), configured
+for **4 classes**: `background + wall + window + door`
+(`config/settings.py → NUM_CLASSES = 4`).
+
+| Element | How it is produced | Detected by the model? |
+|---------|--------------------|------------------------|
+| Walls   | Mask R-CNN masks → skeletonise → centerlines, junctions, thickness | ✅ yes |
+| Doors   | Mask R-CNN boxes/masks → orientation, size, host wall | ✅ yes |
+| Windows | Mask R-CNN boxes/masks → size, host wall | ✅ yes |
+| Rooms   | **Geometric** flood-fill of the wall mask + watershed split; **type/name from OCR only** | ⚠️ derived, not detected |
+| Stairs / balcony / parking / terrace / railing / closet | code branches exist but **never fire** with a 4-class model | ❌ no (Section 2 / Mask2Former) |
+
+**Practical consequence for code-checking:** scope your rules to walls, doors,
+windows, and OCR-named rooms. Rooms with no OCR label are emitted with
+`name_source: "none"` and `needs_review: true` — treat those as
+`NEEDS_REVIEW`, not as compliant. There is no stair/guard/egress geometry from
+this model.
+
+---
+
+## Canonical BIM contract (v1) & honest flags
+
+The `bim_data` (and the IFC built from it) now carries a versioned, honest
+contract that the compliance engine reads directly:
+
+- **`schema_version: "bim-canonical-v1"`** + **`units: {length: mm, area: m2}`** —
+  one explicit contract; the engine validates the version (Issue 16).
+- **`scale: {mm_per_pixel, source, confidence, needs_review, reasons}`** — the
+  pixel→mm scale, *where it came from* (`user` / `ocr` / `calibration` /
+  `default`), and a plausibility-based confidence. An **uncalibrated default
+  (1 mm/px) is flagged** (confidence 0.3); implausible door/room dimensions lower
+  it. When confidence is low, the engine downgrades **all** dimensional verdicts
+  to `NEEDS_REVIEW` — a wrong scale can never produce a false PASS/FAIL (Issue 4).
+- **Canonical room categories** — every room is normalized to `room_bedroom /
+  room_kitchen / room_bathroom / room_living / room_toilet / room_entry /
+  room_storage` via `services/room_taxonomy.py` (English + Persian + broad-bucket
+  aliases). Anything unmappable keeps its raw label and is marked
+  `needs_review` — **never guessed** (Issue 2). `bim_data._category_summary`
+  reports canonical / normalized / unmapped counts.
+- **Per-element provenance** — `source / confidence / needs_review /
+  review_reason` ride through to `Pset_SimsysProvenance` in the IFC, so the
+  engine can defer uncertain elements (Issue 11). These flags are now set by
+  geometry-reliability heuristics:
+  - **Rooms** (Issue 5) — `confidence` + `review_reasons` from a quality check
+    (implausible area, thin/sliver polygon, image-border contact, missing OCR
+    type, degenerate polygon). Suspicious rooms are flagged, never trusted.
+  - **Doors & windows** (Issue 6) — host-wall binding carries
+    `host_wall_confidence`, `host_wall_distance_mm`, and `candidate_host_walls`;
+    openings with a far or ambiguous host are flagged.
+  - **Exterior walls** (Issue 7) — `exterior_confidence` + `exterior_reasons`;
+    a window on a low-confidence-exterior wall inherits review so it can't drive
+    a hard natural-light / ventilation verdict.
+
+  When any element is flagged, the compliance engine downgrades the verdicts that
+  depend on it to `NEEDS_REVIEW` — a brittle detection can never become a false
+  PASS/FAIL.
+
+`services/room_taxonomy.py` mirrors the engine's `ingest/category_normalizer.py`
+— keep the two `ALIASES` dicts in sync when adding vocabulary from real plans.
+
+## Pipeline
 
 ```
-Floor_Plan/
-├── application.py              Flask + OpenAPI entry point (Stage 1)
-├── Dockerfile                  Production image, two-stage build
-├── gunicorn.conf.py            Production server config
-├── requirements.txt            Stage 1 dependencies (ML + Flask)
-├── train_mask2former.py        HuggingFace fine-tuning script
-├── evaluate.py                 mAP evaluation (torchmetrics)
-│
-├── config/                     Class definitions, settings, constants
-│   └── classes.py              ← single source of truth for class IDs
-├── models/                     Mask2Former inference engine
-├── routes/                     Flask APIBlueprints (analyse / export / health)
-├── analysis/                   Wall, room, door, window, stair, junction
-├── image_processing/           Image loading and mask processing
-├── export/
-│   └── ifc_exporter.py         IFC4 generation via ifcopenshell
-├── services/                   bim_data builder, JSON service, analysis report
-├── utils/                      Geometry, validators, inference executor
-├── visualization/              Wall visualisation
-├── notebooks/                  Colab smoke test
-├── weights/                    Model checkpoints (mounted in production)
-│
-└── Compliance Engine/          Stage 2 — Mabhas checker
-    ├── README.md
-    ├── requirements.txt        Stage 2 dependencies
-    ├── classification/         Mabhas .docx → structured JSON corpus
-    ├── RAG/                    pgvector schema, embeddings, retriever
-    ├── services/               Spatial graph, 4 agents, orchestrator,
-    │                           report generator, review queue
-    ├── api/                    FastAPI + Celery async job queue
-    ├── tests/                  62 tests across both stages
-    ├── data/                   594-clause Mabhas corpus + sample
-    └── sample_output/          A real generated municipal letter
-                                (compliance_report.html / .pdf,
-                                 compliance_issues.bcf)
+image ─► validate / resize ─► Mask R-CNN .detect() ─► {walls, windows, doors}
+                                     │
+   ┌─────────────────────────────────┼─────────────────────────────────────┐
+   │ wall masks → skeleton → segments → junctions → wall params (mm)        │
+   │ door/window boxes → orientation, size, nearest host wall               │
+   │ PaddleOCR → space names (Persian / English)                           │
+   │ flood-fill wall mask → room polygons → bind OCR name (or needs_review) │
+   └─────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+                       BimDataBuilder → bim_data (mm)
+                                     ▼
+                  (POST /export/ifc) ifc_exporter → .ifc (IFC4)
 ```
+
+---
+
+## API endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/analyze` | Upload an image → `bim_data` JSON + saved visualisation + analysis report |
+| POST | `/export/ifc` | Convert a prior `/analyze` result (or uploaded `bim_json`) → IFC4 file |
+| GET  | `/export/ifc/parameters` | List building-height parameters and defaults |
+| GET  | `/health` | Model + system diagnostics (reports `num_classes: 4`) |
+| POST | `/analyze_accuracy` | Accuracy/diagnostics route |
+
+Interactive docs: `http://localhost:8080/openapi/swagger`
+(Note: `/analyze` and `/analyze_accuracy` use `@bp.route`, so they run but do
+not appear in the Swagger UI — call them directly.)
 
 ---
 
 ## Quick start
 
-### Stage 1 — the ML + BIM service
-
 ```bash
+# 1) Python 3.10 or 3.11 (TensorFlow 2.13 does NOT support 3.12+)
+python3.11 -m venv venv && source venv/bin/activate
+
+# 2) System lib for paddle, then deps
+sudo apt-get install -y libgomp1
 pip install -r requirements.txt
+#    Verify the two load-bearing pins:
+python -c "import numpy; assert numpy.__version__ == '1.24.3', numpy.__version__"
+python -c "import ifcopenshell, ifcopenshell.api.geometry; print('ifcopenshell', ifcopenshell.version)"
 
-# development
-python application.py
-# Swagger UI: http://localhost:8080/openapi/swagger
+# 3) Place the Mask R-CNN weights (see weights/README.md)
+#    weights/maskrcnn_15_epochs.h5   (~244 MB, 4-class)
 
-# production
-APP_ENV=production \
-FLOORPLAN_MODEL_PATH=./weights/mask2former-floorplan-finetuned \
-ALLOW_COCO_FALLBACK=false \
-gunicorn --config gunicorn.conf.py application:application
+# 4) Run
+python application.py                      # development
+APP_ENV=production gunicorn --config gunicorn.conf.py application:application
 ```
 
-### Stage 2 — the compliance engine
+Smoke test (recommended after install):
 
 ```bash
-cd "Compliance Engine"
-pip install -r requirements.txt
-pip install -U fonttools          # see "Setup notes" below
-
-# run the full test suite — no database or API key required
-python -m pytest tests/ -q
-
-# run the engine on a bim_data dict
-python -c "
-from services.orchestrator import run_compliance
-from services.report_generator import generate_reports
-import json
-
-with open('data/mabhas_clauses.json') as f:
-    clauses = [c for c in json.load(f) if not c.get('skip_category')]
-
-# bim_data is whatever Stage 1 produced
-result = run_compliance(my_bim_data, clauses)
-paths = generate_reports(result.to_dict(),
-                         {'plan_name': 'Plan_04',
-                          'occupancy_fa': 'مسکونی — گروه M-4'},
-                         out_dir='out/')
-print(paths)   # {'html': ..., 'pdf': ..., 'bcf': ...}
-"
+python smoke_test.py --health-only                 # imports + health + openapi
+python smoke_test.py --image plan.png --scale 10.0 # full /analyze + /export/ifc
 ```
-
-### Run with Docker
-
-```bash
-docker build -t floorplan3d-api:1.0 .
-
-# CPU-only
-docker run -p 8080:8080 \
-    -e APP_ENV=development \
-    -v /path/to/weights:/app/weights:ro \
-    -v /tmp/outputs:/app/outputs \
-    floorplan3d-api:1.0
-
-# GPU (requires nvidia-container-toolkit on the host)
-docker run -p 8080:8080 --gpus all \
-    -e APP_ENV=production \
-    -e FLOORPLAN_MODEL_PATH=/app/weights/mask2former-floorplan-finetuned \
-    -v /opt/floorplan/weights:/app/weights:ro \
-    -v /opt/floorplan/outputs:/app/outputs \
-    floorplan3d-api:1.0
-```
-
-The model weights are mounted as a read-only volume rather than baked into
-the image, so one image works for development, staging, and production by
-pointing at different weight folders.
 
 ---
 
-## Stage 1 — Vision + BIM
+## Building parameters (heights, mm)
 
-### Model
+Pass per-request as a JSON form field `building_params`, or rely on the
+Iranian-residential defaults:
 
-Fine-tuned **Mask2Former** with a Swin-Large backbone, trained on annotated
-architectural floor plans. The generic COCO base model is loaded only during
-development (`ALLOW_COCO_FALLBACK=true`); production requires the fine-tuned
-checkpoint.
-
-### Class mapping
-
-All class definitions live in `config/classes.py` — the single source of truth.
-
-| Project ID | Training ID | Name     |
-|:----------:|:-----------:|----------|
-| 1          | 0           | wall     |
-| 2          | 1           | window   |
-| 3          | 2           | door     |
-| 4          | 3           | stairs   |
-| 5          | 4           | parking  |
-| 6          | 5           | balcony  |
-| 7          | 6           | terrace  |
-
-Project IDs (1–7) appear in COCO annotation files, the `bim_data` output, and
-the API. Training IDs (0–6) are used inside the model head (contiguous,
-0-indexed).
-
-### Training
-
-```bash
-python train_mask2former.py \
-    --dataset_dir ./dataset \
-    --output_dir  ./weights/mask2former-floorplan-finetuned \
-    --epochs      50 \
-    --batch_size  2 \
-    --grad_accum  8 \
-    --fp16
-```
-
-Dataset format is COCO instance segmentation with the 7 categories above.
-Recommended annotation tool: [CVAT](https://cvat.ai), export as COCO
-instance segmentation.
-
-### Evaluation
-
-```bash
-python evaluate.py --checkpoint ./weights/mask2former-floorplan-finetuned
-python evaluate.py --checkpoint ./weights/mask2former-floorplan-finetuned \
-    --find_best_threshold
-```
-
-Set `DETECTION_MIN_CONFIDENCE` in `config/settings.py` to the best value found.
-
-### API endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/analyze` | upload a floor-plan image → `bim_data` JSON |
-| `POST` | `/analyze_accuracy` | reliability analysis on a plan |
-| `POST` | `/export/ifc` | convert `bim_data` to IFC4 file |
-| `GET`  | `/export/ifc/parameters` | list all `building_params` with defaults |
-| `GET`  | `/health` | server and model status |
-| `GET`  | `/openapi/swagger` | interactive API documentation |
-
-### IFC export
-
-```bash
-curl -X POST http://localhost:8080/export/ifc \
-  -H "Content-Type: application/json" \
-  -d '{
-    "analysis_file": "plan_abc12345.json",
-    "building_params": {
-      "wall_height": 3000,
-      "door_height": 2100,
-      "window_sill_height": 900,
-      "window_height": 1200,
-      "floor_thickness": 200,
-      "project_name": "Block 4 - Unit 12"
-    }
-  }' --output model.ifc
-```
-
-### Configuration
-
-| Variable | Default | Description |
-|---|---|---|
-| `FLOORPLAN_MODEL_PATH` | *(none)* | path to the fine-tuned checkpoint directory |
-| `ALLOW_COCO_FALLBACK` | `true` | allow the generic COCO model in dev; **set `false` in production** |
-| `APP_ENV` | `development` | `development` / `production` / `testing` |
-| `APP_CORS_ORIGINS` | `*` | comma-separated allowed origins in production |
-| `GUNICORN_WORKERS` | `1` | gunicorn workers (one per GPU recommended) |
-| `INFERENCE_WORKERS` | `1` | concurrent inference threads per worker |
-| `INFERENCE_TIMEOUT` | `90` | seconds before a slow inference is aborted |
+| Parameter | Default (mm) |
+|-----------|-------------:|
+| `wall_height` | 2800 |
+| `door_height` | 2100 |
+| `window_height` | 1200 |
+| `window_sill_height` | 900 |
+| `floor_thickness` | 200 |
 
 ---
 
-## Stage 2 — Mabhas Compliance Engine
+## Project phases
 
-### The four agents
+- **Section 1 (this repo, active):** Mask R-CNN vision API → `bim_data` → IFC4.
+- **Section 2 (later, not wired):** supplementary **YOLO** detector
+  (`yolo_best.pt`) for columns / railings / staircases, merged at the
+  `bim_data` layer. Design lives in `config/yolo_classes.py`,
+  `models/yolo_detector.py`, `services/yolo_elements.py`. `build_yolo_elements`
+  is **not called yet** — do not expect YOLO output until Section 2 is built.
+- **Downstream (separate project):** the Mabhas compliance engine
+  (deterministic checks + RAG) consumes this IFC/`bim_data`. It is **not** in
+  this repository.
 
-Each agent is a deterministic Python specialist with a narrowly scoped domain.
-All findings flow through one shared `Finding` type with a three-state verdict
-(PASS / FAIL / NEEDS_REVIEW).
-
-| Agent | Checks |
-|---|---|
-| **Numeric checker** (`services/numeric_checker.py`) | Room areas, ceiling heights, room dimensions, door widths — any measurable threshold mapped through `OBJECT_MAP` |
-| **Topology agent** (`services/topology_agent.py`) | Adjacency and reachability rules through the door graph (the headline check: kitchen must not connect directly to a bathroom) |
-| **Opening agent** (`services/opening_agent.py`) | Glazing-to-floor ratios, natural-light presence; site-dependent rules (open space, light wells) are conservatively flagged for review |
-| **Safety agent** (`services/safety_agent.py`) | Egress reachability, stair presence, balcony/terrace guard requirements — highest bar for an automatic verdict because life-safety errors are the most dangerous |
-
-The **orchestrator** (`services/orchestrator.py`) builds the spatial graph
-once, runs all four agents in parallel via LangGraph (with an identical
-sequential fallback if LangGraph is absent), merges their findings, and
-optionally annotates `NEEDS_REVIEW` items with advisory notes using RAG
-context. Verified to be fully offline-capable.
-
-### The RAG layer
-
-The Mabhas corpus (594 clauses across 8 files of the regulations) is
-classified offline by `classification/mabhas_classify.py` using GPT-OSS-120B
-into structured JSON: each clause is tagged with rule type (numeric / spatial
-/ definition / exception), applicable occupancy groups, height groups, and
-structured `entities`. The result is embedded with
-`intfloat/multilingual-e5-large` and stored in PostgreSQL + pgvector. Under
-the M-4 residential scope, 324 clauses are ingested. Adding occupancy groups
-later requires no re-classification — only a wider ingest filter.
-
-### The output — Iranian municipal letter
-
-`services/report_generator.py` produces three files from one fixed,
-data-bound template:
-
-- **HTML** — a self-contained Persian-RTL **اخطار رفع نواقص ساختمانی**
-  (defect rectification notice) in the style of an Iranian municipal control
-  document, with the شهرداری تهران letterhead, document meta strip
-  (شماره / تاریخ / پیوست with a Jalali date), narrative paragraph with
-  inline colored counts, مشخصات ملک property table, four metric cards in
-  Persian numerals, proportional compliance bar, defects table with the
-  five-column structure (ردیف / بند مقررات / شرح حکم / مغایرت مشاهده‌شده /
-  وضعیت), signature block, and a Persian methodology footer.
-- **PDF** — rendered FROM the HTML by WeasyPrint, so the two cannot drift.
-- **BCF 2.1** — one issue topic per FAIL and NEEDS_REVIEW (PASS findings
-  excluded; BCF tracks issues, not what passes). Opens directly in Revit,
-  BIMcollab, and That Open Engine.
-
-The Spectral font is included as a sibling `spectral_fonts.css`, embedded as
-base64 `@font-face` rules so the report is fully portable.
-
-A real generated example is in `Compliance Engine/sample_output/`.
-
-### The async web service
-
-`Compliance Engine/api/` exposes the engine as a FastAPI service:
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/analyze` | submit `bim_data` + meta → returns a job id |
-| `GET`  | `/jobs/{id}` | poll job status, includes the result when completed |
-| `GET`  | `/jobs/{id}/report/{kind}` | download the report (`kind` = `html` / `pdf` / `bcf`) |
-| `GET`  | `/health` | liveness and which execution mode is active |
-
-The service runs in two modes selected automatically. Without a broker, jobs
-run in a background thread with in-memory status mirrored atomically to disk
-— no infrastructure required, perfect for development and the test suite.
-With `CELERY_BROKER_URL` set, the same code dispatches to a Celery worker for
-true async processing across machines. Switching modes is one environment
-variable; no code change.
-
-### The human review queue
-
-`services/review_queue.py` manages the `NEEDS_REVIEW` items that the engine
-deliberately could not auto-verify. Two safety properties define it:
-deterministic verdicts are never touched (only `NEEDS_REVIEW` items enter the
-queue, and the test suite confirms FAIL counts are unchanged after any number
-of decisions), and decisions never leak across plans (auto-applying one
-building's verdict to another would risk propagating a wrong call). Reviewer
-decisions persist to a JSON store with atomic writes and merge back into the
-result for the final signed report. `suggestions()` surfaces clauses
-repeatedly decided the same way as candidates to encode as deterministic
-rules later — the safe form of feedback to the rule registry.
-
-### Tests
-
-```bash
-cd "Compliance Engine"
-python -m pytest tests/ -q
-```
-
-62 tests across nine suites cover the spatial graph, each of the four agents,
-the orchestrator (both LangGraph and sequential paths), the report generator
-(HTML structure, real PDF header, BCF zip), the review queue (persistence,
-cross-plan safety), and the FastAPI endpoints. The suite needs no database
-or external API to run.
+A shelved **Mask2Former** path also exists in the codebase (15-class taxonomy
+in `config/classes.py`, kept for that future work). It does **not** drive the
+running service.
 
 ---
 
-## Setup notes
+## Review fixes applied (see CHANGES_REVIEW_FIXES.md)
 
-**WeasyPrint and fontTools.** WeasyPrint 68.x depends on `fontTools ≥ 4.62`
-for font subsetting. If PDF generation fails with `expected 0 <= int <= 122,
-found: 123`, run `pip install -U fonttools`.
-
-**The Mabhas corpus.** `data/mabhas_clauses.json` is pre-classified and ready
-to use; the classifier script in `classification/` only needs to be re-run if
-new Mabhas sections are added.
-
-**The RAG index.** Provisioning steps are in `Compliance Engine/RAG/`. A Colab
-notebook (`mabhas_pipeline.ipynb`) automates the full ingest end-to-end. The
-connection uses keyword arguments rather than a URL string to handle
-special characters in passwords and managed-Postgres SSL requirements.
-
----
-
-## Status
-
-| Component | State |
-|---|---|
-| Stage 1 — Mask2Former training, inference, IFC export | done; production-ready API |
-| Stage 2 — Mabhas corpus + RAG index | done; 324 clauses live in pgvector |
-| Stage 2 — Spatial graph + 4 agents + orchestrator | done; 62 tests pass |
-| Stage 2 — Report generator (HTML + PDF + BCF) | done; Iranian municipal letter template |
-| Stage 2 — FastAPI + Celery async service | done |
-| Stage 2 — Human review queue | done |
-| Stage 1 ↔ Stage 2 integration on real model output | pending GPU training run |
-| Web frontend + 3D viewer | pending (frontend integrates with both APIs) |
-
----
+This checkout has had the Critical/High review items addressed: the
+`ifcopenshell` pin (C1), a visible weight-loader warning (C2), corrected
+`weights/README.md` (C3), explicit 4-class scope (H1), `needs_review` room
+flags (H2), accurate `model_mode` reporting (M3), and a clarifying banner on
+`config/classes.py` (M2). The supplementary YOLO integration (H3) is
+intentionally deferred to Section 2.

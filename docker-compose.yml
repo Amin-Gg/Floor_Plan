@@ -1,0 +1,140 @@
+# ============================================================================
+# docker-compose.yml — Floor_Plan full pipeline
+# ============================================================================
+# Services:
+#   redis              Celery broker + job store (status, uploads, reports)
+#   compliance-api     Section 2 FastAPI  (photo-derived IFC → Mabhas verdicts)
+#   compliance-worker  Section 2 Celery worker (same image, worker command)
+#   floorplan-api      Section 1 Flask    (floor-plan photo → bim_data → IFC)
+#
+# Architecture note (decision 2026-07): the compliance api and worker share
+# NO volume. Job status, the uploaded IFC, and the finished reports all
+# travel through Redis (api/job_store.py), so workers scale horizontally by
+# raising the replica count — nothing else to wire.
+#
+#   cp .env.example .env        # fill in DATABASE_URL, GROQ_API_KEYS, …
+#   docker compose up --build -d
+#   docker compose ps           # wait for (healthy)
+#
+#   curl http://localhost:8000/health          # compliance engine
+#   curl http://localhost:8080/health          # Section 1 (needs weights/)
+#
+# Scale workers:
+#   docker compose up -d --scale compliance-worker=3
+# ============================================================================
+
+name: floorplan-pipeline
+
+services:
+
+  # ── Redis — Celery broker + job store ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory ${REDIS_MAXMEMORY:-1gb}
+      --maxmemory-policy volatile-ttl
+    # volatile-ttl: under memory pressure evict keys closest to expiry —
+    # every job-store key carries a TTL, so eviction hits the oldest jobs
+    # first and never touches Celery's broker structures unexpectedly.
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    # Not published to the host by default — reachable as redis:6379 on the
+    # internal network. Uncomment to debug from the host:
+    # ports:
+    #   - "6379:6379"
+
+  # ── Section 2: compliance engine API ───────────────────────────────────────
+  compliance-api:
+    build: ./compliance-engine
+    image: mabhas-compliance:latest
+    ports:
+      - "${COMPLIANCE_PORT:-8000}:8000"
+    environment: &compliance-env
+      CELERY_BROKER_URL: redis://redis:6379/0
+      # Job state/uploads/reports — kept on a separate Redis DB from the
+      # broker so FLUSHDB on one never nukes the other.
+      JOB_STORE_REDIS_URL: redis://redis:6379/1
+      JOB_TTL_SECONDS: ${JOB_TTL_SECONDS:-604800}
+      DATABASE_URL: ${DATABASE_URL}
+      GROQ_API_KEYS: ${GROQ_API_KEYS}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-large}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
+    volumes:
+      # Reranker weights (mount read-only); HF cache is baked into the image.
+      - ${RERANKER_DIR:-./compliance-engine/models/bge_reranker}:/app/models/bge_reranker:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # GPU (optional — embeddings/reranker use CUDA when present):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # ── Section 2: compliance engine worker (same image, worker role) ─────────
+  compliance-worker:
+    build: ./compliance-engine
+    image: mabhas-compliance:latest
+    command: >
+      celery -A api.tasks.celery_app worker
+      --loglevel=info
+      --concurrency=${WORKER_CONCURRENCY:-1}
+      --without-heartbeat --without-gossip --without-mingle
+    environment: *compliance-env
+    volumes:
+      - ${RERANKER_DIR:-./compliance-engine/models/bge_reranker}:/app/models/bge_reranker:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # The image's default HEALTHCHECK curls the API port, which a worker
+      # doesn't open — probe the Celery control plane instead.
+      test: ["CMD-SHELL", "celery -A api.tasks.celery_app inspect ping -d celery@$$HOSTNAME --timeout 10 | grep -q pong"]
+      interval: 30s
+      timeout: 15s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+
+  # ── Section 1: floor-plan analysis API (photo → bim_data → IFC) ───────────
+  floorplan-api:
+    build: .
+    image: floorplan3d-api:latest
+    ports:
+      - "${FLOORPLAN_PORT:-8080}:8080"
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-*}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-1}
+    volumes:
+      # Model checkpoints are never baked into the image:
+      #   weights/maskrcnn_15_epochs.h5, weights/yolo_best.pt
+      - ${WEIGHTS_DIR:-./weights}:/app/weights:ro
+      - floorplan-outputs:/app/outputs
+    restart: unless-stopped
+    # GPU (recommended for Mask R-CNN inference; CPU works for smoke tests):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  redis-data:
+  floorplan-outputs:

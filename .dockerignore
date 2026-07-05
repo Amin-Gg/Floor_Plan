@@ -138,3 +138,9 @@ logs/
 .Trash
 .AppleDouble
 .LSOverride
+
+# ── Graphify code-map cache (dev tooling, machine-specific paths) ────────────
+graphify-out/
+
+# ── Compose secrets — never bake credentials into an image ───────────────────
+.env

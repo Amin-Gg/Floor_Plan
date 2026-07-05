@@ -170,3 +170,11 @@ def get_config(environment: str = None) -> Config:
         environment = os.getenv("APP_ENV") or os.getenv("FLASK_ENV", "development")
     cfg = _CONFIG_MAP.get(environment.lower(), DevelopmentConfig)
     return cfg
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Step 2 interface — confidence/review pre-pass threshold (IFC Interface Spec §B2)
+# Elements with provenance Confidence below this (or NeedsReview=true) are marked
+# so any verdict depending on them resolves to NEEDS_REVIEW. Override with the
+# REVIEW_CONFIDENCE_THRESHOLD env var.
+# ─────────────────────────────────────────────────────────────────────────────
+REVIEW_CONFIDENCE_THRESHOLD = float(os.getenv("REVIEW_CONFIDENCE_THRESHOLD", "0.5"))

@@ -216,6 +216,7 @@ def run_compliance(
     retriever: Optional[Any] = None,
     llm: Optional[Callable[[str], str]] = None,
     use_langgraph: bool = True,
+    building_params: Optional[Dict[str, Any]] = None,
 ) -> ComplianceResult:
     """
     Run the full compliance pipeline on one floor plan.
@@ -234,12 +235,35 @@ def run_compliance(
         clauses stay NEEDS_REVIEW (safe default — fully offline).
     use_langgraph : bool
         Use LangGraph fan-out if installed; otherwise sequential.
+    building_params : dict, optional
+        Operator-supplied values that cannot be measured from a 2D plan (e.g.
+        ``{"ceiling_height_mm": 2900}``). Merged into ``bim_data["building_params"]``
+        and read by the numeric checker. Verdicts that use them are tagged as
+        parameter-sourced.
 
     Returns
     -------
     ComplianceResult
     """
     t0 = time.time()
+
+    # Operator building parameters (ceiling height, …) ride in bim_data so the
+    # numeric checker's adapter reads them in one place. Explicit arg wins.
+    if building_params:
+        block = dict(bim_data.get("building_params") or {})
+        explicit = {k: v for k, v in building_params.items()
+                    if k != "_provided" and v is not None}
+        merged = {**block, **explicit}
+        # Provenance: explicit params were asserted by the operator at the
+        # API boundary, so they must join the "_provided" list — otherwise a
+        # flat merge leaves the ingest's list (often []) claiming these are
+        # recorded defaults and the verdict gets mis-tagged ENGINE DEFAULT.
+        # Only when the block carries "_provided" though: legacy flat blocks
+        # (no list) already mean "every key present counts as supplied".
+        if "_provided" in block:
+            merged["_provided"] = sorted(
+                set(block.get("_provided") or []) | set(explicit))
+        bim_data["building_params"] = merged
 
     # Build the spatial graph once and share it across agents.
     from spatial_graph import SpatialGraph
