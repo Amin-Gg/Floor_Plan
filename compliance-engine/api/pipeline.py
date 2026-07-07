@@ -9,9 +9,13 @@ or not a Celery/Redis worker is running.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
-from typing import Any, Dict, List, Optional
+import threading
+from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # The pipeline modules (orchestrator, agents) use flat imports like
 # `from numeric_checker import ...`. They live in the sibling `services/`
@@ -202,6 +206,114 @@ def clause_health(clauses_path: Optional[str]) -> Dict[str, Any]:
     }
 
 
+# ── LLM interpretive pass — production wiring (review fix C4, 2026-07) ───────
+# Design decisions, made explicit:
+#
+#   * GATING     LLM_PASS_ENABLED (default "1") turns the pass on; the
+#                provider then comes from rag/llm_client.resolve_provider():
+#                LLM_PROVIDER pin, else AgentRouter when its key is present,
+#                else Groq when its keys are present, else None → the exact
+#                pre-C4 offline behaviour (interpretive clauses stay
+#                NEEDS_REVIEW, zero LLM calls, zero retriever cost).
+#   * CACHING    Retriever and llm callable are built ONCE per process and
+#                reused across jobs. The retriever loads the regulation
+#                graph + clause map (~1.4 MB JSON + graphml) and lazily the
+#                embedding/reranker models; rebuilding per job was pure
+#                waste. A lock guards thread-mode (no-broker) concurrency.
+#   * FAILURE    Retriever construction failure degrades LOUDLY to None
+#                (logged warning — the old bare except was silent) and the
+#                LLM then runs without RAG context; llm-call failures are
+#                already caught per clause inside the orchestrator. The
+#                deterministic verdict path never depends on either.
+#   * BUDGET     max 300 completion tokens: the advisory note is 1–2
+#                sentences. On Groq, reasoning_effort="none" additionally
+#                suppresses Qwen3's thinking tokens (9-key daily budget);
+#                on AgentRouter that knob is dropped (OpenAI-compatible
+#                surface) and the SDK's own 429/5xx backoff applies.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_RT_LOCK = threading.Lock()
+_RETRIEVER: Any = None
+_RETRIEVER_READY = False
+_LLM: Optional[Callable[[str], str]] = None
+_LLM_READY = False
+
+
+def _get_retriever() -> Any:
+    """Build the production retriever once per process (Stage 1–3 stack)."""
+    global _RETRIEVER, _RETRIEVER_READY
+    if _RETRIEVER_READY:
+        return _RETRIEVER
+    with _RT_LOCK:
+        if not _RETRIEVER_READY:
+            try:
+                from rag.rag_retriever import build_default_retriever
+                _RETRIEVER = build_default_retriever()
+                logger.info("RAG retriever ready (Graph/CRAG per env flags)")
+            except Exception as exc:  # noqa: BLE001 — degrade loudly, never crash
+                logger.warning(
+                    "RAG retriever unavailable (%s) — the LLM interpretive "
+                    "pass will run WITHOUT regulation context. Check "
+                    "DATABASE_URL / rag dependencies.", exc)
+                _RETRIEVER = None
+            _RETRIEVER_READY = True
+    return _RETRIEVER
+
+
+def _get_llm() -> Optional[Callable[[str], str]]:
+    """Return the cached llm callable, or None when the pass is off/unkeyed."""
+    global _LLM, _LLM_READY
+    if _LLM_READY:
+        return _LLM
+    with _RT_LOCK:
+        if not _LLM_READY:
+            _LLM = _build_llm()
+            _LLM_READY = True
+    return _LLM
+
+
+def _build_llm() -> Optional[Callable[[str], str]]:
+    if os.environ.get("LLM_PASS_ENABLED", "1") != "1":
+        logger.info("LLM interpretive pass disabled (LLM_PASS_ENABLED != 1)")
+        return None
+    # Provider resolution (rag/llm_client.py): explicit LLM_PROVIDER, else
+    # agentrouter when AGENTROUTER_API_KEY / AGENT_ROUTER_TOKEN is present,
+    # else groq when GROQ keys are present, else None — the pre-C4 offline
+    # behaviour (interpretive clauses stay NEEDS_REVIEW, zero LLM calls).
+    try:
+        from rag.llm_client import llm_chat, provider_status, resolve_provider
+    except Exception as exc:  # noqa: BLE001 — rag deps absent → offline mode
+        logger.warning("LLM interpretive pass off: llm client unavailable "
+                       "(%s)", exc)
+        return None
+    provider = resolve_provider()
+    if provider is None:
+        logger.info("LLM interpretive pass off: no provider configured — set "
+                    "AGENTROUTER_API_KEY or GROQ_API_KEYS (interpretive "
+                    "clauses stay NEEDS_REVIEW, the offline behaviour)")
+        return None
+
+    def _llm(prompt: str) -> str:
+        return llm_chat(
+            messages=[{"role": "user", "content": prompt}],
+            max_completion_tokens=300,     # 1–2 sentence advisory note
+            reasoning_effort="none",       # groq/qwen3 only; dropped for
+        )                                  # agentrouter (see llm_client)
+
+    logger.info("LLM interpretive pass ENABLED via %s (advisory notes only — "
+                "deterministic verdicts are never LLM-touched)",
+                provider_status())
+    return _llm
+
+
+def reset_llm_wiring_for_tests() -> None:
+    """Reset the cached retriever/llm so tests can exercise both branches."""
+    global _RETRIEVER, _RETRIEVER_READY, _LLM, _LLM_READY
+    with _RT_LOCK:
+        _RETRIEVER, _RETRIEVER_READY = None, False
+        _LLM, _LLM_READY = None, False
+
+
 def run_pipeline(
     bim_data: Dict[str, Any],
     clauses: List[Dict[str, Any]],
@@ -218,19 +330,18 @@ def run_pipeline(
     from services.orchestrator import run_compliance
     from services.report_generator import generate_reports
 
-    # Stage 1 / Step 7: construct the production retriever via the single
-    # factory so the LLM interpretive pass (when an LLM is configured) gets
-    # hybrid + reranked context. Construction failure (no DB, missing deps)
-    # degrades to retriever=None — identical to pre-Step-7 behaviour, and
-    # deterministic verdicts never depend on the retriever either way.
-    retriever = None
-    try:
-        from rag.rag_retriever import build_default_retriever
-        retriever = build_default_retriever()
-    except Exception:  # noqa: BLE001 — service must start without RAG deps
-        retriever = None
+    # Review fix C4 (2026-07): the LLM interpretive pass is now WIRED INTO
+    # production. Previously this function built a retriever but passed no
+    # llm= callable, so _llm_review_interpretive returned immediately and the
+    # entire Stage 1–3 RAG stack (hybrid+rerank, CRAG, Graph) never ran on a
+    # real job. The retriever is only built when an LLM is actually
+    # configured (no llm → no retriever cost, the old fully-offline
+    # behaviour), and both are cached at module level instead of rebuilt per
+    # job. Deterministic PASS/FAIL verdicts never depend on either.
+    llm = _get_llm()
+    retriever = _get_retriever() if llm is not None else None
 
-    result = run_compliance(bim_data, clauses, retriever=retriever,
+    result = run_compliance(bim_data, clauses, retriever=retriever, llm=llm,
                             use_langgraph=False)
 
     # Issue 8 — honest clause-coverage accounting, passed to the report too.
@@ -272,7 +383,15 @@ def run_pipeline_from_ifc(
     from ingest.ifc_pipeline import run_ifc_compliance
     from services.report_generator import generate_reports
 
+    # Review fix C4 (2026-07): the primary production path now carries the
+    # LLM interpretive pass too (it previously passed neither retriever nor
+    # llm, so the RAG stack never ran on an uploaded IFC). Same gating and
+    # caching as run_pipeline; no llm → no retriever cost → old behaviour.
+    llm = _get_llm()
+    retriever = _get_retriever() if llm is not None else None
+
     result, bim_data = run_ifc_compliance(ifc_path, clauses, threshold=threshold,
+                                          retriever=retriever, llm=llm,
                                           corpus_total=corpus_total,
                                           building_params=building_params)
     coverage = bim_data.get("_coverage", {})

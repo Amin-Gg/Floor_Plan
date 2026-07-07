@@ -187,13 +187,29 @@ class OpeningAgent:
 
         worst = None  # track the worst (failing) room for the message
         all_pass = True
+        unmeasured = []  # rooms whose floor area is missing → ratio is None
         for rid in rooms_checked:
             ratio = self.sg.glazing_ratio(rid)
+            if ratio is None:
+                # Review fix H1: no floor area → the ratio is unmeasurable.
+                # It must not count as a measured 0.0 (false FAIL) and must
+                # not silently count as passing either.
+                unmeasured.append(rid)
+                continue
             ok = self._compare(ratio, comp, required)
             if not ok:
                 all_pass = False
                 if worst is None or ratio < worst[1]:
                     worst = (rid, ratio)
+
+        if all_pass and unmeasured:
+            # Every MEASURABLE room passes, but the claim "all habitable
+            # rooms comply" cannot be made while some rooms are unmeasured.
+            return self._review(clause,
+                f"Glazing ratio unmeasurable for {', '.join(unmeasured)} "
+                f"(floor area missing); all measurable rooms meet "
+                f"{comp} {required} — needs review",
+                object=ent.get("object"))
 
         if all_pass:
             return Finding(

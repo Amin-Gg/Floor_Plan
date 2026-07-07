@@ -127,28 +127,52 @@ def _llm_review_interpretive(
     llm: Optional[Callable[[str], str]],
 ) -> None:
     """
-    For each NEEDS_REVIEW finding, optionally call the LLM with RAG context to
+    For each NEEDS_REVIEW *clause*, optionally call the LLM with RAG context to
     add an advisory note. Mutates findings in place by appending to .message.
     NEVER changes the verdict away from NEEDS_REVIEW (human queue decides).
     Deterministic PASS/FAIL findings are left untouched.
+
+    Budget discipline (review fix M3, 2026-07): findings are per-ELEMENT, so a
+    plan with 5 bedrooms used to trigger 5 identical retrievals + 5 identical
+    Groq calls for the same clause. Findings are now grouped by article_id —
+    ONE retrieval and ONE LLM call per clause — and the note fans out to every
+    element finding of that clause. On the 9-key daily token budget this is
+    the difference between a viable pass and an exhausted one.
     """
     if llm is None:
         return  # no LLM configured → interpretive items stay NEEDS_REVIEW
 
+    # Group review findings by clause, preserving first-seen clause order.
+    by_clause: Dict[str, List[Finding]] = {}
     for f in findings:
         if f.verdict != Verdict.NEEDS_REVIEW:
             continue
-        clause = clauses_by_id.get(f.article_id, {})
-        rule_text = clause.get("text_en") or f.rule_text_en or ""
+        by_clause.setdefault(f.article_id, []).append(f)
 
-        # Pull supporting regulation context if a retriever is available
+    for article_id, group in by_clause.items():
+        clause = clauses_by_id.get(article_id, {})
+        rule_text = clause.get("text_en") or group[0].rule_text_en or ""
+
+        # Pull supporting regulation context ONCE per clause.
         context = ""
         if retriever is not None and rule_text:
             try:
                 hits = retriever.retrieve(rule_text[:120], top_k=2)
                 context = "\n".join(h.get("text_en", "") for h in hits if h.get("text_en"))
             except Exception as exc:
-                logger.warning("RAG retrieval failed for %s: %s", f.article_id, exc)
+                logger.warning("RAG retrieval failed for %s: %s", article_id, exc)
+
+        # Element-level reasons: up to three distinct messages so the note can
+        # reflect why the elements were flagged without an unbounded prompt.
+        reasons = []
+        for f in group:
+            if f.message not in reasons:
+                reasons.append(f.message)
+            if len(reasons) == 3:
+                break
+        why = "\n".join(f"- {r}" for r in reasons)
+        if len(group) > len(reasons):
+            why += f"\n- (and {len(group) - len(reasons)} more elements flagged for this clause)"
 
         prompt = (
             "You are a building-code compliance assistant. A deterministic checker "
@@ -157,15 +181,17 @@ def _llm_review_interpretive(
             "(1-2 sentence) advisory note on what a human reviewer should check. "
             "Do NOT invent thresholds.\n\n"
             f"Rule: {rule_text}\n"
-            f"Why flagged: {f.message}\n"
+            f"Why flagged ({len(group)} element(s)):\n{why}\n"
             f"Regulation context:\n{context}\n"
         )
         try:
             advice = llm(prompt)
             if advice:
-                f.message = f"{f.message}  [AI note: {advice.strip()}]"
+                note = advice.strip()
+                for f in group:  # one call, fanned out to every element finding
+                    f.message = f"{f.message}  [AI note: {note}]"
         except Exception as exc:
-            logger.warning("LLM review failed for %s: %s", f.article_id, exc)
+            logger.warning("LLM review failed for %s: %s", article_id, exc)
 
 
 # ═══════════════════════════════════════════════════════════════════════════

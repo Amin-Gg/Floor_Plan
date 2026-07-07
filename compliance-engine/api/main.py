@@ -71,9 +71,23 @@ def health() -> Dict[str, Any]:
     # Degraded (but live) when the clause corpus is empty — never report a
     # healthy compliance service that would produce empty reports (Issue 9).
     status = "ok" if cs["clause_count"] > 0 or cs["allow_empty"] else "degraded"
+    # LLM provider visibility (AgentRouter integration, 2026-07): shows WHICH
+    # provider the interpretive pass resolved to (agentrouter | groq | None)
+    # without making any LLM call — so a misconfigured key is visible here,
+    # not as silent NEEDS_REVIEW-only reports. Never breaks health.
+    llm: Dict[str, Any] = {"provider": None}
+    try:
+        from rag.llm_client import provider_status
+        llm = provider_status()
+        if os.environ.get("LLM_PASS_ENABLED", "1") != "1":
+            llm["provider"] = None
+            llm["disabled"] = "LLM_PASS_ENABLED != 1"
+    except Exception:  # noqa: BLE001 — health must never 500 on rag imports
+        pass
     return {
         "status": status,
         "mode": "celery" if BROKER_URL else "in-process",
+        "llm": llm,
         **cs,
     }
 

@@ -9,7 +9,9 @@ Step 3: stepback_transform    (Step-Back Prompting, Zheng et al. 2023)
 
 Design notes
 ------------
-- All transforms use groq_client.groq_chat (qwen/qwen3-32b, temperature=0.3).
+- All transforms call rag.llm_client.llm_chat — the provider-agnostic seam
+  (Groq qwen/qwen3-32b by default; AgentRouter when configured — see
+  rag/llm_client.py for the LLM_PROVIDER resolution rules).
 - Every API call increments module-level counters so evaluation runs can
   audit LLM cost (project-wide constraint). multi_query_transform makes ONE
   call for all reformulations, so every transform costs exactly 1 call/query.
@@ -30,7 +32,7 @@ import logging
 import re
 import time
 
-from rag.groq_client import groq_chat
+from rag.llm_client import llm_chat
 
 logger = logging.getLogger(__name__)
 
@@ -76,16 +78,17 @@ def _record_call(elapsed: float) -> None:
 
 
 def _complete(system: str, user: str, max_tokens: int) -> str:
-    """One counted, non-raising completion via groq_chat. Returns "" on any failure.
+    """One counted, non-raising completion via llm_chat. Returns "" on any failure.
 
     Failed attempts are counted too: an attempted call is billed latency
     (and possibly tokens), so cost auditing counts attempts.
-    groq_chat handles 429 / key rotation internally; only non-limit
-    exceptions (auth, network, model error) propagate here and are caught.
+    The provider client handles transient 429/5xx internally (Groq: key
+    rotation; AgentRouter: SDK backoff); only hard errors (auth, network,
+    model error) propagate here and are caught.
     """
     start = time.monotonic()
     try:
-        text = groq_chat(
+        text = llm_chat(
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -93,7 +96,7 @@ def _complete(system: str, user: str, max_tokens: int) -> str:
             max_completion_tokens=max_tokens,
         )
         _record_call(time.monotonic() - start)
-        return text  # groq_chat already strips whitespace
+        return text  # provider clients already strip whitespace
     except Exception as exc:  # noqa: BLE001 — must never crash retrieval
         _record_call(time.monotonic() - start)
         logger.warning("LLM transform call failed (%s)", exc)

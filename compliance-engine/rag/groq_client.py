@@ -1,155 +1,138 @@
 """
-services/groq_client.py
-=======================
-Key-rotating Groq client — qwen/qwen3-32b, streaming mode.
+rag/agentrouter_client.py
+=========================
+AgentRouter chat client — the OpenAI-compatible gateway at agentrouter.org.
 
-Set GROQ_API_KEYS to a comma-separated list of all 9 Groq keys in the
-environment before importing this module.  On any 429 (rate-limit or
-daily-limit) response the client transparently rotates to the next key,
-waits 3 seconds for the new key's per-minute window to settle, then
-retries.  All 9 keys are tried before giving up.
+AgentRouter routes one API key to many upstream models (Claude, GPT,
+DeepSeek, GLM, …) behind an OpenAI-compatible surface:
 
-Usage (call this instead of constructing Groq() directly):
+    base URL   https://agentrouter.org/v1
+    endpoint   POST /v1/chat/completions
+    auth       Authorization: Bearer sk-...      (key from /console/token)
 
-    from rag.groq_client import groq_chat
+Environment
+-----------
+    AGENTROUTER_API_KEY   the sk-... token. AGENT_ROUTER_TOKEN is accepted
+                          as an alias — that is the variable name
+                          AgentRouter's own Codex guide tells users to set,
+                          so a key configured for their CLI tools is reused
+                          here unchanged.
+    AGENTROUTER_BASE_URL  default https://agentrouter.org/v1
+    AGENTROUTER_MODEL     default claude-sonnet-4-5-20250929 (the model
+                          AgentRouter's guides recommend as the balance of
+                          speed and reasoning; override freely — the gateway
+                          is a passthrough router)
 
-    text = groq_chat(
-        messages=[{"role": "user", "content": "..."}],
-    )
+Design notes
+------------
+* Uses the ``openai`` SDK, which is ALREADY a project dependency (the
+  offline Mabhas classification step) — no new requirement.
+* Everything is lazy (the C2 lesson): this module imports cleanly with
+  neither the SDK installed nor a key present; both are resolved on the
+  first actual call.
+* No custom retry loop: unlike Groq we hold ONE key (nothing to rotate),
+  and the OpenAI SDK already retries 429/5xx with exponential backoff.
+  AGENTROUTER_MAX_RETRIES (default 3) and AGENTROUTER_TIMEOUT_S
+  (default 60) tune that.
+* ``max_completion_tokens`` is kept as the parameter NAME for seam
+  compatibility with groq_chat, but is sent on the wire as ``max_tokens``
+  — the classic field every OpenAI-compatible gateway accepts for every
+  routed model family.
 """
 
 from __future__ import annotations
 
+import logging
 import os
-import time
+import threading
+from typing import Any, Optional
 
-from groq import Groq
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Key pool — resolved LAZILY on first use, never at import time.
-#
-# Review fix (issue: import-time raise): this module is imported transitively
-# by rag.query_transforms → rag.rag_retriever, so an import-time RuntimeError
-# made even pure vector/hybrid retrieval (which never calls Groq) unimportable
-# without keys, silently stripped RAG citations from production reports via
-# the orchestrator's best-effort retriever factory, and aborted pytest
-# collection for the whole suite. Keys are now validated inside _keys() the
-# first time a Groq call is actually attempted.
-# ---------------------------------------------------------------------------
+DEFAULT_BASE_URL = "https://agentrouter.org/v1"
+DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
 
-_KEYS: list[str] | None = None  # populated by _keys() on first Groq call
+_LOCK = threading.Lock()
+_CLIENT: Any = None
+_CLIENT_SIG: Optional[tuple] = None  # (key, base_url) the cached client was built with
 
 
-def _keys() -> list[str]:
-    """Return the key pool, reading the env on first call. Raises only then."""
-    global _KEYS
-    if _KEYS is None:
-        _raw = os.environ.get("GROQ_API_KEYS", os.environ.get("GROQ_API_KEY", ""))
-        parsed = [k.strip() for k in _raw.split(",") if k.strip()]
-        if not parsed:
-            raise RuntimeError(
-                "Set GROQ_API_KEYS='key1,key2,...' (or GROQ_API_KEY) before "
-                "calling the Groq-backed query transforms."
-            )
-        _KEYS = parsed
-    return _KEYS
-
-# Current key index — module-level mutable state (single process, single thread).
-_idx: int = 0
-
-# Cache one Groq client per key so we don't reconstruct on every call.
-_clients: dict[str, Groq] = {}
+def _key() -> str:
+    """Resolve the API key lazily. Raises only when a call is attempted."""
+    key = (os.environ.get("AGENTROUTER_API_KEY")
+           or os.environ.get("AGENT_ROUTER_TOKEN") or "").strip()
+    if not key:
+        raise RuntimeError(
+            "Set AGENTROUTER_API_KEY (or AGENT_ROUTER_TOKEN) to your "
+            "AgentRouter sk-... token before calling agentrouter_chat. "
+            "Get one at https://agentrouter.org/console/token")
+    return key
 
 
-def _current_client() -> Groq:
-    keys = _keys()
-    key = keys[_idx % len(keys)]
-    if key not in _clients:
-        _clients[key] = Groq(api_key=key)
-    return _clients[key]
+def _base_url() -> str:
+    return os.environ.get("AGENTROUTER_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
 
 
-def _rotate(reason: str = "") -> None:
-    global _idx
-    _idx += 1
-    keys = _keys()
-    active = _idx % len(keys)
-    print(f"[groq_client] key rotated → index {active}/{len(keys) - 1}"
-          + (f"  ({reason})" if reason else ""))
+def _model() -> str:
+    return os.environ.get("AGENTROUTER_MODEL", DEFAULT_MODEL)
 
 
-# ---------------------------------------------------------------------------
-# Public call — use everywhere instead of client.chat.completions.create()
-# ---------------------------------------------------------------------------
+def _make_client() -> Any:
+    """Construct the OpenAI-SDK client (test seam — monkeypatched in tests)."""
+    from openai import OpenAI  # lazy: SDK only required when a call is made
+    return OpenAI(
+        api_key=_key(),
+        base_url=_base_url(),
+        timeout=float(os.environ.get("AGENTROUTER_TIMEOUT_S", "60")),
+        max_retries=int(os.environ.get("AGENTROUTER_MAX_RETRIES", "3")),
+    )
 
-def groq_chat(
+
+def _client() -> Any:
+    """One cached client per (key, base_url); rebuilt if either changes."""
+    global _CLIENT, _CLIENT_SIG
+    sig = (_key(), _base_url())
+    with _LOCK:
+        if _CLIENT is None or _CLIENT_SIG != sig:
+            _CLIENT = _make_client()
+            _CLIENT_SIG = sig
+        return _CLIENT
+
+
+def agentrouter_chat(
     messages: list[dict],
-    model: str = "qwen/qwen3-32b",
+    model: Optional[str] = None,
     temperature: float = 0.3,
     max_completion_tokens: int = 4096,
     top_p: float = 0.95,
-    reasoning_effort: str = "default",
 ) -> str:
-    """Call Groq chat completions (streaming) with automatic key rotation on 429.
+    """Call AgentRouter chat completions. Returns the completion text.
 
-    Streams the response internally and returns the fully assembled text.
-    Returns "" if the model produced an empty completion.
-    Raises RuntimeError only after all keys have been tried.
+    Same call shape as rag.groq_client.groq_chat: pass messages and a token
+    budget; model/temperature default to the sanctioned project config
+    (AGENTROUTER_MODEL @ temperature 0.3). Returns "" on an empty
+    completion. Network/auth errors propagate (the SDK has already retried
+    429/5xx internally) — callers that must not raise (query transforms,
+    the interpretive pass) already catch per call site.
     """
-    last_exc: Exception | None = None
-
-    for attempt in range(len(_keys())):
-        try:
-            stream = _current_client().chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_completion_tokens=max_completion_tokens,
-                top_p=top_p,
-                reasoning_effort=reasoning_effort,
-                stream=True,
-                stop=None,
-            )
-            # Collect all streamed chunks into a single string.
-            text = ""
-            for chunk in stream:
-                text += chunk.choices[0].delta.content or ""
-            return text.strip()
-
-        except Exception as exc:
-            err = str(exc).lower()
-            is_limit = any(
-                token in err
-                for token in (
-                    "429",
-                    "rate_limit",
-                    "rate limit",
-                    "quota",
-                    "daily",
-                    "limit exceeded",
-                    "too many requests",
-                )
-            )
-            if is_limit:
-                last_exc = exc
-                _rotate(reason=f"429 on attempt {attempt + 1}")
-                time.sleep(3)
-                continue
-            # Non-limit error (auth, network, model error) — re-raise immediately.
-            raise
-
-    raise RuntimeError(
-        f"All {len(_keys())} Groq keys returned 429 for this request. "
-        "Daily budgets may be exhausted — try again tomorrow."
-    ) from last_exc
+    resp = _client().chat.completions.create(
+        model=model or _model(),
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_completion_tokens,   # universal OpenAI-compat field
+        top_p=top_p,
+        stream=False,
+    )
+    choices = getattr(resp, "choices", None) or []
+    if not choices:
+        logger.warning("AgentRouter returned no choices (model=%s)",
+                       model or _model())
+        return ""
+    return (choices[0].message.content or "").strip()
 
 
-# ---------------------------------------------------------------------------
-# Convenience: reset to key 0 between eval runs (optional)
-# ---------------------------------------------------------------------------
-
-def reset_key_index() -> None:
-    """Reset rotation to key 0. Call between Phase 6 steps if desired."""
-    global _idx
-    _idx = 0
-    print(f"[groq_client] key index reset to 0 ({len(_keys())} keys available)")
+def reset_client_for_tests() -> None:
+    """Drop the cached client so tests can vary env between cases."""
+    global _CLIENT, _CLIENT_SIG
+    with _LOCK:
+        _CLIENT, _CLIENT_SIG = None, None

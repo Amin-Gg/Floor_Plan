@@ -18,7 +18,7 @@ torch>=2.0               # required by sentence-transformers; reranker probes to
 # ---- LLM providers (each tied to one stage) ----
 anthropic>=0.39.0        # Stage 1 contextual retrieval — one-time index pass (contextualize.py)
 groq>=0.11.0             # Stage 2 query transforms — qwen/qwen3-32b (groq_client.py, query_transforms.py)
-openai>=1.0.0            # Step 1 offline Mabhas classification (classification/mabhas_classify.py)
+openai>=1.0.0            # Step 1 offline Mabhas classification (classification/mabhas_classify.py) + AgentRouter gateway client (rag/agentrouter_client.py)
 
 # ---- Document input (Step 1) ----
 python-docx>=1.1.0       # reads the Mabhas Word document into structured clauses

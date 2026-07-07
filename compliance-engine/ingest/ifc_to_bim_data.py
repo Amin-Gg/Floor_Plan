@@ -118,12 +118,41 @@ def _space_polygon_mm(space, M, f: float) -> List[List[float]]:
     return pts
 
 
+def _area_or_none(value: Any) -> Optional[float]:
+    """Floor area as a float, or None when it is missing/unreadable/zero.
+
+    Honest-provenance rule (review fix H1): an area we could not read is
+    NOT an area of 0.0 — downstream, None means "unmeasured → NEEDS_REVIEW"
+    while 0.0 means "measured and failing", which is a false claim.
+    """
+    if value in (None, ""):
+        return None
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return v if v > 0.0 else None
+
+
 def _bbox_dims_mm(polygon: List[List[float]]) -> Dict[str, float]:
+    """Bounding-box dimensions with a hard ordering guarantee:
+    width_mm is ALWAYS the shorter side, length_mm ALWAYS the longer.
+
+    Review fix C3 (2026-07): the previous version labelled length=X-extent
+    and width=Y-extent. A room whose long axis runs along Y then reported
+    its LONG side as `width_mm`, and Mabhas minimum-width clauses were
+    checked against the wrong dimension — a verified false PASS (bedroom
+    with a 2.1 m short side passed a "width >= 2.5 m" rule). Min-width /
+    max-length semantics are orientation-independent, so the extents are
+    ordered here, at the single place the dims are produced.
+    """
     if not polygon:
         return {"length_mm": 0.0, "width_mm": 0.0}
     xs = [p[0] for p in polygon]; ys = [p[1] for p in polygon]
-    return {"length_mm": round(max(xs) - min(xs), 1),
-            "width_mm":  round(max(ys) - min(ys), 1)}
+    dx = max(xs) - min(xs)
+    dy = max(ys) - min(ys)
+    return {"length_mm": round(max(dx, dy), 1),
+            "width_mm":  round(min(dx, dy), 1)}
 
 
 # ── main entry point ──────────────────────────────────────────────────────────
@@ -302,7 +331,16 @@ def _read_spaces(model, f: float) -> List[Dict[str, Any]]:
             "name":       sp.Name or "Room",
             "local_name": sp.LongName or "",
             "category":   common.get("Category", "Unknown") or "Unknown",
-            "area_m2":    float(qto.get("NetFloorArea", common.get("GrossFloorArea", 0.0)) or 0.0),
+            # Review fix H1 (2026-07): a missing/zero floor area used to be
+            # coerced to 0.0, which the agents read as a MEASUREMENT — the
+            # numeric checker emitted FAIL "area = 0.0" for rooms that were
+            # never measured, <=-comparator (max-area) clauses false-PASSed,
+            # and glazing ratios false-FAILed. Missing is now None; every
+            # agent already routes an unmeasurable value to NEEDS_REVIEW.
+            # (0.0 is treated as missing: exporters write 0.0 for "unknown",
+            # and a genuinely zero-area room does not exist.)
+            "area_m2":    _area_or_none(qto.get("NetFloorArea",
+                                                common.get("GrossFloorArea"))),
             "polygon":    polygon,
             "dimensions": _bbox_dims_mm(polygon),
             "centroid_mm": [float(M[0][3]) * f, float(M[1][3]) * f] if M is not None else [0.0, 0.0],

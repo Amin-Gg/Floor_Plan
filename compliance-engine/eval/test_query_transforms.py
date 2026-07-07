@@ -1,11 +1,12 @@
 """
 Unit tests for rag/query_transforms (HyDE, step-back, multi-query).
 
-Rewritten after the Anthropic -> Groq migration: the transforms now make all
-completions through rag.groq_client.groq_chat (qwen/qwen3-32b, temperature
-0.3 — enforced by groq_chat's own defaults), so these tests mock
-``rag.query_transforms.groq_chat`` — the exact seam production calls — and
-make NO network calls. The behavioral contracts under test are unchanged
+Rewritten after the Anthropic -> Groq migration, and again after the
+provider dispatcher was introduced: the transforms now make all completions
+through rag.llm_client.llm_chat (Groq qwen/qwen3-32b by default; AgentRouter
+when configured — model/temperature enforced by each provider client's own
+defaults), so these tests mock ``rag.query_transforms.llm_chat`` — the exact
+seam production calls — and make NO network calls. The behavioral contracts under test are unchanged
 from the original suite:
 
   * language routing picks the Persian vs English system prompt
@@ -38,7 +39,7 @@ ENGLISH_CLAUSE = ("The clear ceiling height of habitable rooms shall not be "
 def mock_chat():
     """Patch the production seam; reset counters around every test."""
     qt.reset_llm_counters()
-    with mock.patch("rag.query_transforms.groq_chat") as m:
+    with mock.patch("rag.query_transforms.llm_chat") as m:
         yield m
     qt.reset_llm_counters()
 
@@ -88,9 +89,10 @@ def test_hyde_explicit_language_overrides_detection(mock_chat):
 
 def test_hyde_token_budget_and_model_constraints(mock_chat):
     """The transforms pass ONLY messages + their token budget: model and
-    temperature come from groq_chat's own defaults, which are the sanctioned
-    qwen/qwen3-32b @ 0.3 (this pins the constraint the old anthropic-based
-    test asserted, at its new single change point)."""
+    temperature come from the provider clients' own defaults. This pins the
+    constraint the old anthropic-based test asserted, at BOTH provider
+    change points: Groq's sanctioned qwen/qwen3-32b @ 0.3, and AgentRouter's
+    temperature 0.3 (its model is the AGENTROUTER_MODEL config)."""
     import inspect
     from rag.groq_client import groq_chat
     mock_chat.return_value = PERSIAN_CLAUSE
@@ -101,6 +103,9 @@ def test_hyde_token_budget_and_model_constraints(mock_chat):
     defaults = inspect.signature(groq_chat).parameters
     assert defaults["model"].default == "qwen/qwen3-32b"
     assert defaults["temperature"].default == 0.3
+    from rag.agentrouter_client import agentrouter_chat
+    ar_defaults = inspect.signature(agentrouter_chat).parameters
+    assert ar_defaults["temperature"].default == 0.3
 
 
 def test_hyde_api_failure_returns_original(mock_chat, caplog):

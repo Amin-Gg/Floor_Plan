@@ -315,15 +315,29 @@ class BimAdapter:
         # use this are tagged as parameter-sourced in their message.
         return self.ceiling_height_m()
 
+    # Review fix C3 (2026-07): dim_min/dim_max are ORDER-INDEPENDENT reads.
+    # The ingest now guarantees width<=length, but bim_data also arrives
+    # hand-built through POST /analyze, where nothing enforces the labels.
+    # A "min width" rule must measure the SHORTER side no matter which key
+    # it was stored under — trusting the label produced a verified false
+    # PASS. When only one dimension is present we cannot know whether it is
+    # the shorter or longer side, so both reads return None (→ NEEDS_REVIEW,
+    # never a guess), matching design principle 1.
+    def _room_dims_mm(self, room: Dict[str, Any]) -> tuple:
+        dims = room.get("dimensions", {}) or {}
+        vals = [float(v) for v in (dims.get("width_mm"), dims.get("length_mm"))
+                if v is not None]
+        if len(vals) != 2:
+            return (None, None)
+        return (min(vals), max(vals))
+
     def room_dim_min_m(self, room: Dict[str, Any]) -> Optional[float]:
-        dims = room.get("dimensions", {})
-        w = dims.get("width_mm")
-        return float(w) / 1000.0 if w is not None else None
+        w, _ = self._room_dims_mm(room)
+        return w / 1000.0 if w is not None else None
 
     def room_dim_max_m(self, room: Dict[str, Any]) -> Optional[float]:
-        dims = room.get("dimensions", {})
-        l = dims.get("length_mm")
-        return float(l) / 1000.0 if l is not None else None
+        _, l = self._room_dims_mm(room)
+        return l / 1000.0 if l is not None else None
 
     def doors(self) -> List[Dict[str, Any]]:
         return self._bim.get("doors", [])

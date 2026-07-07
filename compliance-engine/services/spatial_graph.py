@@ -160,7 +160,12 @@ class SpatialGraph:
             self.graph.add_node(rid, **{
                 "category":          room.get("category", "unknown"),
                 "name":              room.get("name", ""),
-                "area_m2":           float(room.get("area_m2", 0.0)),
+                # Review fix H1 (2026-07): keep a missing area as None instead
+                # of coercing to 0.0 — 0.0 downstream reads as a MEASURED zero
+                # and produced false glazing-ratio FAILs for unmeasured rooms.
+                "area_m2":           (float(room["area_m2"])
+                                      if room.get("area_m2") is not None
+                                      else None),
                 "polygon":           poly,
                 "has_exterior":      has_exterior,
                 "has_exterior_door": False,   # updated in _add_door_edges
@@ -325,14 +330,20 @@ class SpatialGraph:
         # dimensions are stored in mm → convert to m²
         return sum(w["width"] * w["height"] / 1_000_000 for w in wins)
 
-    def glazing_ratio(self, room_id: str) -> float:
+    def glazing_ratio(self, room_id: str) -> Optional[float]:
         """
         Glazing-to-floor-area ratio for room_id.
-        Returns 0.0 if room area is zero to avoid division by zero.
+
+        Returns None when the room's floor area is missing or non-positive
+        (review fix H1): the ratio is then UNMEASURABLE, not zero. The old
+        behaviour returned 0.0, which the opening agent read as a measured
+        failing ratio and hard-FAILed rooms that were never measured. The
+        single caller (OpeningAgent._check_glazing_ratio) routes None to
+        NEEDS_REVIEW.
         """
-        area = self.graph.nodes[room_id].get("area_m2", 0.0)
-        if area <= 0:
-            return 0.0
+        area = self.graph.nodes[room_id].get("area_m2")
+        if area is None or area <= 0:
+            return None
         return self.total_glazing_area_m2(room_id) / area
 
     def can_reach_exit(self, room_id: str) -> bool:
