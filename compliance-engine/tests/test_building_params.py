@@ -109,9 +109,11 @@ def test_explicit_arg_overrides_bim_block():
 # ── Honest verdict tagging ────────────────────────────────────────────────────
 
 def test_default_driven_check_forces_needs_review():
-    """Policy: unasserted ceiling -> NEEDS_REVIEW, never a default verdict."""
+    """Policy: unasserted ceiling -> NOT_EVALUATED (data absent), never a
+    default-driven verdict. Stage 1: was NEEDS_REVIEW; missing required input
+    is now a model-data problem, not a judgment call."""
     f = _only(NumericChecker(dict(BIM)).check_clause(ROOM_H))
-    assert f.verdict == Verdict.NEEDS_REVIEW
+    assert f.verdict == Verdict.NOT_EVALUATED
     assert "building_params.wall_height" in f.message
     assert f.element_id == "R1"
 
@@ -135,11 +137,11 @@ def test_user_param_can_fail_the_check():
 
 def test_recorded_default_from_step1_block_forces_review():
     """Step 1 always embeds the value; if the operator never touched the
-    stepper the check must degrade to NEEDS_REVIEW, not verdict on it."""
+    stepper the check must degrade to NOT_EVALUATED, not verdict on it."""
     bim = {**BIM, "building_params": {
         "wall_height": 2800.0, "door_height": 2100.0, "_provided": []}}
     f = _only(NumericChecker(bim).check_clause(ROOM_H))
-    assert f.verdict == Verdict.NEEDS_REVIEW
+    assert f.verdict == Verdict.NOT_EVALUATED
     assert "building_params.wall_height" in f.message
 
 
@@ -194,7 +196,7 @@ def test_ingest_marks_nothing_provided_when_all_defaults(tmp_path):
     # …and the checker consequently tags a room-height verdict as default.
     bim.update(rooms=BIM["rooms"])
     f = _only(NumericChecker(bim).check_clause(ROOM_H))
-    assert f.verdict == Verdict.NEEDS_REVIEW
+    assert f.verdict == Verdict.NOT_EVALUATED
     assert "building_params.wall_height" in f.message
 
 
@@ -235,35 +237,43 @@ def test_end_to_end_params_flip_verdict_through_pset(tmp_path):
     assert "user building parameter" in f.message
 
 
-# ── Orchestrator merge point (regression: provenance survived the merge) ─────
+# ── Unified-pipeline merge point (provenance regression) ─────────────────────
 
-def test_orchestrator_merge_preserves_operator_provenance():
-    """run_compliance merges API-supplied params into bim_data['building_params'].
-    Regression: a flat merge left the ingest's '_provided: []' claiming the
-    operator's own values were recorded defaults, so the verdict said ENGINE
-    DEFAULT while measuring the operator's number (caught live in e2e)."""
-    from services.orchestrator import run_compliance
+def test_pipeline_manual_inputs_preserve_operator_provenance():
+    """Manual Inputs v1 is the only supported operator-input path.
 
-    bim = {**BIM, "rooms": [dict(BIM["rooms"][0])],
-           "building_params": {"_provided": []}}   # what an old IFC yields
-    res = run_compliance(bim, [ROOM_H], retriever=None, llm=None,
-                         use_langgraph=False,
-                         building_params={"wall_height_mm": 2250.0})
-    room_h = [f for f in res.findings if f.article_id == "ROOM-H"]
-    assert room_h, res.findings
-    f = room_h[0]
-    assert f.verdict == Verdict.FAIL and f.measured == 2.25, f.message
-    assert "user building parameter" in f.message, f.message
-    assert "ENGINE DEFAULT" not in f.message
+    The resolved value must reach the deterministic checker with user
+    provenance; no low-level compliance function may merge flat parameters.
+    """
+    from services.validation_pipeline import PipelineRequest, run_validation_pipeline
+
+    execution = run_validation_pipeline(PipelineRequest(
+        source_type="bim_data",
+        bim_data={**BIM, "rooms": [dict(BIM["rooms"][0])]},
+        clauses=[ROOM_H],
+        generate_reports=False,
+        manual_inputs={
+            "schema_version": "1.0",
+            "defaults": {"wall_height_mm": 2250.0},
+        },
+    ))
+    room_h = [f for f in execution.compliance.findings if f.article_id == "ROOM-H"]
+    assert room_h, execution.compliance.findings
+    finding = room_h[0]
+    assert finding.verdict == Verdict.FAIL and finding.measured == 2.25, finding.message
+    assert "user building parameter" in finding.message, finding.message
+    assert "ENGINE DEFAULT" not in finding.message
 
 
-def test_orchestrator_merge_keeps_defaults_tagged_when_no_operator_input():
-    from services.orchestrator import run_compliance
+def test_pipeline_without_manual_input_keeps_height_not_evaluated():
+    from services.validation_pipeline import PipelineRequest, run_validation_pipeline
 
-    bim = {**BIM, "rooms": [dict(BIM["rooms"][0])],
-           "building_params": {"_provided": []}}
-    res = run_compliance(bim, [ROOM_H], retriever=None, llm=None,
-                         use_langgraph=False)
-    f = [x for x in res.findings if x.article_id == "ROOM-H"][0]
-    assert f.verdict == Verdict.NEEDS_REVIEW, f.message
-    assert "building_params.wall_height" in f.message
+    execution = run_validation_pipeline(PipelineRequest(
+        source_type="bim_data",
+        bim_data={**BIM, "rooms": [dict(BIM["rooms"][0])]},
+        clauses=[ROOM_H],
+        generate_reports=False,
+    ))
+    finding = [f for f in execution.compliance.findings if f.article_id == "ROOM-H"][0]
+    assert finding.verdict == Verdict.NOT_EVALUATED, finding.message
+    assert "building_params.wall_height" in finding.message

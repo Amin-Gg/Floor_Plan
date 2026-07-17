@@ -1,0 +1,72 @@
+{
+  "bcf": {
+    "selected_ifc_guids": [
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "3NO8F1w26Kn8t6T8TcHFzn",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "3AK_nOlURKyPwsFslYktuj",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "37APn8YdAM5Hib8Eu7wjJn",
+      "37APn8YdAM5Hib8Eu7wjJn"
+    ],
+    "topics": 19,
+    "version": "2.1",
+    "viewpoints": 18
+  },
+  "compliance_summary": {
+    "FAIL": 12,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 5,
+    "PASS": 19
+  },
+  "ok": true,
+  "quality_codes": [
+    "QC-PLACE-006",
+    "QC-PLACE-007",
+    "QC-PROP-001",
+    "QC-SPACE-004",
+    "QC-SPACE-006",
+    "QC-SPACE-009"
+  ],
+  "quality_status": "failed",
+  "reports": {
+    "bcf": "artifacts/remediation_acceptance/compliance_issues.bcf",
+    "bcf_manifest": "artifacts/remediation_acceptance/compliance_issues.bcf.manifest.json",
+    "html": "artifacts/remediation_acceptance/compliance_report.html",
+    "json": "artifacts/remediation_acceptance/compliance_result.json",
+    "pdf": "artifacts/remediation_acceptance/compliance_report.pdf"
+  },
+  "schema_status": "passed",
+  "stage_trace": [
+    "parse_source",
+    "schema",
+    "building_model",
+    "manual_merge",
+    "quality",
+    "compliance",
+    "reporting"
+  ],
+  "window_values": {
+    "W-ACCEPT-02": {
+      "height_mm": 1200.0,
+      "sill_height_mm": 1000.0,
+      "width_mm": 900.0
+    },
+    "Wb": {
+      "height_mm": 1500.0,
+      "sill_height_mm": 900.0,
+      "width_mm": 1400.0
+    }
+  }
+}

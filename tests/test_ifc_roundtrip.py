@@ -23,8 +23,11 @@ import pytest
 
 ifcopenshell = pytest.importorskip("ifcopenshell")
 
-from export.ifc_exporter import bim_json_to_ifc          # noqa: E402
-from _engine_modules import ifc_to_bim_data               # noqa: E402  (production engine loader — see tests/_engine_modules.py)
+from _engine_modules import (
+    ifc_to_bim_data,  # noqa: E402  (production engine loader — see tests/_engine_modules.py)
+)
+
+from export.ifc_exporter import bim_json_to_ifc  # noqa: E402
 
 
 def _sample_bim():
@@ -40,7 +43,7 @@ def _sample_bim():
              "thickness": 200, "height": 2800, "type": "exterior", "is_exterior": True},
         ],
         "doors": [{"id": "d1", "host_wall_id": "w1", "insertion_point": [2500, 0, 0],
-                   "width": 900, "height": 2100}],
+                   "width": 900, "height": 2100, "is_exterior": True}],
         "windows": [{"id": "win1", "host_wall_id": "w2",
                      "insertion_point": [5000, 2000, 0], "width": 1200,
                      "height": 1000, "sill_height": 900}],
@@ -91,6 +94,7 @@ def test_doors_preserved(recon):
     assert got["host_wall_id"] == src["host_wall_id"]
     assert got["width"] == pytest.approx(src["width"], abs=1)
     assert got["height"] == pytest.approx(src["height"], abs=1)
+    assert got["is_exterior"] is True
     # insertion point in true mm (guards §9.1) — not ×1000
     assert got["insertion_point"][0] == pytest.approx(2500, abs=2)
 
@@ -102,6 +106,7 @@ def test_windows_preserved(recon):
     assert got["host_wall_id"] == src["host_wall_id"]
     assert got["width"] == pytest.approx(src["width"], abs=1)
     assert got["sill_height"] == pytest.approx(src["sill_height"], abs=2)
+    assert got["is_exterior"] is True
 
 
 def test_rooms_preserved(recon):
@@ -125,4 +130,4 @@ def test_provenance_carried(recon):
 
 
 def test_contract_version_readable(recon):
-    assert recon["contract_version"] == "1.0"
+    assert recon["contract_version"] == "1.2"

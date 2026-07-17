@@ -1,0 +1,44 @@
+{
+  "checks": {
+    "all_reports": true,
+    "correlation_preserved": true,
+    "engine_authenticated_health": true,
+    "engine_health_requires_auth": true,
+    "engine_liveness_public": true,
+    "engine_openapi_security": true,
+    "engine_security_headers": true,
+    "engine_upload_cleanup": true,
+    "job_completed": true,
+    "stage1_liveness_public": true,
+    "stage1_openapi_requires_auth": true,
+    "stage1_openapi_security": true,
+    "stage1_wrong_key_rejected": true,
+    "traceback_not_exposed": true
+  },
+  "correlation_id": "phase7-secure-live-acceptance",
+  "job_id": "fa0bab2361cb",
+  "passed": true,
+  "reports": {
+    "bcf": {
+      "bytes": 3496,
+      "signature_valid": true,
+      "status": 200
+    },
+    "html": {
+      "bytes": 7104,
+      "signature_valid": true,
+      "status": 200
+    },
+    "json": {
+      "bytes": 10344,
+      "signature_valid": true,
+      "status": 200
+    },
+    "pdf": {
+      "bytes": 18381,
+      "signature_valid": true,
+      "status": 200
+    }
+  },
+  "schema_version": "phase7-secure-live-acceptance-v1"
+}

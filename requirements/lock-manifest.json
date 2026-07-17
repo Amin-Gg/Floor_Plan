@@ -1,0 +1,50 @@
+{
+  "locks": [
+    {
+      "id": "stage1-runtime",
+      "input": "requirements/stage1-runtime.in",
+      "input_sha256": "5e7b11c9dd4b576e1b90f53b4a8e7c2f36b5937c1013eabfcdbfe7c50d8927e9",
+      "lock": "requirements/stage1-runtime.lock",
+      "lock_sha256": "10556c904eaef74fb82c4d30608c7cadca6bc5b887149497da1ffc130a5e0d63",
+      "no_deps_overlay": false
+    },
+    {
+      "id": "stage1-ml-overlay",
+      "input": "requirements/stage1-ml-overlay.in",
+      "input_sha256": "e3f9af50c7a3b301792491927ea964e15e19138c21f0a64dac814a12505de3ee",
+      "lock": "requirements/stage1-ml-overlay.lock",
+      "lock_sha256": "551e6ad267771c54b408644f732df37124b15160035f3d3ee4320c8a73de62ca",
+      "no_deps_overlay": true
+    },
+    {
+      "id": "baseline",
+      "input": "requirements/baseline.in",
+      "input_sha256": "255fe1fe34a87d09130cc6347ce802672c6c61d75b744b583278cc1bdf905123",
+      "lock": "requirements/baseline.lock",
+      "lock_sha256": "c6aee66f219edb8e7e7cf96f6a7b2399d3196118298d5dcf5c54b5ecfabd0d00",
+      "no_deps_overlay": false
+    },
+    {
+      "id": "engine-runtime",
+      "input": "compliance-engine/requirements/runtime.in",
+      "input_sha256": "81274dbdef1d6f6c0b3f9d1133417ed9537c3f247628d997380ea3a1a94a191c",
+      "lock": "compliance-engine/requirements/runtime.lock",
+      "lock_sha256": "47cba43124990429a7835781900685d0898bdc0fcad4b202bbecaac90949c7bf",
+      "no_deps_overlay": false
+    },
+    {
+      "id": "engine-ml-overlay",
+      "input": "compliance-engine/requirements/ml-overlay.in",
+      "input_sha256": "e539e09823dfb5de2b67e3cf7a8a084137b4fc478aadf3c077d7b4cf29a5ae86",
+      "lock": "compliance-engine/requirements/ml-overlay.lock",
+      "lock_sha256": "954d6b450520b2d9ced8247ff5caf8453248a303655056708ca610a3be3bf602",
+      "no_deps_overlay": true
+    }
+  ],
+  "schema_version": "phase6-dependency-locks-v1",
+  "target": {
+    "platform": "x86_64-manylinux_2_31",
+    "python": "3.11"
+  },
+  "uv_version": "0.8.4"
+}

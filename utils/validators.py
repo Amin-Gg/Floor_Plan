@@ -23,17 +23,20 @@ Usage in a route
 """
 
 import logging
+import warnings
 from typing import Optional
 
 from flask import request
 from PIL import Image
 
 from utils.error_handlers import ValidationError, ImageValidationError
+from config.settings import get_config
 
-# Prevent decompression bomb attacks — images that appear small but expand to
-# gigabytes in memory (e.g. a 1x1 pixel PNG with embedded 1 GB data).
-# Default PIL limit is 178 million pixels; we keep a conservative 100 MP cap.
-Image.MAX_IMAGE_PIXELS = 100_000_000   # 100 megapixels
+# Decompression-bomb protection is enforced both through Pillow and explicit
+# dimensions. The configurable default is 40 MP, far below Pillow's historical
+# warning threshold and sufficient for the 2048px inference pipeline.
+_SECURITY_CONFIG = get_config()
+Image.MAX_IMAGE_PIXELS = _SECURITY_CONFIG.MAX_IMAGE_PIXELS
 
 logger = logging.getLogger(__name__)
 
@@ -113,18 +116,42 @@ def require_image_upload(field_name: str = "image") -> Image.Image:
         )
 
     try:
-        img = Image.open(upload.stream)
-        img.verify()                    # detects truncated / corrupt files
-        upload.stream.seek(0)           # verify() consumes the stream — rewind
-        img = Image.open(upload.stream) # re-open after rewind
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            img = Image.open(upload.stream)
+            width, height = img.size
+            pixels = width * height
+            if width <= 0 or height <= 0:
+                raise ValueError("image dimensions must be positive")
+            if pixels > _SECURITY_CONFIG.MAX_IMAGE_PIXELS:
+                raise ValueError("decoded pixel count exceeds the configured safety limit")
+            if max(width, height) > _SECURITY_CONFIG.MAX_IMAGE_DIMENSION:
+                raise ValueError("image dimension exceeds the configured safety limit")
+            aspect = max(width / height, height / width)
+            if aspect > _SECURITY_CONFIG.MAX_IMAGE_ASPECT_RATIO:
+                raise ValueError("image aspect ratio exceeds the configured safety limit")
+            if int(getattr(img, "n_frames", 1)) != 1:
+                raise ValueError("animated or multi-frame images are not accepted")
+            detected = (img.format or "").upper()
+            allowed_formats = {"JPEG", "PNG", "BMP", "TIFF", "WEBP"}
+            if detected not in allowed_formats:
+                raise ValueError("decoded image format is not allowed")
+            img.verify()                    # detects truncated / corrupt files
+        upload.stream.seek(0)               # verify() consumes the stream — rewind
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            img = Image.open(upload.stream) # re-open after rewind
         return img
     except Exception as exc:
+        logger.warning("Rejected unsafe/invalid image upload: %s", type(exc).__name__)
         raise ImageValidationError(
-            f"The uploaded file is not a valid image: {exc}",
+            "The uploaded file is invalid or exceeds image safety limits.",
             details={
                 "filename":      upload.filename,
                 "content_type":  upload.content_type,
                 "allowed_types": sorted(_ALLOWED_MIME),
+                "max_pixels": _SECURITY_CONFIG.MAX_IMAGE_PIXELS,
+                "max_dimension": _SECURITY_CONFIG.MAX_IMAGE_DIMENSION,
             }
         ) from exc
 

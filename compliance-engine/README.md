@@ -1,110 +1,287 @@
-# Mabhas Compliance Engine
+# Mabhas BIM Compliance Engine — Final R2 Release
 
-An AI-assisted system that checks Iranian residential building floor plans
-against the National Building Regulations (مقررات ملی ساختمان / *Mabhas*). It
-takes the `bim_data` produced by a 2D-to-3D floor-plan model, checks it against
-the digitised Mabhas corpus, and produces a compliance report (HTML + PDF + BCF).
+A modular-monolith validation engine for checking Iranian residential building
+models against digitised National Building Regulations (*Mabhas*). The system
+accepts IFC or canonical BIM data, validates model integrity and quality before
+regulatory evaluation, and produces explainable JSON, HTML, PDF, and BCF 2.1
+reports.
 
-## Architecture in one line
+## Final architecture
 
+```text
+IFC / bim_data / BuildingModel
+             │
+             ▼
+     Boundary parsing and validation
+             │
+             ├── IFC Schema Gate
+             │   file, version, hierarchy, GUIDs, mandatory attributes
+             │
+             ▼
+      Canonical BuildingModel
+             │
+             ▼
+      Manual Inputs v1.0 merge
+             │
+             ▼
+      Plugin-based Quality Layer
+             │
+             ▼
+  Deterministic Compliance Engine
+             │
+             ├── optional RAG/LLM explanation only
+             │
+             ▼
+       ValidationReport v1.0
+             │
+             ├── JSON
+             ├── HTML
+             ├── PDF
+             └── Full BCF 2.1
 ```
-bim_data → spatial graph → 4 deterministic agents → orchestrator → report
-                                ↑                                      ↓
-                    RAG over the Mabhas corpus                  human review queue
-```
 
-## Design principle: deterministic spine, AI on the wings
+The deterministic engine is the only component allowed to produce `PASS` or
+`FAIL`. RAG/LLM components may retrieve clauses and add advisory explanations,
+but they cannot create, change, or override deterministic verdicts.
 
-Every PASS/FAIL verdict on a numeric or spatial rule comes from **deterministic
-Python**, never an LLM. The system is conservative by design: anything it cannot
-verify from the plan is flagged `NEEDS_REVIEW` for a qualified professional,
-never guessed. The LLM is used only for offline regulation classification,
-optional advisory notes on ambiguous clauses, and report narrative — it can
-never override a deterministic verdict. This keeps every verdict reproducible
-and defensible.
+## Validation stages
+
+1. **IFC Schema Validation**
+   - supported IFC version policy;
+   - one `IfcProject`;
+   - Project → Site → Building → Storey hierarchy;
+   - duplicate and missing `GlobalId` detection;
+   - mandatory IFC attributes;
+   - single IFC parse shared with ingest.
+
+2. **Model Quality Validation**
+   - required semantic properties and units;
+   - Space identity, name, type, area, boundary, overlap, and storey;
+   - Door/Window host and endpoint placement;
+   - opening vertical fit;
+   - Manual Input completeness and provenance;
+   - plugin isolation and explicit internal-error findings.
+
+3. **Regulatory Compliance**
+   - deterministic numeric, topology, opening, and safety checks;
+   - `NEEDS_REVIEW` for interpretive or unsupported rules;
+   - `NOT_EVALUATED` when required model data is missing or untrusted;
+   - RAG/LLM used only for eligible advisory explanations.
 
 ## Repository layout
 
-| Folder | Contents |
+| Path | Responsibility |
 |---|---|
-| `rag/` | retrieval + knowledge-graph layer: pgvector schema & ingestion, dense/lexical/hybrid retrieval, cross-encoder rerank, contextual retrieval, adaptive (CRAG) layer, the NetworkX regulation graph, and graph-aware retrieval. Colab notebook in `rag/notebooks/`. |
-| `services/` | the deterministic engine: spatial graph, the four agents (numeric, topology, opening, safety), `graph_linker`, orchestrator, report generator, review queue. |
-| `api/` | FastAPI + (optional) Celery async web service. |
-| `classification/` | Mabhas Word document → structured clause JSON (prompt + script). |
-| `scripts/` | provenance dump + element/clause coverage utilities. |
-| `eval/` | retrieval-evaluation harness (hit@k, recall@k, MRR, nDCG@k) + retrieval unit tests + `eval/results/` (ablation outputs, `SUMMARY.md`, `PROVENANCE.md`). |
-| `tests/` | engine + API tests (the deterministic spine). |
-| `data/` | the 594-clause Mabhas corpus across pipeline stages, the 43-item retrieval eval set, a 5-clause sample, and the regulation graph (`regulation_graph.graphml`, 393 nodes / 922 edges). |
-| `docs/` | per-stage write-ups (Stage 0–3), regulation-graph schema, coverage reports. |
+| `domain/` | Canonical `BuildingModel`, elements, geometry, identity, findings, and stage results |
+| `ingest/` | IFC-safe opening, IFC → canonical model conversion, category normalization |
+| `validation/schema/` | IFC schema policy and checks |
+| `validation/quality/` | Plugin protocol, registry, context, and quality-check plugins |
+| `validation/compliance/` | Canonical adapter and private prepared-input compliance runner |
+| `manual_inputs/` | Manual Inputs v1.0 parser, typed models, and merge/provenance logic |
+| `standards/` | Semantic Property Catalog, Controlled Values, validated loaders, query API |
+| `services/` | Authoritative validation pipeline plus deterministic agent implementations |
+| `reporting/` | ValidationReport v1.0 and JSON/HTML/PDF/BCF renderers |
+| `api/` | FastAPI, optional Celery execution, job and artifact storage |
+| `rag/` | Retrieval, graph retrieval, reranking, and optional advisory generation |
+| `scripts/` | Acceptance, BCF validation, coverage, and audit utilities |
+| `tests/`, `eval/` | Architecture, pipeline, validation, report, and retrieval tests |
+| `docs/` | Architecture decisions, schemas, phase acceptance records, and migration docs |
 
-### The Mabhas corpus (`data/`)
-
-| File | What it is |
-|---|---|
-| `mabhas_clauses.json` | raw extracted clauses (594) |
-| `mabhas_clauses_normalized.json` | Stage 0 — six-rule Persian text normalization (594) |
-| `mabhas_clauses_contextual.json` | Stage 1 — LLM-generated `context_fa` prepended at index time (594) |
-| `mabhas_eval_set.json` | 43-item retrieval evaluation set |
-| `sample_mabhas_clauses.json` | 5-clause sample for quick smoke runs |
-
-## Quick start
+## Installation
 
 ```bash
-pip install -r requirements.txt        # runtime deps
-pip install -r requirements-dev.txt    # + pytest/httpx for the test suite
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
 
-# run the engine on a plan in Python (no database or API key needed)
-python -c "
-from services.orchestrator import run_compliance
-from services.report_generator import generate_reports
+The exact Phase 0 environment snapshot is retained at:
+
+```text
+docs/STAGE8_PIP_FREEZE.txt
+```
+
+## CLI: validate an IFC model
+
+```bash
+python -m ingest.run_ifc tests/fixtures/sample_plan.ifc \
+  --clauses data/mabhas_clauses.json \
+  --manual-inputs tests/fixtures/remediation_manual_inputs.json \
+  --out artifacts/ifc_run
+```
+
+Precheck mode runs Schema + Quality without regulatory verdicts:
+
+```bash
+python -m ingest.run_ifc tests/fixtures/sample_plan.ifc \
+  --precheck \
+  --out artifacts/precheck
+```
+
+## Python API
+
+```python
 import json
-clauses = [c for c in json.load(open('data/mabhas_clauses.json')) if not c.get('skip_category')]
-result = run_compliance(my_bim_data, clauses)
-generate_reports(result.to_dict(), {'plan_name': 'Plan_01'}, out_dir='out/')
-"
+
+from services.validation_pipeline import PipelineRequest, run_validation_pipeline
+
+with open("data/mabhas_clauses.json", encoding="utf-8") as handle:
+    clauses = [row for row in json.load(handle) if not row.get("skip_category")]
+
+execution = run_validation_pipeline(PipelineRequest(
+    source_type="ifc",
+    ifc_path="tests/fixtures/sample_plan.ifc",
+    clauses=clauses,
+    manual_inputs={
+        "schema_version": "1.0",
+        "project": {"default_storey_height_mm": 3200},
+        "defaults": {"window_sill_height_mm": 900},
+        "element_overrides": {
+            "windows": {
+                "Wb": {
+                    "width_mm": 1400,
+                    "height_mm": 1500,
+                    "sill_height_mm": 900,
+                }
+            },
+            "doors": {},
+            "walls": {},
+        },
+    },
+    out_dir="artifacts/python_run",
+    metadata={"plan_name": "sample_plan.ifc"},
+    mode="full_check",
+))
+
+print(execution.compliance.summary if execution.compliance else {})
+print(execution.reports)
 ```
 
-> The engine modules import one another by bare name (a flat-layout convention
-> from the original codebase). `services/__init__.py` adds its own directory to
-> `sys.path` on import so `from services.orchestrator import …` works from a
-> plain checkout with no manual `PYTHONPATH`.
+All public source paths delegate to the same authoritative function:
 
-## Running the tests
+```python
+run_validation_pipeline(request)
+```
+
+## Manual Inputs v1.0
+
+The public manual-input contract supports:
+
+- project-level storey height, finished floor level, and floor thickness;
+- defaults for walls, doors, and windows;
+- per-window, per-door, and per-wall overrides;
+- explicit merge provenance;
+- strict unknown-key, type, range, and cross-field validation.
+
+Full documentation:
+
+```text
+docs/MANUAL_INPUTS_SCHEMA.md
+```
+
+The old flat `building_params` public input was removed in Phase 9 and is
+rejected at both HTTP and pipeline boundaries. A value-bearing enriched
+`bim_data` mapping produced after Manual Inputs resolution is an internal,
+output-only agent seam. Reuse `BuildingModel` in-process, or submit the
+original raw `bim_data` together with Manual Inputs v1 again.
+
+## FastAPI service
 
 ```bash
-pytest                  # discovers tests/ and eval/ (see pyproject.toml)
-pytest tests/           # just the deterministic engine + API
+export CLAUSES_PATH=data/mabhas_clauses.json
+uvicorn api.main:app --reload
 ```
 
-`pyproject.toml` sets `pythonpath = [".", "services"]` so both the package-style
-imports (`rag.*`, `services.*`) and the engine's bare intra-package imports
-resolve without any environment setup. `conftest.py` pins `CRAG_ENABLED=0` and
-`GRAPH_ENABLED=0` so unit tests exercise the deterministic Stage 1 retriever.
+Endpoints:
 
-The deterministic-engine suite (all of `tests/`) and the pure retrieval-logic
-tests run offline. Tests that need a live **PostgreSQL + pgvector** instance
-(`tests/test_rag_smoke.py`) or downloaded embedding/reranker models are skipped
-when those resources are absent.
+```text
+GET  /health
+POST /analyze
+POST /analyze-ifc
+GET  /jobs/{job_id}
+GET  /jobs/{job_id}/report/{kind}
+```
 
-> **Known stale tests.** `eval/test_query_transforms.py` and
-> `eval/test_crag_retriever.py` were written against an earlier generation of
-> those modules (anthropic-based transforms; Python post-filtering in CRAG). The
-> shipped `rag/` modules are the newer canonical versions (Groq-based transforms
-> via `groq_client`; SQL-level filtering, `top_k=3`, sigmoid score-transform in
-> CRAG). These two test files need updating to the new behaviour — see
-> `docs/` and the cleanup notes.
+`kind` may be `html`, `pdf`, or `bcf`. JSON results are returned in the job
+result payload and written as `compliance_result.json` in the job artifact set.
 
-## Pipeline stages
+When `CELERY_BROKER_URL` is configured, jobs run through Celery. Without a
+broker, development mode uses background threads and the same pipeline.
 
-| Stage | What it adds | Write-up |
-|---|---|---|
-| 0 | Persian text normalization (six rules) + 43-item eval set | `docs/STAGE0_INTEGRATION.md` |
-| 1 | Hybrid retrieval (BM25 + dense, RRF), cross-encoder rerank, contextual retrieval, embedder ablation | `docs/STAGE1_RETRIEVAL.md` |
-| 2 | Adaptive corrective retrieval (CRAG): confidence gate, HyDE / step-back / multi-query, rule-based router | `docs/STAGE2_REASONING.md` |
-| 3 | Regulation knowledge graph (NetworkX, 393 nodes / 922 edges) + graph-aware retrieval | `docs/STAGE3_GRAPH.md` |
+## Report outputs
 
-## Scope
+Every report bundle is rendered from one `ValidationReport v1.0`:
 
-Residential occupancy group **M-4** (1–2 household, max 3 storeys) plus rules
-that apply to all residential buildings. Expanding to apartments (M-2) needs no
-re-classification — just a wider ingest scope.
+```text
+compliance_result.json
+compliance_report.html
+compliance_report.pdf
+compliance_issues.bcf
+compliance_issues.bcf.manifest.json
+```
+
+The JSON contract is published at:
+
+```text
+reporting/schemas/validation_report_v1.schema.json
+```
+
+BCF export uses real IFC `GlobalId` values for component selection. Findings
+without a trustworthy IFC anchor remain in JSON/HTML/PDF instead of becoming
+empty BCF topics.
+
+## Final acceptance scenario
+
+Run the complete Phase 9 acceptance scenario with one command:
+
+```bash
+python -m scripts.run_validation_acceptance \
+  --ifc tests/fixtures/sample_plan.ifc \
+  --manual-inputs tests/fixtures/remediation_manual_inputs.json \
+  --output-dir artifacts/remediation_acceptance
+```
+
+The scenario verifies:
+
+- IFC schema success;
+- two windows with different manual dimensions;
+- a malformed Space with missing area and open boundary;
+- a Window extending beyond its host Wall;
+- at least one real compliance `FAIL`;
+- at least one `NOT_EVALUATED` result;
+- schema-valid JSON, HTML, PDF, and BCF output;
+- BCF selected GUIDs against the source IFC.
+
+## Tests
+
+```bash
+python -m compileall api ingest services domain validation reporting manual_inputs standards
+pytest -q -W error::pytest.PytestUnraisableExceptionWarning
+```
+
+The final release must have zero failures, errors, skips caused by missing core
+functionality, and zero IfcOpenShell unraisable warnings.
+
+## Release documentation
+
+- `ARCHITECTURE.md` — final module boundaries and runtime contracts
+- `PROJECT_CHANGES_PHASE0_TO_PHASE9.md` — complete remediation history
+- `CHANGELOG_PHASE9.md` — final cleanup and release changes
+- `docs/MIGRATION_PHASE9.md` — removed APIs and migration examples
+- `docs/PHASE9_IMPLEMENTATION.md` — implementation details
+- `docs/PHASE9_ACCEPTANCE.md` — final evidence and release gates
+- `docs/BCF_INTEROPERABILITY_TEST.md` — BCF verification and GUI-viewer limitation
+
+## Scope and known limitation
+
+The automatic checks cover the deterministic rule types implemented by the
+engine. Many regulations remain interpretive or unsupported and therefore
+correctly produce `NEEDS_REVIEW`; missing trustworthy model data produces
+`NOT_EVALUATED`. The engine does not claim full automation of the complete
+Mabhas corpus.
+
+The BCF archive is structurally and schema validated and its IFC selections are
+cross-checked against the source model. A desktop GUI-viewer verification still
+requires a supported viewer installed by the project team, as documented in
+`docs/BCF_INTEROPERABILITY_TEST.md`.

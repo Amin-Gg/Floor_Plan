@@ -1,0 +1,21 @@
+{
+  "compliance_finding_count": 341,
+  "compliance_rows_identical": true,
+  "phase2_compliance_summary": {
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8,
+    "PASS": 15
+  },
+  "phase2_quality_status": "passed_with_alerts",
+  "phase3_compliance_summary": {
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8,
+    "PASS": 15
+  },
+  "phase3_quality_status": "passed_with_alerts",
+  "quality_finding_count_phase2": 1,
+  "quality_finding_count_phase3": 1,
+  "quality_rows_identical": true
+}

@@ -1,0 +1,1454 @@
+{
+  "bcf_version": "2.1",
+  "camera_topics": 18,
+  "component_selection_topics": 18,
+  "path": "acceptance/compliance_issues.bcf",
+  "skipped": [
+    {
+      "finding_id": "9ddbfb89-d4ce-56bb-ac4d-1969b1793dbb",
+      "reason": "element has no trustworthy IFC GlobalId; BCF component selection unavailable"
+    },
+    {
+      "finding_id": "599b0b38-dce2-5355-9ad7-9ee8e5730be5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "61232bbe-064e-5c44-85f6-5907af1f6eb8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3bcabb7e-3e92-5612-9d40-10abc248b6bd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "79edda90-25ae-5437-957c-e23685780ad3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bc753242-e810-5158-8acd-e7914c8901ce",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "31c2d0a1-5de8-56b1-aec2-720744bf4786",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7db50ee4-7d5d-577e-9b09-9502355d18b0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "09a08433-2c90-5641-81d4-e40030f190aa",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7845ec79-9161-594c-9d56-020b7b4206cc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cd488cc9-323d-52ba-899f-e261b54c73ed",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d573058a-e043-5067-85c8-ca5338b3a742",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "30c656d7-2779-531b-85a5-e7b9ae2c09af",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5033d258-7cc8-561e-8060-90a764bb3f34",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4c9bedee-962f-5eac-95a9-990f5f2e93ea",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8c30fb39-5629-52de-b54a-5f44cd7cb241",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "95a78402-e5d3-5ea7-ac5c-6d9e36855364",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f3349c2c-ba4c-52ff-a916-5f28fe7e025a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "481c9805-0afb-516b-a885-5775585e9a40",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d9152d0e-7ec1-58b3-a5fa-915c2c7550d6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ae3b7818-8b0e-5803-95af-b18a1fab8afe",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ffdf6ee0-5234-5334-bf0f-83f126d2b47d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "375076e9-12a8-5bf9-a20f-dbb046af98b4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "52abe8c1-002b-50c0-a3ec-28a59d8d6b2d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e9dc9251-40c2-5207-9fab-13301ecd968f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a91ca3b7-4c2d-5990-af6c-2071775d715c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "221523cc-fc9a-5b30-a4a4-4e616dcbba9d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "969acc16-9605-5bc9-aa82-e26b622df863",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c1460127-368b-5466-8656-b2450c4e1144",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f87e4553-2d6a-5581-85d1-5c39f50e3cfa",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7d8b9fc3-16dd-5e77-b31e-cc574bcbb1db",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8584e2c1-22c2-5b87-9b36-485216ee3eb3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "025fb22f-ebec-5032-b89d-b42786d35f27",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ef29f3c1-5856-5995-8c12-47bf5a182028",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1f6cf6ee-deaa-5b54-a9a1-a4b57121d3fc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "23fcd4bb-1fbd-5cc7-aba0-fb6c72b751b4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d34b3d1f-76bb-52f3-9bdb-2e2d2d718781",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3c56d40c-964a-5e22-bcc8-7c6c3353bcbd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "87ea534b-9fc0-5992-8fc8-23c34c7f1f2e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a1199ccc-1afb-5341-9801-bf71cbd38ee5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cb910be0-8680-5554-a10e-2f6b7a698a76",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "69906ef6-be8b-55b6-9654-7db7e46ab35a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3be23e44-62e0-53a9-b368-6f74576f2b36",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "876db226-f494-57d0-bd2a-ec396cfe676b",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d1f6328f-3708-5b24-82d0-232c258a74dd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e80973eb-4816-57f0-8864-261326277c8a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0abb65f1-e827-5635-acb5-14cabc92e208",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "816e2bfa-2e81-5089-8e3c-eecfe8541274",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bd5a2185-a579-5515-8bc9-639835b68b8a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "028da854-2a6a-52c9-9dbd-f79f4dfde3e7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "053da96f-d040-59c2-a6a1-4267a119bfe8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e999de11-ce9c-5519-8757-532b2cdf0494",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "91c34045-93a6-54da-8b7b-79c6b836932d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d11591e0-68bf-5b31-b91a-ea5fc81c7d56",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a0dd68ae-392d-5fbd-8b4c-fa8ef67ddd25",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6f013bc5-c73e-526b-b355-ba2f21619aab",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "834a9d55-2e1b-5997-a281-143ff440d512",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ba5b9526-f2d4-5330-90b7-cbb55e1639d8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1cae5333-6cbf-511d-837e-9efd678516d6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0400fc4a-c59a-5732-a03b-c8ca13459bc7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cb531ce4-b2aa-5dea-ae93-85a6e09335b7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5e0066be-af95-5265-9400-85d9135be8d3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7312dd2c-05fe-561d-84c6-ac1f14dd9be9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6885ca92-686d-50d6-846c-4d81d45ab4a7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e6020b2a-6ad1-51b9-b2ca-d4a14ef5b9f9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1c480430-7184-595c-bdaf-6a2f6dc43dba",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "710592cd-f101-5aba-ac66-976ec63bc8fd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5c1b9dc3-5606-5a35-8bd4-3ff72ac0fd2a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0d18e30b-3e11-5642-abd1-ef636f8ee862",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "96aa9854-28c1-5e98-b80f-02f9dfd57ea0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2c738b28-947f-5598-9bab-08d1b5115726",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a948ab91-0855-56fe-9bde-620033bfdff0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d3f9ac68-4ea2-5477-9444-1b313d088884",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7502cfcb-7015-5966-8c8a-816e41259df4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "312597ec-f1da-5ce2-be8a-a35d2f576aea",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0d3f511a-b98a-5797-80ec-1856d6885b6c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d5341c31-1fd1-589a-ac78-54b1d7abefe8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9d6032f4-d127-5d4e-8283-c974d013dd7e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "de52ef06-6371-5782-9c43-133b50d5c942",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2f325b9f-4f99-574e-a696-a4f6fa0262da",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8c82d703-b70d-5c29-b272-1676e21be377",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f4381aa4-6a58-5861-a519-58d579a54ce5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f1915fea-6172-5056-8091-610779ed217c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c08278fe-454f-5c55-82f8-8cda4290b83c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8910ab5b-7e86-5213-a606-94c3d7bd81c2",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "926d5f73-34e1-5bc2-a330-acee11d7dd0e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "aa66f49c-9fcd-5d6c-a67d-e9d4e97d8600",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3337d314-a92d-5901-847d-3362b6489da2",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b090386d-eb88-52ef-b375-bd0632cf4642",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4a91e131-a306-5c9f-a36a-46158d3577a9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "80ff7698-6245-5e23-a7c1-fed5e6464d76",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e9032a85-11d8-50ec-bbe8-64e4e94e2930",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f894be4b-bf28-5370-aa06-345d1aa7a73a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1dbc5af5-54e9-56bd-a488-f976d738cd62",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "34476e51-887e-5114-a1ef-1b31d29fc547",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "01a5340f-983a-50e4-a579-091070eae5cf",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d16c4f75-be64-5235-b3c1-cdd468c05906",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8b994edd-fd96-59c6-83b8-620dbb099a78",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0530bb46-742c-5664-802e-ab01ecee1a45",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3a82de0a-d139-58f2-be07-c5685c815ee4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cce0c28e-8e8b-5c60-a9b7-7c85bcf257a3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "639c1559-6572-5e01-bd7e-284a02fd9614",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "30059779-8eb9-5280-872e-ac2eaabcc421",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a65bcfd6-28e3-5cbd-ac4c-ebd2798d822f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "498f2a08-81f5-5fa5-9720-f961343a94b8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1aea1dc6-22f7-5166-acd0-10de7fec52b5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "618fac55-5be9-580e-9a39-7fcbd84ac0ac",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "77aeb0bb-79be-5de2-8eaa-5cc276a06c6a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0e2ea699-7443-5f36-aa8f-e36135bb04cb",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6c7fc6d9-f51d-5057-8471-1ed762eca6be",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d4e368f8-47d1-5978-bd68-7461bd20b98b",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "565d4c4d-a4b3-5dd0-aba2-9251d8d16e59",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d78304a0-4df5-5b2c-ba50-0611ea88436c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "320496aa-eb3f-549c-8979-8e28b82e434e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3c59dc67-1639-59bf-bca6-f306baa76ab3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2bab358a-243f-56c7-b193-d3d626149d03",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "439c75e1-9c00-5e8b-9070-fc31f3d0f9e5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "762858fb-1a4d-51d4-9110-d5e0edc8772d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3c8c7d89-1cd1-5ba3-8bb3-091b21d17eee",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "78c86e0c-a8ad-5f89-9e7c-8da714d80074",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cbc87441-0d68-5ec3-9369-387e950a1637",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2e3dbd8e-cb0a-5c14-9290-19832d8d758d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c72bd187-27a5-582b-8343-1410bc17cbdd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c34e449d-6722-5ce2-8a8e-c4c8d03a8230",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "72650e62-aacb-5206-a135-72cefe7610a6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "783437de-5fa0-5bdd-b34c-ece0ff58d7d0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4849b03e-dfed-556f-b129-03468ad72b51",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4876ea85-2bd8-5bea-af65-b4dddfae7ff2",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6e95d698-bf8d-5e88-92fd-9719c1b5cd11",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a406fb2e-f6cc-5af9-bb3b-c4e60f317154",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9a6df407-b14a-53fd-9133-20d0128080d1",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "aa070c40-896e-5477-877c-49854ee0d5ff",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2e4c1b69-a85a-563a-879a-50e7328872a6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9c9d0614-c854-5c96-89c7-0b70a864a632",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "fb033745-5d1c-5c0d-bcaa-71f1249a959c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4f4ed2f8-518c-546e-9bd9-b80173307e0e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8f2130f3-69bc-5e56-9220-b2d59746169d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b2ac6482-16d1-5195-bfb9-b6f23bd9c515",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cfd7e3bd-4e4b-54a2-8d4d-4764b82133e0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "25c44443-28c6-57e9-81be-0d9ad79b89f0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a79657a8-61f9-5063-baa1-1dab13fc1e6c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "fe0db40a-a555-5a75-92a2-a8a87583c745",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "67fd1ec1-91b1-5dce-af71-bb1764b2d377",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "987dbf5d-2eaa-56e7-b92e-846314be9934",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "71a68725-3d7c-5940-9f56-09767ddd124f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ad3f776c-f2d9-5419-9d30-c9708ff0ac78",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d13c041b-7d0b-5ed1-90ec-ad5ba509b823",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2f76559a-d68e-53e3-a752-1fc155e5eef1",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9fefc270-9d97-5416-b3b6-f19195a384b8",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "088cc940-3376-5f92-a49d-27c32fe3604f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a977d154-70b9-5694-a727-9966a52f6612",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6938190c-4c59-5eac-bf9d-7ab91858be56",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "841ae196-25a0-5577-984c-b658a9e84a67",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "85878bad-e308-5bb8-8c3b-86fdd88c191e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7024b7e5-d78f-5c72-80ba-b2f7bf61dff3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d5118616-ebbf-5cf0-bb23-67a8b898246d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b4ab913f-f07b-5e23-baa5-1f59643c5640",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a3ca8cde-747e-563d-a9db-c3de67986b3a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "576e4ad9-6748-5341-a28b-9a25cc3eacaa",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d915c5a5-2873-5cf7-bf6a-cbb1c31e133f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "75f22a87-cdd1-511d-9e75-329374878d7c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e11272b5-9014-58b6-aa3e-ee95d5318a4c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "74d09fe9-1d46-5436-b0ba-e0d44e102694",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b16a1711-d5ab-5527-9c2c-eb49c467e263",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d8ea907a-1171-5ce8-9fac-d5a0c00d9f76",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "31384d5a-475f-5e44-852d-0513b6918b40",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ba8743e1-f2a7-58eb-a8a0-535373b6f4e9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5ab36974-ea17-5864-9bbd-e31feacb3681",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d2584c0b-4123-5c7d-9e8f-2a0e5b274622",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "09ce2a7a-445b-5945-b449-3c374d65d5a5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bbdcc8f2-c931-5478-b69c-0d64304ddd63",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "126a78d4-c291-5eb7-b333-f850be845704",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4d281a51-5ec6-50b7-8bd6-1fbd5a936a37",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "71f4f7b5-930d-5ba7-94e5-b07e3ebc714b",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a94c2497-808f-5495-b7e4-1595502d7534",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6ae2f75d-f485-5ef5-8116-43a26f1256cd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "6fd7945d-636e-5dd8-bdf8-9f0cead5ed59",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a0713fce-d563-5c58-bf93-51878f58c086",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "aca1be5e-09c9-5398-9546-d80a856093f1",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "27064fbc-7043-5832-b1e7-b7c63124960a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3ca5e218-7b92-5d92-9b76-2130947a2bff",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "88377273-272f-5142-9d01-c177bd2015d7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "738ccbb0-4e11-5622-8239-f448630d3522",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a004727c-2e4b-5cb5-9eaa-7ae82d930851",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a05a0454-38d2-5bdc-988c-f56692b517e5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b4a12b19-5fd7-565a-abde-9e63e645100c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7e31922c-9104-54e2-b155-19dbe2ec690a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "12c6b8a9-d6eb-59d2-b856-bfc1bc86f9d9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b2f778f0-f87a-58da-826c-773149bd3ced",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "38b28ecc-651a-5caf-af22-744435e1b087",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9edc848f-16e5-5aa8-afb0-963f896828c5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "fbc10daf-b5e5-5e8b-bc5f-82568faba28e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "127c8bba-2045-5a54-afea-6e88f8fdfb5f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e65030ee-fdf6-5254-bdfb-a1c95c9c2374",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ce05d8ce-d612-5965-92cb-30708703b268",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "fb9ced36-eb9f-5b13-be3d-076c8e71a404",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d923cd30-1c7d-5397-aae9-c80c8287abf3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e16d8b94-8250-57a6-9e37-c0af5f64d623",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "79c7c439-ad8a-5af9-974e-3680c069ca94",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e8cdba90-ea68-561e-8dd9-bdb1fd078644",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1f80f605-fd0e-5b87-8c4b-db5b88fec3a6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "923809ea-9085-5754-a15d-4baf2f4d43a6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4b55c059-e698-51d4-8f65-494a7e719eac",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bf61d913-0d30-5387-82c9-39afb275635c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "76ba4b47-7cb3-57e8-8cc5-1494e79172d4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b09a1a95-92a6-5a73-8c5c-ba3e14060231",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0c239795-d70a-54ea-8fe8-6da535ecee81",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "85567a97-6e78-59a4-acc1-12057fc0855a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "169fec76-5e04-5fcd-be8a-dff3afed6d92",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c01054b3-9258-53d5-bbb2-f0080fdb634b",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7ecd4791-44e0-5084-8949-2ddc02c664c7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b960a35a-0f61-5eb0-ad3c-3a93ebf547f7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "9ba42ecb-595d-5ea0-acf3-6f7f61c7f20c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "22dca809-f398-51f3-a37a-d58ed089ca23",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "006876a4-217a-5231-8ae0-46f70763818a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "71b50709-ec37-5320-aed6-26b6283be290",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8ad97975-0038-52c4-872f-0bcf7a6c9b0a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "27134b7d-bf3a-5ede-82f5-3120d2f8f4f7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2848ddb0-53f2-5785-a2a0-9cced3943bd4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "04128061-e442-504f-bccf-1d1506ae07bb",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "34f2e8c9-9297-55d2-88dd-f530ef83e9db",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "94c31811-72ab-51f7-9715-0994197cf559",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0c61e517-581a-577d-9b6d-b5f8986dc114",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b02997f9-edc4-5ed8-b624-205a352ff2a0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "90115183-f821-53c2-8b44-8a03725fc5b9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e2647dd5-74e3-58fc-afa1-7b8527e1ef7d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "34ccd197-aaa6-5b15-9b13-97a61d14cecc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "638d971d-bd6c-5ddf-87d7-f6969c36c7b5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "414ac4e4-6b71-5923-a4c1-549dca076c04",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0be9f910-2211-5b73-acaa-638cd66d7bcd",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "15c69235-0c07-5dc7-804c-9210aee811bf",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "af37c516-4fde-5215-b53d-8c4459cee53b",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3e4d50f1-bba8-53ca-8c65-41d1c845521d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8ea0548b-d7cd-5376-9d25-b1bbebc76cc7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "950d43e7-b841-5427-8ee0-b7711335b693",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c647e045-26b9-50c1-953c-e585a651b473",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cde93e8e-bb4f-5525-bf5b-26a0ef280482",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a4217b18-66c1-5011-83d0-449139ac7e52",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4dfcb741-f970-589a-9a69-d6f779d41625",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "937dc088-7889-531b-bfdb-27bf5d33fc51",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b38513ef-7d86-5170-9842-61868ee50ce5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b449cecf-7f37-5256-ae22-2bdc830b2993",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "91b90229-54df-5d48-925d-bff57da09475",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a75db891-97b7-588a-b2ee-3f704e484693",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4cede393-f352-5204-a935-048673f67869",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "385257d6-1c8a-56ed-8b68-7ab3b5bcaeb2",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bd57c0a8-7896-5c16-988b-470872a454f9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f4947c5f-a182-53df-8bf6-ff40d2d88003",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b0feb93e-6bd0-5a13-8038-903d07e51710",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ec035d56-e001-58bd-b0dc-5a2f4b1fa1ed",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "fb221b2e-f04c-5cb6-86c9-7833eb210cc6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1f173ec5-9460-5541-8da4-1ad6dadca9e9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2f230023-0835-5605-9dd7-0bba9850bbc2",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a9ee84f7-cc9e-5d5b-8f1c-d8cf4fd25b86",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c8d745de-7088-5db7-8bae-a6e14f831ca4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "eae824af-a319-5936-a7a7-76e0a8eefba6",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4a23cdbb-e7cf-557c-b55d-fe31f597ec73",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "604c1022-d0d1-52cc-b762-2ee72174657f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5772b59b-ff6f-50da-81be-7c114cba0d50",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "c35d7e10-1d49-558b-892c-8be6700291dc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4b1acad7-3d98-58a6-a0b0-f96672ba8342",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "eefd1c64-341c-52f9-86b5-87b056d002d0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d69f162e-fc09-5b6a-9c5a-ab0d080ab58e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "84eafed8-bec2-5561-a083-8f258498f1c7",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cfc5b5bd-653e-5194-b1c5-d239de289981",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "35644401-93c6-538f-98cc-ff88b3eb30f5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "8f220be3-a7b8-5c14-9eac-2e5234756196",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "18227c04-870e-55b1-a152-f6efa79b98ce",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3253862c-3554-54f0-b602-71196d616d5a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4cdfbf37-13bb-50b2-8610-519e7995e9a5",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "bab4fc6a-cc9f-56f0-898f-236322d2c3e9",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "91f46cf6-6d8c-5bd8-8475-d0e0f709d0ab",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "00371f21-adc6-58ff-b240-8a3adbe07ffb",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "d5cd5655-a562-53ae-a899-37febe92520c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "96289cda-6eab-5653-a51d-2732c5bc39e3",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1a4d39a0-a87b-5277-ba93-00963270954d",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "89cf8d60-df24-5986-a177-d322a2913e66",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "491aea37-3031-557b-a46d-2a6d761da8ae",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "aa7debb7-eca2-5184-a0d1-dd808f863783",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2415abbb-f0af-58dc-aef0-202804bcda8a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "41e387ae-0646-567d-8f69-fe78f381fe18",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "5b660539-d80e-58de-8053-5150b27146ea",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "67dccab1-b576-5d5f-9d06-863f35f3cb35",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "de0865c4-4ea8-5749-b622-f4e2f8070712",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "3b1cd437-b249-50d2-b1d0-ee75ec608dda",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "827d9d3f-1c7c-5ceb-9676-719f23427072",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b20c1257-6d71-525b-8229-0da47d6e9788",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1dcaabb5-d376-5c7f-849e-3e1c2af681fa",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a7c25a9f-1b18-589c-b99a-f4e8e7954dd4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "72e91b88-614d-54d3-82e2-1bafeddd00bc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "35a259b0-61d1-5e39-a558-7670fda07628",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4c17976c-f78e-5592-9cf2-419fad0ecc7f",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "7cf916db-9923-5e57-8382-9b60adfef70e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "74a038be-738a-5322-a81b-93873f740893",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ef013265-d09e-55e3-b788-531f3ab91e13",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "22d81769-24ec-5914-80d9-991ab1bf475a",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "2602943f-7d34-5614-96eb-2826aeef3a17",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "ec8363c0-b771-52d4-9fe4-41f727e73bdc",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "f9fb4a93-96fd-5d5f-b077-39bab523a42c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "24c794af-9046-5e6c-8907-9f6cfaf326ef",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e5616238-197f-5bd5-946c-76308cc2e402",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "cf13e9ed-616c-520b-b1c1-faad9570750e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "64568130-5583-5121-b918-0ea9db6e541c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "e57f9134-a945-5d56-9c33-92c63eadd1ca",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "4ddb4c7e-4be3-587f-9643-0e4b7706924e",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "0b9349fc-e3d9-5d39-acbc-10cf1fea71ed",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "a84b7757-5357-56c4-a5a0-b02c66176184",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "135eaad3-dfc9-5dc6-9750-031a2e0f587c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b874f19a-53f9-5b90-8e7a-a5be5cf49a46",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "1efa3da0-3624-5c47-91c8-050fbc0ee315",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "099ee5c6-7fc1-5230-a5bf-ff4e6a76706c",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "61bedf0d-1d23-5cd0-9039-915773c52482",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "b3245614-c8ad-5e17-a1de-474b89cf7eb0",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "46212abe-25c3-5def-b647-00bb173fb7d4",
+      "reason": "global or unanchored finding"
+    },
+    {
+      "finding_id": "83eea64c-8709-502b-bd3c-a45eb6ab0ff6",
+      "reason": "global or unanchored finding"
+    }
+  ],
+  "skipped_total": 315,
+  "snapshot_topics": 18,
+  "topics": [
+    {
+      "element_ifc_guid": "37APn8YdAM5Hib8Eu7wjJn",
+      "element_internal_id": "22c6d2e8-4095-5db7-8294-4363320f2409",
+      "finding_id": "8bee8430-e6e5-5cc2-8d9c-82e6d445f008",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "fb963b50-2ced-59f8-ab85-6690aa32a627",
+      "viewpoint_guid": "fe56d236-99f1-5bd4-b804-c295d29dd149"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "ce5b5f1d-e54e-5f9d-bf62-fd2cab8331dd",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "79a6dc2e-91c6-5b10-9f35-10cc78453d7a",
+      "viewpoint_guid": "e5c92ae3-a785-5d36-abb5-1e9d65ba1e1f"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "ee54fa3c-911d-5ec5-8ad6-53e883b7bdc3",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "59ad0c1b-9b88-5631-b1cf-eff6b3bcdd81",
+      "viewpoint_guid": "8abeafdf-dbd2-56e5-b0de-f7bb4ac2248d"
+    },
+    {
+      "element_ifc_guid": "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "element_internal_id": "89e92dca-18da-5c77-8808-785ee86d6417",
+      "finding_id": "82514c21-c9fd-53d0-94bd-5d5213a4f115",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "65ad1358-52f9-5d53-919a-1214e8034fee",
+      "viewpoint_guid": "ca003603-3572-52c7-9055-8830bb9c903f"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "d1ad86f2-f786-5877-9825-bce4607e6d25",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "ee654780-7a77-5f9a-8042-4b7301c7eb61",
+      "viewpoint_guid": "00516c67-f2dc-5161-ab29-9a4b23625528"
+    },
+    {
+      "element_ifc_guid": "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "element_internal_id": "89e92dca-18da-5c77-8808-785ee86d6417",
+      "finding_id": "aad85ec8-89ea-5631-9549-66545f6ee267",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "b1728601-45f0-5e8d-bfc9-b5af575c7075",
+      "viewpoint_guid": "4ef6f183-0cf2-5929-b392-f834f0561c5c"
+    },
+    {
+      "element_ifc_guid": "1JaBYJJAAqrjuxsk0cuM5Q",
+      "element_internal_id": "9ae684df-1ca3-5e38-a330-e3ae53b78766",
+      "finding_id": "bede1941-9633-5098-b1df-087ae08a3792",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "0228ea0f-a5fd-5847-bd63-d9d8f1e666a4",
+      "viewpoint_guid": "11e59e4e-ce66-5be2-80e1-ec93710c30b3"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "bc05e38c-47fd-5a41-bfb0-d92b66c83ea5",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "ae29f828-1dd1-50d8-aca9-122ea72947db",
+      "viewpoint_guid": "bbfa8d9d-d0af-55c8-ae4e-48e9d4c18cc0"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "efb67f26-68b9-5b29-af91-7913799e65f0",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "d0d2222d-0190-524e-a066-d2ad64f69b55",
+      "viewpoint_guid": "45498e96-a3db-5757-9acf-41c915f05aa0"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "257085a4-a0ba-585f-b9d7-1ae779aabf91",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "9f25afb0-1f63-50f4-8731-f6fb09b69c06",
+      "viewpoint_guid": "a2791833-65be-57ab-84a9-93f73c6e4801"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "b6386044-d004-5af9-96b1-49a857c9feae",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "e1f9e96c-01d5-516b-946c-15917932c3e4",
+      "viewpoint_guid": "401c7cc6-b8ad-501b-b48d-e65d7ebc8b68"
+    },
+    {
+      "element_ifc_guid": "3NO8F1w26Kn8t6T8TcHFzn",
+      "element_internal_id": "e1e637d5-3980-551c-ab5b-fa988f3db636",
+      "finding_id": "2675e671-c9c9-5068-a434-7c92e994bde9",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "2fb4fbd6-e321-53ae-882a-27325e43de09",
+      "viewpoint_guid": "073c5971-bd3d-5192-aa7a-4add60382edf"
+    },
+    {
+      "element_ifc_guid": "3AK_nOlURKyPwsFslYktuj",
+      "element_internal_id": "19005b5d-1801-5c55-b2b1-beb3a0b3587c",
+      "finding_id": "93a1c867-757e-5187-a78e-c8d76bbcd8d5",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "a6ff9b13-8202-5c72-8cae-e8487ee6a758",
+      "viewpoint_guid": "c71a2057-a444-5675-a47e-204f6a9dfd4d"
+    },
+    {
+      "element_ifc_guid": "1JaBYJJAAqrjuxsk0cuM5Q",
+      "element_internal_id": "9ae684df-1ca3-5e38-a330-e3ae53b78766",
+      "finding_id": "a45f140f-5619-5559-b42a-b2716b405fde",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "02a9b980-d8c0-561b-83df-4caa0c6ecbe2",
+      "viewpoint_guid": "3a0996b5-a8e8-5a59-afba-a1e4e0833a42"
+    },
+    {
+      "element_ifc_guid": "1JaBYJJAAqrjuxsk0cuM5Q",
+      "element_internal_id": "9ae684df-1ca3-5e38-a330-e3ae53b78766",
+      "finding_id": "6ed1aa17-6b84-58fc-b925-bf7be170b055",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "0cabaebc-f632-5006-bc64-19343b43bee6",
+      "viewpoint_guid": "29f81bd4-0e4d-56d5-bdcc-fb0b00bc4bfb"
+    },
+    {
+      "element_ifc_guid": "33_QXrxDDNpQ$WZlMZnM19",
+      "element_internal_id": "a65c6731-2f02-5d64-8dbe-2fb083e84484",
+      "finding_id": "e8d77625-57ef-5b52-ae2c-fe6ef6112c11",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "58acd719-3aaa-56d5-8936-39b427fa1ccc",
+      "viewpoint_guid": "091254d2-a1b3-5edb-b580-b6319b2f1f6c"
+    },
+    {
+      "element_ifc_guid": "1JaBYJJAAqrjuxsk0cuM5Q",
+      "element_internal_id": "9ae684df-1ca3-5e38-a330-e3ae53b78766",
+      "finding_id": "479e797e-7764-5969-9744-1fa1537b5d88",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "686ec6a4-08cf-5738-8108-bf1acf9a47a4",
+      "viewpoint_guid": "bdac2ef4-66e3-5543-99bb-91aabb0c2f11"
+    },
+    {
+      "element_ifc_guid": "37APn8YdAM5Hib8Eu7wjJn",
+      "element_internal_id": "22c6d2e8-4095-5db7-8294-4363320f2409",
+      "finding_id": "606d121e-8436-5e53-907a-3ae07061748c",
+      "has_camera": true,
+      "has_snapshot": true,
+      "reason": "IFC component selection",
+      "topic_guid": "f7cb65fd-5b5a-5232-a085-2c21b95449cb",
+      "viewpoint_guid": "322c9015-c7f0-5a2a-abee-5fcf73965dfb"
+    }
+  ],
+  "topics_total": 18,
+  "viewpoints_total": 18
+}

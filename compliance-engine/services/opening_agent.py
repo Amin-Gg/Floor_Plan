@@ -172,6 +172,7 @@ class OpeningAgent:
         # Recognised as glazing but not in a checkable numeric form.
         return self._review(clause,
             "Glazing rule not in a directly checkable ratio form — needs review",
+            unsupported=True,
             object=obj)
 
     def _check_glazing_ratio(self, clause, ent, comp, required) -> Finding:
@@ -181,9 +182,9 @@ class OpeningAgent:
             rooms_checked.extend(self.sg.get_rooms_by_category(cat))
 
         if not rooms_checked:
-            return self._review(clause,
-                "No habitable rooms in plan to check glazing ratio",
-                object=ent.get("object"))
+            return self._blocked(clause,
+                "No habitable rooms in plan to check glazing ratio — "
+                "not evaluated", object=ent.get("object"))
 
         worst = None  # track the worst (failing) room for the message
         all_pass = True
@@ -205,10 +206,10 @@ class OpeningAgent:
         if all_pass and unmeasured:
             # Every MEASURABLE room passes, but the claim "all habitable
             # rooms comply" cannot be made while some rooms are unmeasured.
-            return self._review(clause,
+            return self._blocked(clause,
                 f"Glazing ratio unmeasurable for {', '.join(unmeasured)} "
                 f"(floor area missing); all measurable rooms meet "
-                f"{comp} {required} — needs review",
+                f"{comp} {required} — not evaluated",
                 object=ent.get("object"))
 
         if all_pass:
@@ -262,10 +263,23 @@ class OpeningAgent:
 
     @staticmethod
     def _review(clause: Dict[str, Any], msg: str,
-                object: Optional[str] = None) -> Finding:
+                object: Optional[str] = None,
+                unsupported: bool = False) -> Finding:
         return Finding(
             article_id=clause.get("article_id", "?"),
             verdict=Verdict.NEEDS_REVIEW,
+            message=msg, object=object,
+            rule_text_en=clause.get("text_en"),
+            unsupported=unsupported)
+
+    @staticmethod
+    def _blocked(clause: Dict[str, Any], msg: str,
+                 object: Optional[str] = None) -> Finding:
+        """Stage 5: data-absence finding (rooms/areas missing from the model).
+        Verdict-level NOT_EVALUATED, never a judgment request."""
+        return Finding(
+            article_id=clause.get("article_id", "?"),
+            verdict=Verdict.NOT_EVALUATED,
             message=msg, object=object,
             rule_text_en=clause.get("text_en"))
 

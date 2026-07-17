@@ -16,10 +16,13 @@ CRITICAL issue (the export cannot be trusted) rather than raising.
 
 from __future__ import annotations
 
+import json
+import math
 from typing import Any
 
+from .ifc_io import open_ifc_safely
 from .report import (
-    ValidationReport, LAYER_IFC4, LAYER_COMPLETENESS,
+    ValidationReport, LAYER_IFC4, LAYER_COMPLETENESS, LAYER_GEOMETRY,
 )
 
 
@@ -28,7 +31,7 @@ def validate_ifc_file(ifc_path: str) -> ValidationReport:
     r = ValidationReport(stage="post_export")
 
     try:
-        import ifcopenshell
+        __import__("ifcopenshell")
     except Exception as exc:  # ImportError or a broken install
         r.critical("IFC4.ENV.NO_IFCOPENSHELL", LAYER_IFC4,
                    f"ifcopenshell is not importable, so the IFC output cannot be "
@@ -36,7 +39,7 @@ def validate_ifc_file(ifc_path: str) -> ValidationReport:
         return r
 
     try:
-        model = ifcopenshell.open(ifc_path)
+        model = open_ifc_safely(ifc_path)
     except Exception as exc:
         r.critical("IFC4.PARSE.FAILED", LAYER_IFC4,
                    f"The written file does not parse as IFC: {exc}")
@@ -255,9 +258,101 @@ _PROVENANCE_REQUIRED = ("OriginalId", "Source", "Confidence",
                         "NeedsReview", "ReviewReason")
 
 
+
+
+def _check_v12_trace_integrity(model, r: ValidationReport, *, ue,
+                               provenance_pset: str, manifest: dict[str, Any]) -> None:
+    """Compare Contract 1.2 provenance values to canonical IFC properties."""
+    expected_scale_hash = str(manifest.get("ScaleEvidenceSha256") or "")
+    expected_context = {
+        "schema_version": "1.0",
+        "model_version": str(manifest.get("ModelVersion") or ""),
+        "weight_version": str(manifest.get("WeightVersion") or ""),
+    }
+    producer_request = str(manifest.get("ProducerRequestId") or "")
+    if producer_request:
+        expected_context["request_id"] = producer_request
+
+    def canonical_fields(element, ifc_class: str) -> dict[str, float | None]:
+        if ifc_class == "IfcWall":
+            qtos = ue.get_psets(element, qtos_only=True)
+            base = qtos.get("Qto_WallBaseQuantities", {})
+            return {"thickness": base.get("Width"), "height": base.get("Height")}
+        if ifc_class == "IfcDoor":
+            return {"width": element.OverallWidth, "height": element.OverallHeight}
+        if ifc_class == "IfcWindow":
+            # Sill placement is validated by the geometry gate and again by the
+            # engine's canonical loader. Width/height are stable IFC attributes.
+            return {"width": element.OverallWidth, "height": element.OverallHeight}
+        return {}
+
+    for ifc_class in ("IfcWall", "IfcDoor", "IfcWindow"):
+        for element in model.by_type(ifc_class):
+            gid = getattr(element, "GlobalId", None)
+            prov = ue.get_psets(element).get(provenance_pset, {})
+            try:
+                context = json.loads(str(prov.get("ProvenanceContextJson") or ""))
+            except Exception:
+                context = None
+            context_errors = []
+            if not isinstance(context, dict):
+                context_errors.append("context is not a JSON object")
+            else:
+                for field, expected in expected_context.items():
+                    if str(context.get(field) or "") != expected:
+                        context_errors.append(f"{field} does not match project trace")
+            if context_errors:
+                r.critical(
+                    "CONTRACT.V12.TRACE_CONTEXT_INVALID", LAYER_COMPLETENESS,
+                    f"{ifc_class} trace context is invalid: {'; '.join(context_errors)}.",
+                    element=gid,
+                )
+
+            try:
+                measurements = json.loads(str(prov.get("MeasurementsJson") or ""))
+            except Exception:
+                measurements = None
+            if not isinstance(measurements, dict):
+                # The generic JSON-shape check already records the syntax error.
+                continue
+            for field, canonical in canonical_fields(element, ifc_class).items():
+                record = measurements.get(field)
+                if not isinstance(record, dict):
+                    r.critical(
+                        "CONTRACT.V12.MEASUREMENT_INVALID", LAYER_COMPLETENESS,
+                        f"{ifc_class} is missing a measurement record for {field}.",
+                        element=gid,
+                    )
+                    continue
+                try:
+                    recorded = float(record.get("value"))
+                    canonical_number = float(canonical)
+                    matches = (math.isfinite(recorded) and math.isfinite(canonical_number)
+                               and math.isclose(recorded, canonical_number, abs_tol=0.5))
+                except (TypeError, ValueError):
+                    recorded = record.get("value")
+                    matches = False
+                if not matches:
+                    r.critical(
+                        "CONTRACT.V12.MEASUREMENT_MISMATCH", LAYER_COMPLETENESS,
+                        f"{ifc_class} recorded {field}={recorded!r} does not match "
+                        f"canonical IFC value {canonical!r}.",
+                        element=gid,
+                    )
+                if str(record.get("scale_evidence_sha256") or "") != expected_scale_hash:
+                    r.critical(
+                        "CONTRACT.V12.MEASUREMENT_SCALE_HASH_MISMATCH",
+                        LAYER_COMPLETENESS,
+                        f"{ifc_class} measurement {field} references a different "
+                        "scale-evidence commitment.",
+                        element=gid,
+                    )
+
+
 def validate_ifc_contract(ifc_path: str,
                           provenance_pset: str = "Pset_SimsysProvenance",
-                          contract_pset: str = "Pset_SimsysContract"
+                          contract_pset: str = "Pset_SimsysContract",
+                          expected_manifest: dict[str, Any] | None = None
                           ) -> ValidationReport:
     """Acceptance gate for the IFC contract (§A7 + §4).
 
@@ -268,14 +363,13 @@ def validate_ifc_contract(ifc_path: str,
     r = ValidationReport(stage="contract")
 
     try:
-        import ifcopenshell
         import ifcopenshell.util.element as ue
     except Exception as exc:
         r.critical("CONTRACT.ENV.NO_IFCOPENSHELL", LAYER_IFC4,
                    f"ifcopenshell unavailable; cannot validate contract: {exc}")
         return r
     try:
-        model = ifcopenshell.open(ifc_path)
+        model = open_ifc_safely(ifc_path)
     except Exception as exc:
         r.critical("CONTRACT.PARSE.FAILED", LAYER_IFC4,
                    f"Written file does not parse as IFC: {exc}")
@@ -298,6 +392,129 @@ def validate_ifc_contract(ifc_path: str,
         r.critical("CONTRACT.VERSION.MISSING", LAYER_COMPLETENESS,
                    f"Project is missing {contract_pset}.ContractVersion; Step 2 "
                    f"cannot verify interface compatibility.")
+        cv = None
+    elif str(cv) not in {"1.0", "1.1", "1.2"}:
+        r.critical("CONTRACT.VERSION.UNSUPPORTED", LAYER_COMPLETENESS,
+                   f"Unsupported IFC interface ContractVersion={cv!r}; "
+                   f"supported versions are 1.0, 1.1 and 1.2.")
+
+    # Contract 1.1 adds a typed traceability/element-count manifest. Hashes are
+    # validated for shape here; the exporter additionally compares them to the
+    # in-memory source payload before publishing the file.
+    if str(cv or "") in {"1.1", "1.2"} and projects:
+        manifest = psets.get(contract_pset, {}) if isinstance(psets, dict) else {}
+        required_text = (
+            "ExporterVersion", "SourcePayloadSha256", "ManualInputManifestSha256",
+            "InsertionPointSemantics", "OrientationConvention", "LengthUnit",
+        )
+        required_counts = (
+            "ExpectedWallCount", "ExpectedDoorCount", "ExpectedWindowCount",
+            "ExpectedSpaceCount", "ExpectedStairCount", "ExpectedSlabCount",
+        )
+        for field in required_text:
+            value = manifest.get(field)
+            if value in (None, ""):
+                r.critical("CONTRACT.MANIFEST.MISSING", LAYER_COMPLETENESS,
+                           f"Contract {cv} manifest is missing {field}.")
+        for field in ("SourcePayloadSha256", "ManualInputManifestSha256"):
+            value = str(manifest.get(field) or "")
+            if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value.lower()):
+                r.critical("CONTRACT.MANIFEST.HASH_INVALID", LAYER_COMPLETENESS,
+                           f"Contract {cv} {field} is not a SHA-256 hex digest.")
+        if str(cv) == "1.2":
+            required_v12_text = (
+                "ManualInputsSchemaVersion", "ManualInputsSha256",
+                "ManualInputsResolvedSha256", "ScaleEvidenceSha256",
+                "ProvenanceSchemaVersion", "ModelVersion", "WeightVersion",
+                "ScaleSource", "ScaleMmPerPixel", "ScaleConfidence",
+            )
+            for field in required_v12_text:
+                if manifest.get(field) in (None, ""):
+                    r.critical(
+                        "CONTRACT.V12.MANIFEST.MISSING", LAYER_COMPLETENESS,
+                        f"Contract 1.2 manifest is missing {field}.",
+                    )
+            if str(manifest.get("ManualInputsSchemaVersion") or "") != "1.0":
+                r.critical(
+                    "CONTRACT.V12.MANUAL_SCHEMA_UNSUPPORTED", LAYER_COMPLETENESS,
+                    "Contract 1.2 requires ManualInputsSchemaVersion=1.0.",
+                )
+            if str(manifest.get("ProvenanceSchemaVersion") or "") != "1.0":
+                r.critical(
+                    "CONTRACT.V12.PROVENANCE_SCHEMA_UNSUPPORTED", LAYER_COMPLETENESS,
+                    "Contract 1.2 requires ProvenanceSchemaVersion=1.0.",
+                )
+            scale_sources = {
+                "user_dimension", "recognized_scale_bar",
+                "recognized_dimension_text", "document_metadata",
+                "default_unverified",
+            }
+            if str(manifest.get("ScaleSource") or "") not in scale_sources:
+                r.critical(
+                    "CONTRACT.V12.SCALE_SOURCE_UNSUPPORTED", LAYER_COMPLETENESS,
+                    "Contract 1.2 declares an unsupported ScaleSource.",
+                )
+            try:
+                mmpp = float(manifest.get("ScaleMmPerPixel"))
+                confidence = float(manifest.get("ScaleConfidence"))
+                valid_scale = 0 < mmpp <= 100 and 0 <= confidence <= 1
+            except (TypeError, ValueError):
+                valid_scale = False
+            if not valid_scale:
+                r.critical(
+                    "CONTRACT.V12.SCALE_INVALID", LAYER_COMPLETENESS,
+                    "Contract 1.2 scale value/confidence is invalid.",
+                )
+            for field in (
+                "ManualInputsSha256", "ManualInputsResolvedSha256",
+                "ScaleEvidenceSha256",
+            ):
+                value = str(manifest.get(field) or "")
+                if len(value) != 64 or any(
+                    ch not in "0123456789abcdef" for ch in value.lower()
+                ):
+                    r.critical(
+                        "CONTRACT.V12.HASH_INVALID", LAYER_COMPLETENESS,
+                        f"Contract 1.2 {field} is not a SHA-256 hex digest.",
+                    )
+        for field in required_counts:
+            value = manifest.get(field)
+            try:
+                number = float(value)
+                valid = number >= 0 and number.is_integer()
+            except (TypeError, ValueError):
+                valid = False
+            if not valid:
+                r.critical("CONTRACT.MANIFEST.COUNT_INVALID", LAYER_COMPLETENESS,
+                           f"Contract {cv} {field} must be a non-negative integer.")
+        if manifest.get("InsertionPointSemantics") != "CENTER_ON_HOST_CENTERLINE":
+            r.critical("CONTRACT.MANIFEST.INSERTION_SEMANTICS", LAYER_COMPLETENESS,
+                       "Contract 1.1/1.2 insertion semantics are unsupported.")
+        if manifest.get("OrientationConvention") != (
+            "LOCAL_X_WALL_DIRECTION_LOCAL_Y_THICKNESS_LOCAL_Z_UP"
+        ):
+            r.critical("CONTRACT.MANIFEST.ORIENTATION", LAYER_COMPLETENESS,
+                       "Contract 1.1/1.2 orientation convention is unsupported.")
+        if manifest.get("LengthUnit") != "MILLIMETRE":
+            r.critical("CONTRACT.MANIFEST.LENGTH_UNIT", LAYER_COMPLETENESS,
+                       "Contract 1.1/1.2 requires LengthUnit=MILLIMETRE.")
+        if expected_manifest:
+            for field, expected in expected_manifest.items():
+                actual = manifest.get(field)
+                if isinstance(expected, float):
+                    try:
+                        matches = abs(float(actual) - expected) <= 1e-9
+                    except (TypeError, ValueError):
+                        matches = False
+                else:
+                    matches = str(actual) == str(expected)
+                if not matches:
+                    r.critical(
+                        "CONTRACT.MANIFEST.SOURCE_MISMATCH",
+                        LAYER_COMPLETENESS,
+                        f"Contract manifest {field}={actual!r} does not match "
+                        f"the exporter source value {expected!r}.",
+                    )
 
     # 2. every element: GlobalId + provenance Pset with no null fields
     for ifc_class in _CONTRACT_ELEMENT_TYPES:
@@ -321,6 +538,55 @@ def validate_ifc_contract(ifc_path: str,
                     r.critical("CONTRACT.PROVENANCE.NULL", LAYER_COMPLETENESS,
                                f"{ifc_class} '{getattr(el, 'Name', None) or gid}' "
                                f"has null provenance field '{field}'.", element=gid)
+            if str(cv or "") == "1.2":
+                context_json = prov.get("ProvenanceContextJson")
+                if context_json in (None, ""):
+                    r.critical(
+                        "CONTRACT.V12.PROVENANCE_CONTEXT_MISSING",
+                        LAYER_COMPLETENESS,
+                        f"{ifc_class} '{getattr(el, 'Name', None) or gid}' "
+                        "has no ProvenanceContextJson.",
+                        element=gid,
+                    )
+                if ifc_class in {"IfcWall", "IfcWallStandardCase", "IfcDoor", "IfcWindow"}:
+                    measurements_json = prov.get("MeasurementsJson")
+                    if measurements_json in (None, ""):
+                        r.critical(
+                            "CONTRACT.V12.MEASUREMENTS_MISSING",
+                            LAYER_COMPLETENESS,
+                            f"{ifc_class} '{getattr(el, 'Name', None) or gid}' "
+                            "has no MeasurementsJson.",
+                            element=gid,
+                        )
+                for field, raw_json in (
+                    ("ProvenanceContextJson", context_json),
+                    ("MeasurementsJson", prov.get("MeasurementsJson")),
+                ):
+                    if raw_json in (None, ""):
+                        continue
+                    try:
+                        import json
+                        parsed = json.loads(str(raw_json))
+                        if not isinstance(parsed, dict):
+                            raise ValueError("must decode to an object")
+                    except Exception as exc:
+                        r.critical(
+                            "CONTRACT.V12.PROVENANCE_JSON_INVALID",
+                            LAYER_COMPLETENESS,
+                            f"{ifc_class} '{getattr(el, 'Name', None) or gid}' "
+                            f"has invalid {field}: {exc}.",
+                            element=gid,
+                        )
+
+    # Contract 1.2 semantic trace gate. JSON shape alone is insufficient: an
+    # external editor could preserve valid JSON while changing the recorded
+    # measurement or its scale commitment. This is intentionally independent
+    # from the exporter and runs on every declared Contract 1.2 IFC.
+    if str(cv or "") == "1.2" and projects:
+        _check_v12_trace_integrity(
+            model, r, ue=ue, provenance_pset=provenance_pset,
+            manifest=manifest,
+        )
 
     # 3. every door/window is actually voided into a host wall (the old C4 bug)
     for ifc_class in ("IfcDoor", "IfcWindow"):
@@ -348,6 +614,25 @@ def validate_ifc_contract(ifc_path: str,
             r.critical("CONTRACT.SPACE.NO_FOOTPRINT", LAYER_COMPLETENESS,
                        f"IfcSpace '{getattr(sp, 'Name', None) or gid}' has no "
                        f"footprint geometry.", element=gid)
+
+    # 5. Body-aware geometry + manifest reconciliation. Attribute/Qto values are
+    # not accepted as proof that the actual triangulated Body is trustworthy.
+    try:
+        from .ifc_geometry import inspect_ifc_geometry
+        geometry = inspect_ifc_geometry(model, contract_pset=contract_pset)
+        r.checked["geometry_issues"] = len(geometry["issues"])
+        for issue in geometry["issues"]:
+            recorder = r.critical if issue.get("severity") == "critical" else r.warn
+            recorder(
+                "CONTRACT." + issue["code"],
+                LAYER_GEOMETRY,
+                issue["message"],
+                element=issue.get("element"),
+            )
+    except Exception as exc:
+        r.critical("CONTRACT.GEOMETRY.GATE_FAILED", LAYER_GEOMETRY,
+                   f"Body-aware geometry gate failed internally: "
+                   f"{type(exc).__name__}: {exc}")
 
     # containment + GlobalId uniqueness (reuse — orphans/dupes are contract fails)
     _check_containment(model, r)

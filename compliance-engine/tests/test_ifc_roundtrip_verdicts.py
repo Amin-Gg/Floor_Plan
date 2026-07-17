@@ -2,10 +2,10 @@
 tests/test_ifc_roundtrip_verdicts.py
 ====================================
 IFC Interface Spec §B3 — the round-trip *contract guarantee*, now realizable
-because the engine (run_compliance) is here:
+because the private deterministic runner is here:
 
     bim_data ──Step1 export──► plan.ifc ──ifc_to_bim_data──► bim_data'
-    run_compliance(bim_data).summary  ==  run_compliance(bim_data').summary
+    _run_compliance_core(bim_data).summary  ==  _run_compliance_core(bim_data').summary
 
 "the IFC is a faithful contract." This is wired into the same suite as
 eval/test_verdict_regression.py and uses committed, self-contained fixtures:
@@ -41,7 +41,7 @@ for _p in (str(_ROOT), str(_SERVICES)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from orchestrator import run_compliance, ComplianceResult   # noqa: E402
+from validation.compliance.runner import _run_compliance_core, ComplianceResult   # noqa: E402
 from numeric_checker import Finding, Verdict                # noqa: E402
 from ingest.ifc_to_bim_data import ifc_to_bim_data          # noqa: E402
 from ingest.review_prepass import downgrade_flagged_findings  # noqa: E402
@@ -63,8 +63,8 @@ def roundtrip_bim():
 
 @pytest.fixture(scope="module")
 def runs(src_bim, roundtrip_bim):
-    a = run_compliance(src_bim, CLAUSES, use_langgraph=False)
-    b = run_compliance(roundtrip_bim, CLAUSES, use_langgraph=False)
+    a = _run_compliance_core(src_bim, CLAUSES, use_langgraph=False)
+    b = _run_compliance_core(roundtrip_bim, CLAUSES, use_langgraph=False)
     return a, b
 
 
@@ -104,9 +104,9 @@ def test_ingest_pipeline_matches_raw(src_bim):
     """run_ifc_compliance on the file yields the same deterministic summary as
     running the engine on the source dict (the fixture has no uncertain
     elements, so the B2 pre-pass downgrades nothing)."""
-    from ingest.ifc_pipeline import run_ifc_compliance
+    from tests.helpers import run_ifc_compliance
     result, bim_data = run_ifc_compliance(str(_FIX / "sample_plan.ifc"), CLAUSES)
-    raw = run_compliance(src_bim, CLAUSES, use_langgraph=False)
+    raw = _run_compliance_core(src_bim, CLAUSES, use_langgraph=False)
     assert result.summary == raw.summary
     assert bim_data["_review_summary"]["downgraded_count"] == 0
     assert bim_data["_categories_seen"] == {
@@ -115,7 +115,8 @@ def test_ingest_pipeline_matches_raw(src_bim):
 
 # ── §B2 honest-degradation post-pass ─────────────────────────────────────────
 def test_downgrade_flagged_findings_forces_review():
-    """A PASS/FAIL finding on a flagged element must become NEEDS_REVIEW."""
+    """A PASS/FAIL finding on a flagged element must become NOT_EVALUATED
+    (Stage 1: untrusted data = check impossible, not human-judgment)."""
     result = ComplianceResult(
         findings=[
             Finding(article_id="N1", verdict=Verdict.PASS,
@@ -135,8 +136,9 @@ def test_downgrade_flagged_findings_forces_review():
     downgrade_flagged_findings(result, bim_data)
 
     by_id = {f.element_id: f for f in result.findings}
-    assert by_id["Rx"].verdict == Verdict.NEEDS_REVIEW
+    assert by_id["Rx"].verdict == Verdict.NOT_EVALUATED
     assert "downgraded" in by_id["Rx"].message.lower()
     assert by_id["Ry"].verdict == Verdict.PASS           # untouched
-    assert result.summary == {"PASS": 1, "FAIL": 0, "NEEDS_REVIEW": 1}
+    assert result.summary == {"PASS": 1, "FAIL": 0, "NEEDS_REVIEW": 0,
+                              "NOT_EVALUATED": 1}
     assert bim_data["_review_summary"]["downgraded_count"] == 1

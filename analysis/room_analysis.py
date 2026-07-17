@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 #
 # If your output has too many vertices for Revit to handle gracefully, raise
 # this to 0.025 or 0.03. If room corners look "rounded off" or chamfered in
-# Revit, lower it to 0.015 (which matches slab_analysis.py).
+# Revit, lower it to 0.015 (used by the room-boundary simplifier).
 #
 # This is intentionally a module-level constant, not a config setting — it is
 # a geometry-math knob, not a runtime/deployment concern. Tune in code with a

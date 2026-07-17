@@ -1,0 +1,52 @@
+{
+  "schema_id": "simsys-ifc-contract-1.1",
+  "contract_version": "1.1",
+  "ifc_schema": "IFC4",
+  "project_pset": "Pset_SimsysContract",
+  "supported_previous_versions": [
+    "1.0"
+  ],
+  "units": {
+    "length": "MILLIMETRE",
+    "area": "SQUARE_METRE",
+    "geometry_kernel_output": "SI_METRE"
+  },
+  "hosted_opening_semantics": {
+    "insertion_point": "CENTER_ON_HOST_CENTERLINE",
+    "orientation": "LOCAL_X_WALL_DIRECTION_LOCAL_Y_THICKNESS_LOCAL_Z_UP",
+    "opening_clearance_each_side_mm": 10.0
+  },
+  "required_project_properties": {
+    "ContractVersion": "string",
+    "ExporterVersion": "string",
+    "ExpectedWallCount": "non_negative_integer",
+    "ExpectedDoorCount": "non_negative_integer",
+    "ExpectedWindowCount": "non_negative_integer",
+    "ExpectedSpaceCount": "non_negative_integer",
+    "ExpectedStairCount": "non_negative_integer",
+    "ExpectedSlabCount": "non_negative_integer",
+    "SourcePayloadSha256": "sha256_hex",
+    "ManualInputManifestSha256": "sha256_hex",
+    "InsertionPointSemantics": "enum",
+    "OrientationConvention": "enum",
+    "LengthUnit": "enum",
+    "OpeningClearanceMm": "positive_number"
+  },
+  "geometry_tolerances": {
+    "dimension_mm": 2.0,
+    "placement_mm": 5.0,
+    "orientation_degrees": 1.0,
+    "space_area_abs_m2": 0.1,
+    "space_area_relative": 0.02
+  },
+  "blocking_rules": [
+    "body_missing_or_untriangulable",
+    "body_zero_or_non_finite",
+    "body_attribute_or_qto_mismatch",
+    "opening_relationship_missing_or_invalid",
+    "opening_host_or_filling_mismatch",
+    "hosted_placement_or_orientation_mismatch",
+    "manifest_count_mismatch",
+    "unknown_contract_version"
+  ]
+}

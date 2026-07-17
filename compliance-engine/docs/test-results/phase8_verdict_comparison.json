@@ -1,0 +1,18 @@
+{
+  "phase7_count": 341,
+  "phase8_count": 341,
+  "findings_identical": true,
+  "summary_identical": true,
+  "phase7_summary": {
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8,
+    "PASS": 15
+  },
+  "phase8_summary": {
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8,
+    "PASS": 15
+  }
+}

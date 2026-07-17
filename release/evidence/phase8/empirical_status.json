@@ -1,0 +1,11 @@
+{
+  "completed": false,
+  "missing_artifacts": [
+    "weights/maskrcnn_15_epochs.h5",
+    "weights/yolo_best.pt"
+  ],
+  "real_dataset_manifest": null,
+  "reason": "Real model weights and an adjudicated holdout dataset were not available in the audit environment. Synthetic metrics validate evaluator behavior only.",
+  "release_gate": "blocked",
+  "status": "blocked_external_evidence"
+}

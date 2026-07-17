@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "default_storey_height_mm": 3200,
+    "finished_floor_level_mm": 0,
+    "floor_thickness_mm": 200
+  },
+  "defaults": {
+    "wall_height_mm": 3200,
+    "door_height_mm": 2100,
+    "window_width_mm": 1200,
+    "window_height_mm": 1500,
+    "window_sill_height_mm": 900
+  },
+  "element_overrides": {
+    "windows": {
+      "Wb": {
+        "width_mm": 1400,
+        "height_mm": 1500,
+        "sill_height_mm": 900
+      },
+      "W-ACCEPT-02": {
+        "width_mm": 900,
+        "height_mm": 1200,
+        "sill_height_mm": 1000
+      }
+    },
+    "doors": {
+      "Df": {
+        "height_mm": 2200
+      }
+    },
+    "walls": {}
+  },
+  "allow_unmatched_overrides": false
+}

@@ -18,7 +18,7 @@ YOLO contributes overlaps, so the default empty set is correct.
 """
 
 import logging
-from typing import Dict, List, FrozenSet
+from typing import Dict, FrozenSet, List
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +75,10 @@ def build_yolo_elements(
                 "confidence":       conf,
                 "source":           "yolo",
                 "mask_based":       False,
+                "geometry_source":  "bbox",
+                "geometry_quality": "approximate",
+                "needs_review":     True,
+                "review_reason":    "YOLO supplies a bounding box, not a segmentation mask",
             })
 
         elif bucket == "railings":
@@ -94,6 +98,10 @@ def build_yolo_elements(
                 "confidence":  conf,
                 "source":      "yolo",
                 "mask_based":  False,
+                "geometry_source": "bbox",
+                "geometry_quality": "approximate",
+                "needs_review": True,
+                "review_reason": "YOLO supplies a bounding box, not a segmentation mask",
             })
 
         elif bucket == "stairs":
@@ -109,6 +117,10 @@ def build_yolo_elements(
                 "confidence":       conf,
                 "source":           "yolo",
                 "mask_based":       False,
+                "geometry_source":  "bbox",
+                "geometry_quality": "approximate",
+                "needs_review":     True,
+                "review_reason":    "YOLO supplies a bounding box, not a segmentation mask",
             })
 
         elif bucket == "curtain_walls":
@@ -127,6 +139,10 @@ def build_yolo_elements(
                 "confidence":  conf,
                 "source":      "yolo",
                 "mask_based":  False,
+                "geometry_source": "bbox",
+                "geometry_quality": "approximate",
+                "needs_review": True,
+                "review_reason": "YOLO supplies a bounding box, not a segmentation mask",
             })
         else:
             logger.debug("YOLO detection with unknown bucket %r skipped", bucket)

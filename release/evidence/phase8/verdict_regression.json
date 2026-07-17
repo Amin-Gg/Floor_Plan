@@ -1,0 +1,61 @@
+{
+  "live_summary": {
+    "FAIL": 3,
+    "NEEDS_REVIEW": 1,
+    "NOT_EVALUATED": 0,
+    "PASS": 1
+  },
+  "live_verdicts": [
+    [
+      "PH2-N1",
+      "PASS"
+    ],
+    [
+      "PH2-O1",
+      "NEEDS_REVIEW"
+    ],
+    [
+      "PH2-S1",
+      "FAIL"
+    ],
+    [
+      "PH2-O1",
+      "FAIL"
+    ],
+    [
+      "natural_light_presence",
+      "FAIL"
+    ]
+  ],
+  "phase2_summary": {
+    "FAIL": 3,
+    "NEEDS_REVIEW": 1,
+    "NOT_EVALUATED": 0,
+    "PASS": 1
+  },
+  "phase2_verdicts": [
+    [
+      "PH2-N1",
+      "PASS"
+    ],
+    [
+      "PH2-O1",
+      "NEEDS_REVIEW"
+    ],
+    [
+      "PH2-S1",
+      "FAIL"
+    ],
+    [
+      "PH2-O1",
+      "FAIL"
+    ],
+    [
+      "natural_light_presence",
+      "FAIL"
+    ]
+  ],
+  "schema_version": "phase3-verdict-regression-v1",
+  "summaries_equal": true,
+  "verdict_sequence_equal": true
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simsys.local/contracts/phase8/ml_evaluation_predictions_v1.schema.json",
+  "title": "FloorPlan ML Predictions v1",
+  "type": "object",
+  "required": ["schema_version", "sample_id", "model", "instances"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "sample_id": {"type": "string", "minLength": 1},
+    "model": {"type": "object"},
+    "instances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "class_name", "confidence", "bbox_xyxy"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "class_name": {"type": "string", "minLength": 1},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "bbox_xyxy": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {"type": "number", "minimum": 0}
+          },
+          "mask": {"type": "object"},
+          "attributes": {"type": "object"}
+        }
+      }
+    },
+    "scale": {"type": "object"},
+    "verdicts": {"type": "object", "additionalProperties": {"enum": ["PASS", "FAIL", "NEEDS_REVIEW", "NOT_EVALUATED"]}}
+  }
+}

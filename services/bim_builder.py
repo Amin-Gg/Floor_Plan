@@ -165,7 +165,7 @@ class BimDataBuilder:
         rooms = list(room_polygons)
         category_summary = normalize_room_categories({"rooms": rooms})
 
-        doors = self._build_doors(detailed_doors)
+        doors = self._build_doors(detailed_doors, exterior_map)
         windows = self._build_windows(detailed_windows, exterior_map)
 
         # Issue 4 — scale source + confidence via a plausibility check.
@@ -174,6 +174,11 @@ class BimDataBuilder:
         return {
             # Issue 16 — versioned canonical-BIM contract (matches the engine).
             "schema_version":    "bim-canonical-v1",
+            "semantics_version": "1.1-phase4",
+            "detector_contract": {
+                "primary": "mask_rcnn_4class",
+                "primary_classes": ["wall", "window", "door"],
+            },
             "units":             {"length": "mm", "area": "m2"},
             "scale":             scale_block,
             # Manual 3D-modeling parameters (values in mm). These are ASSERTED
@@ -218,16 +223,24 @@ class BimDataBuilder:
         check (residential door widths 500–1500 mm, room areas 1.5–80 m²) lowers
         confidence when the resulting dimensions look implausible.
         """
+        # An evidence-assessed scale block is authoritative. Do not
+        # recompute or inflate its confidence from downstream geometric
+        # plausibility; that would turn a lack of source evidence into false
+        # certainty. Plausibility remains only a legacy fallback below.
+        if isinstance(scale, dict) and scale.get("schema_version") == "1.0" \
+                and scale.get("evidence_sha256") and scale.get("confidence") is not None:
+            return dict(scale)
+
         mmpp = None
-        source = "default"
+        source = "default_unverified"
         if isinstance(scale, dict):
             mmpp = scale.get("mm_per_pixel")
-            source = scale.get("source") or "user"
+            source = scale.get("source") or "default_unverified"
 
-        if mmpp is None or float(mmpp) == 1.0:
+        if mmpp is None or (float(mmpp) == 1.0 and source in {"default", "default_unverified"}):
             return {
                 "mm_per_pixel": (float(mmpp) if mmpp is not None else None),
-                "source": "default", "confidence": 0.3, "needs_review": True,
+                "source": "default_unverified", "confidence": 0.15, "needs_review": True,
                 "reasons": ["scale not calibrated (default 1 mm/pixel); dimensional "
                             "checks are unreliable until a real scale is provided"],
             }
@@ -263,10 +276,26 @@ class BimDataBuilder:
             thickness_avg = wall["thickness"]["average"]
             wid = wall["wall_id"]
             ext = exterior_map.get(wid)
+            centerline = [[float(pt[0]), float(pt[1]), 0.0] for pt in cl]
+            segments = [
+                {
+                    "id": f"{wid}__seg_{index}",
+                    "parent_wall_id": wid,
+                    "start_point": centerline[index - 1],
+                    "end_point": centerline[index],
+                }
+                for index in range(1, len(centerline))
+            ]
             entry = {
                 "id":          wid,
-                "start_point": [cl[0][0],  cl[0][1],  0.0],
-                "end_point":   [cl[-1][0], cl[-1][1], 0.0],
+                # Preserve the complete detected centreline and expose stable
+                # segment identities. IFC expansion uses the same parent/segment
+                # model, so host relationships survive polyline walls.
+                "centerline":  centerline,
+                "segment_ids": [segment["id"] for segment in segments],
+                "segments":    segments,
+                "start_point": centerline[0],
+                "end_point":   centerline[-1],
                 "thickness":   thickness_avg,
                 "height":      self.wall_height,
                 "type":        f"Basic Wall - {int(thickness_avg)}mm",
@@ -281,13 +310,17 @@ class BimDataBuilder:
             out.append(entry)
         return out
 
-    def _build_doors(self, doors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _build_doors(self, doors: List[Dict[str, Any]],
+                     exterior_map: Dict[Any, Dict[str, Any]]) -> List[Dict[str, Any]]:
         out = []
         for d in doors:
+            host_id = d.get("host_wall_id")
             host_conf = d.get("host_wall_confidence", 1.0)
+            ext = exterior_map.get(host_id)
+            orientation = d.get("orientation") or {}
             out.append({
                 "id":              f"Door_{d['door_id']}",
-                "host_wall_id":    d.get("host_wall_id"),
+                "host_wall_id":    host_id,
                 "host_wall_confidence":  host_conf,                  # Issue 6
                 "host_wall_distance_mm": d.get("host_wall_distance_mm"),
                 "candidate_host_walls":  d.get("candidate_host_walls", []),
@@ -295,12 +328,22 @@ class BimDataBuilder:
                                     d["location"]["center"]["y"], 0.0],
                 "width":           d["dimensions"]["width"],
                 "height":          self.door_height,
-                "swing_angle":     d.get("swing_angle", 0.0),
-                "hinge_side":      d["orientation"].get("hinge_side", "unknown"),
-                "type":            "Single-Flush",
-                "confidence":      round(host_conf, 2),
-                "needs_review":    bool(d.get("needs_review", False)),
-                "review_reason":   d.get("review_reason", ""),
+                "swing_angle":     d.get("swing_angle"),
+                "swing_direction": orientation.get("estimated_swing", "unknown"),
+                "swing_source":    orientation.get("analysis_method", "unknown"),
+                "hinge_side":      orientation.get("hinge_side", "unknown"),
+                "type":            "not_observable_from_plan",
+                "is_exterior":     bool(d.get("is_exterior", ext is not None)),
+                "externality_source": d.get(
+                    "externality_source", "host_wall_classification"
+                ),
+                "externality_confidence": float(d.get(
+                    "externality_confidence",
+                    ext.get("confidence", 1.0) if ext else 1.0,
+                )),
+                "confidence":      round(min(float(host_conf), float(orientation.get("confidence", 1.0))), 2),
+                "needs_review":    bool(d.get("needs_review", False) or orientation.get("needs_review", False)),
+                "review_reason":   d.get("review_reason", "") or orientation.get("review_reason", ""),
             })
         return out
 
@@ -333,10 +376,22 @@ class BimDataBuilder:
                 "insertion_point": [w["location"]["center"]["x"],
                                     w["location"]["center"]["y"], 0.0],
                 "width":           w["dimensions"]["width"],
-                "width_source":    "measured",     # plan-extracted; "user" after apply_window_overrides
+                "width_source":    w["dimensions"].get("width_source", "measured"),
                 "height":          self.window_height,
                 "sill_height":     self.window_sill,
                 "type":            w["window_type"].capitalize() + " Window",
+                "is_exterior":     bool(w.get("is_exterior", ext is not None)),
+                "externality_source": w.get(
+                    "externality_source", "host_wall_classification"
+                ),
+                "externality_confidence": float(w.get(
+                    "externality_confidence",
+                    ext.get("confidence", 1.0) if ext else 1.0,
+                )),
+                "glazing": {
+                    "status": "not_observable_from_plan",
+                    "source": "not_observable",
+                },
                 "confidence":      round(conf, 2),
                 "needs_review":    needs_review,
                 "review_reason":   "; ".join(r for r in reasons if r),

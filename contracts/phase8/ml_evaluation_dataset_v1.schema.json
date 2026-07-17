@@ -1,0 +1,122 @@
+{
+  "$id": "https://simsys.local/contracts/phase8/ml_evaluation_dataset_v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "classes": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "dataset_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "label_status": {
+      "enum": [
+        "human_verified",
+        "adjudicated",
+        "synthetic_contract_test"
+      ]
+    },
+    "samples": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "annotations_path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "annotations_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "height": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "image_path": {
+            "type": "string"
+          },
+          "image_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "label_status": {
+            "enum": [
+              "human_verified",
+              "adjudicated",
+              "synthetic_contract_test"
+            ]
+          },
+          "mm_per_pixel": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "prediction_sha256": {
+            "additionalProperties": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "predictions": {
+            "additionalProperties": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "sample_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "slices": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "width": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sample_id",
+          "width",
+          "height",
+          "annotations_path"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "split": {
+      "enum": [
+        "train",
+        "validation",
+        "test",
+        "holdout",
+        "synthetic"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "split",
+    "classes",
+    "samples"
+  ],
+  "title": "FloorPlan ML Evaluation Dataset v1",
+  "type": "object"
+}

@@ -15,13 +15,14 @@ Note: FLASK_ENV was deprecated in Flask 2.3 — we use APP_ENV instead.
 NOTE (Phase 1 — Mask R-CNN restore):
 The detector is Mask R-CNN again. NUM_CLASSES below is the MODEL class count
 (4 = background + wall + window + door) and MUST match the trained weights.
-It is intentionally NOT imported from config/classes.py — that file's 15-class
-list belongs to the (shelved) Mask2Former path and to the cold-code branches in
-the analysis layer; it must not drive the Mask R-CNN head.
+The numeric class contract is shared with ``config.runtime_classes``. Optional
+YOLO detections use their own named registry and do not alter this class count.
 """
 
 import os
 from typing import Dict, Any
+
+from config.runtime_classes import PRIMARY_NUM_CLASSES
 
 
 class Config:
@@ -33,9 +34,8 @@ class Config:
     WEIGHTS_FOLDER     = "./weights"          # resolved relative to project root
 
     # Model class count — MUST equal what the .h5 was trained with.
-    # 4 = background + wall + window + door. Do NOT import this from
-    # config/classes.py (that file describes the 15-class Mask2Former scheme).
-    NUM_CLASSES              = 4
+    # 4 = background + wall + window + door.
+    NUM_CLASSES              = PRIMARY_NUM_CLASSES
     GPU_COUNT                = 1
     IMAGES_PER_GPU           = 1
 
@@ -68,10 +68,13 @@ class Config:
     MIN_IMAGE_SIZE        = 100
     ALLOW_IMAGE_RESIZE    = True
     RESIZE_QUALITY        = "LANCZOS"
-    MAX_UPLOAD_MB         = 20      # reject uploads larger than this
+    MAX_UPLOAD_MB         = int(os.getenv("MAX_UPLOAD_MB", "20"))
+    MAX_IMAGE_PIXELS      = int(os.getenv("MAX_IMAGE_PIXELS", "40000000"))
+    MAX_IMAGE_DIMENSION   = int(os.getenv("MAX_IMAGE_DIMENSION", "12000"))
+    MAX_IMAGE_ASPECT_RATIO = float(os.getenv("MAX_IMAGE_ASPECT_RATIO", "50"))
 
     # ── Memory ────────────────────────────────────────────────────────────────
-    MAX_MEMORY_USAGE_MB   = 1024    # 1 GB soft limit — logged, not enforced
+    MAX_MEMORY_USAGE_MB   = int(os.getenv("MAX_MEMORY_USAGE_MB", "1024"))
     ENABLE_MEMORY_MONITORING = True
 
     # ── API server ────────────────────────────────────────────────────────────
@@ -131,16 +134,18 @@ class ProductionConfig(Config):
     CACHE_TIMEOUT  = 600
 
     @classmethod
-    def _get_cors(cls) -> str:
+    def _get_cors(cls) -> list[str]:
         origins = os.getenv("APP_CORS_ORIGINS", "")
-        if not origins:
+        values = [item.strip() for item in origins.split(",") if item.strip()]
+        if not values:
             raise RuntimeError(
                 "APP_CORS_ORIGINS must be set in production. "
                 "Example: export APP_CORS_ORIGINS='https://yourdomain.ir'\n"
-                "To temporarily bypass (not recommended): "
-                "export APP_CORS_ORIGINS='*'"
+                "Wildcard origins are not permitted in production."
             )
-        return origins
+        if "*" in values:
+            raise RuntimeError("Wildcard CORS is forbidden in production")
+        return values
 
 
 class TestingConfig(Config):
@@ -168,8 +173,12 @@ def get_config(environment: str = None) -> Config:
     """
     if environment is None:
         environment = os.getenv("APP_ENV") or os.getenv("FLASK_ENV", "development")
-    cfg = _CONFIG_MAP.get(environment.lower(), DevelopmentConfig)
-    return cfg
+    normalized = environment.lower()
+    if normalized not in _CONFIG_MAP:
+        raise RuntimeError(
+            f"Invalid APP_ENV={environment!r}; expected one of {sorted(_CONFIG_MAP)}"
+        )
+    return _CONFIG_MAP[normalized]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 2 interface — confidence/review pre-pass threshold (IFC Interface Spec §B2)

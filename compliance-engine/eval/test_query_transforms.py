@@ -90,19 +90,15 @@ def test_hyde_explicit_language_overrides_detection(mock_chat):
 def test_hyde_token_budget_and_model_constraints(mock_chat):
     """The transforms pass ONLY messages + their token budget: model and
     temperature come from the provider clients' own defaults. This pins the
-    constraint the old anthropic-based test asserted, at BOTH provider
-    change points: Groq's sanctioned qwen/qwen3-32b @ 0.3, and AgentRouter's
-    temperature 0.3 (its model is the AGENTROUTER_MODEL config)."""
+    constraint the old anthropic-based test asserted at the provider change
+    point: AgentRouter's temperature 0.3 (its model comes from the tier
+    policy / AGENTROUTER_MODEL config). Groq was removed 2026-07."""
     import inspect
-    from rag.groq_client import groq_chat
     mock_chat.return_value = PERSIAN_CLAUSE
     qt.hyde_transform(PERSIAN_Q)
     kwargs = mock_chat.call_args.kwargs
     assert kwargs["max_completion_tokens"] == qt.HYDE_MAX_TOKENS
     assert "model" not in kwargs and "temperature" not in kwargs
-    defaults = inspect.signature(groq_chat).parameters
-    assert defaults["model"].default == "qwen/qwen3-32b"
-    assert defaults["temperature"].default == 0.3
     from rag.agentrouter_client import agentrouter_chat
     ar_defaults = inspect.signature(agentrouter_chat).parameters
     assert ar_defaults["temperature"].default == 0.3

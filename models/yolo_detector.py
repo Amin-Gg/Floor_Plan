@@ -33,16 +33,16 @@ Design notes:
   (detect_supplementary returns []). The main pipeline keeps working.
 """
 
-import os
 import logging
+import os
 
 from config.constants import ROOT_DIR
 from config.yolo_classes import (
     YOLO_ENABLED,
+    YOLO_IMG_SIZE,
+    YOLO_MIN_CONFIDENCE,
     YOLO_WEIGHTS_FILE_NAME,
     YOLO_WEIGHTS_FOLDER,
-    YOLO_MIN_CONFIDENCE,
-    YOLO_IMG_SIZE,
     resolve_yolo_class,
 )
 
@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 _yolo_model = None
 _yolo_ready = False
+_yolo_last_error = None
 
 
 def _resolve_weights_path() -> str:
@@ -65,14 +66,17 @@ def initialize_yolo():
     ultralytics is missing, or the weights aren't present — the Mask R-CNN
     pipeline must never be blocked by the supplementary detector.
     """
-    global _yolo_model, _yolo_ready
+    global _yolo_model, _yolo_ready, _yolo_last_error
+    _yolo_last_error = None
 
     if not YOLO_ENABLED:
+        _yolo_last_error = "disabled"
         logger.info("YOLO supplementary detector disabled (YOLO_ENABLED=false).")
         return None
 
     weights_path = _resolve_weights_path()
     if not os.path.exists(weights_path):
+        _yolo_last_error = f"weights_missing:{weights_path}"
         logger.warning(
             "YOLO weights not found at %s — supplementary detection (columns/"
             "railings/stairs) will be skipped. Place the sanatladkat best.pt "
@@ -82,8 +86,9 @@ def initialize_yolo():
         return None
 
     try:
-        from ultralytics import YOLO   # lazy import (pulls torch)
+        from ultralytics import YOLO  # lazy import (pulls torch)
     except ImportError:
+        _yolo_last_error = "ultralytics_not_installed"
         logger.warning(
             "ultralytics not installed — supplementary YOLO detection skipped. "
             "Add `ultralytics` (and torch) to requirements to enable it."
@@ -101,6 +106,7 @@ def initialize_yolo():
         logger.error("Failed to load YOLO weights (%s): %s", weights_path, exc, exc_info=True)
         _yolo_model = None
         _yolo_ready = False
+        _yolo_last_error = f"initialization_failed:{exc}"
         return None
 
 
@@ -112,6 +118,17 @@ def is_yolo_initialized() -> bool:
     return _yolo_ready and _yolo_model is not None
 
 
+
+def get_yolo_status() -> dict:
+    """Return an auditable supplementary-detector runtime status."""
+    return {
+        "enabled": bool(YOLO_ENABLED),
+        "initialized": is_yolo_initialized(),
+        "last_error": _yolo_last_error,
+        "weights_path": _resolve_weights_path(),
+    }
+
+
 def detect_supplementary(image):
     """
     Run YOLO and return filtered box detections for the supplementary classes.
@@ -119,9 +136,11 @@ def detect_supplementary(image):
     `image` may be an HxWx3 numpy array (RGB or BGR) or a file path — ultralytics
     accepts both. Returns [] if YOLO isn't ready (never raises for that reason).
     """
+    global _yolo_last_error
     if not is_yolo_initialized():
         return []
 
+    _yolo_last_error = None
     try:
         results = _yolo_model.predict(
             source=image,
@@ -130,6 +149,7 @@ def detect_supplementary(image):
             verbose=False,
         )
     except Exception as exc:
+        _yolo_last_error = f"inference_failed:{exc}"
         logger.error("YOLO inference failed: %s", exc, exc_info=True)
         return []
 

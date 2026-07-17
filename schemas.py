@@ -25,8 +25,25 @@ Usage in a route
         ...
 """
 
-from typing import Optional
+from typing import Any, Literal, Optional
+from pydantic_core import core_schema
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+class APIFileStorage:
+    """Pydantic-compatible Werkzeug upload type for flask-openapi3/Pydantic 2.12+."""
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        def validate(value):
+            if value is None or not hasattr(value, "read") or not hasattr(value, "filename"):
+                raise ValueError("uploaded file is required")
+            return value
+        return core_schema.no_info_plain_validator_function(validate)
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema, handler):
+        return {"type": "string", "format": "binary"}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -117,36 +134,34 @@ class BuildingParams(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class AnalyzeFormRequest(BaseModel):
+    """Documented multipart fields for POST /analyze.
+
+    Runtime validation is performed by the same strict contract adapters used
+    by direct exporter calls; these fields keep OpenAPI aligned with that public
+    boundary.
     """
-    Form fields for POST /analyze (multipart/form-data).
-    The image file itself is handled by Flask's request.files — only the
-    scalar parameters are validated here.
-    """
+    image: APIFileStorage = Field(
+        description="Floor-plan image (PNG/JPEG/WebP/TIFF).",
+    )
     scale_factor_mm_per_pixel: float = Field(
         default=1.0, ge=0.01, le=100.0,
-        description="How many millimetres one pixel represents in the physical drawing. "
-                    "Calculated as: (known dimension in mm) / (dimension in pixels). "
-                    "Example: a wall known to be 5000 mm spanning 200 px → factor = 25.0",
-        examples=[1.0, 0.5, 25.0]
+        description="Legacy scalar fallback. Without scale_evidence it is classified as default_unverified.",
+        examples=[1.0, 0.5, 25.0],
     )
-    scale_source: Optional[str] = Field(
+    scale_evidence: Optional[dict] = Field(
         default=None,
-        description="Where the scale came from: 'user' (typed in), 'ocr' (parsed from "
-                    "the drawing's scale text / dimension lines), or 'calibration' "
-                    "(picked a known dimension on the plan). Recorded in the BIM/IFC "
-                    "so the compliance engine can weight dimensional checks; an "
-                    "uncalibrated default scale is flagged for review.",
-        examples=["user", "ocr", "calibration"]
+        description="Versioned Scale Evidence v1.0 payload; see contracts/scale_evidence_v1.json.",
     )
-    building_params: Optional[BuildingParams] = Field(
+    manual_inputs: Optional[dict] = Field(
         default=None,
-        description="Optional building height overrides. If omitted, defaults are used."
+        description="Strict Manual Inputs v1.0 payload; see contracts/manual_inputs_v1.json.",
     )
+
+    model_config = {"extra": "forbid", "arbitrary_types_allowed": True}
 
     @field_validator("scale_factor_mm_per_pixel", mode="before")
     @classmethod
     def coerce_scale_factor(cls, v):
-        """Accept string values from multipart form fields."""
         try:
             return float(v)
         except (TypeError, ValueError):
@@ -155,32 +170,15 @@ class AnalyzeFormRequest(BaseModel):
             )
 
 
-class ExportIFCRequest(BaseModel):
-    """Request body for POST /export/ifc."""
-    analysis_file: Optional[str] = Field(
-        default=None,
-        description="Filename returned by /analyze (e.g. 'final5.json'). "
-                    "Required when not uploading a bim_json file directly.",
-        examples=["final5.json", "analysis_20250508_142301.json"]
-    )
-    building_params: BuildingParams = Field(
-        default_factory=BuildingParams,
-        description="Building height and project metadata parameters."
-    )
+class IFCMetadata(BaseModel):
+    project_name: str = "Floor Plan Project"
+    project_address: str = ""
+    building_name: str = "Building"
+    storey_name: str = "Ground Floor"
+    storey_elevation: float = Field(default=0.0, ge=-5000, le=50000)
 
-    @field_validator("analysis_file", mode="before")
-    @classmethod
-    def sanitize_filename(cls, v):
-        """Prevent path traversal attacks."""
-        if v is None:
-            return v
-        v = str(v).strip()
-        if "/" in v or "\\" in v or ".." in v:
-            raise ValueError(
-                "analysis_file must be a filename only, not a path. "
-                f"Got: {v!r}"
-            )
-        return v
+    model_config = {"extra": "forbid"}
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,30 +186,117 @@ class ExportIFCRequest(BaseModel):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ErrorDetail(BaseModel):
+    code: str = Field(description="Stable machine-readable error code.")
     message: str = Field(description="Human-readable error description.")
-    code:    int  = Field(description="HTTP status code.")
-    type:    str  = Field(description="Error class name for programmatic handling.")
-    details: dict = Field(default_factory=dict, description="Additional context.")
+    status: int = Field(description="HTTP status code.")
+    type: str = Field(description="Exception category.")
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class ErrorResponse(BaseModel):
-    success:    bool        = Field(default=False)
-    request_id: str         = Field(description="Short ID for correlating with server logs.")
-    error:      ErrorDetail
+    success: Literal[False] = False
+    request_id: str
+    error: ErrorDetail
 
 
 class HealthResponse(BaseModel):
-    status:        str  = Field(description="'healthy' or 'degraded'.")
-    model_loaded:  bool
-    model_name:    str
-    num_classes:   int
-    gpu_available: bool
-    version:       str = Field(default="2.0")
+    status: str
+    model_loaded: bool
+    environment: str
+    python_version: str
+    model_path: str
+    model_error: Optional[str] = None
+    compliance_engine: Optional[dict[str, Any]] = None
 
 
 class AnalyzeResponse(BaseModel):
-    """Simplified response envelope — full bim_data structure is too large to enumerate here."""
-    success:    bool = True
+    success: Literal[True] = True
     request_id: str
-    bim_data:   dict = Field(description="Full BIM vector data including walls, doors, windows, rooms.")
-    summary:    dict = Field(description="Element counts and total areas.")
+    message: str
+    analysis_file: str
+    visualization_file: str
+    bim_data: dict[str, Any]
+    summary: dict[str, Any]
+    analysis_report: dict[str, Any]
+    image_processing: dict[str, Any]
+
+
+class ExportIFCRequest(BaseModel):
+    analysis_file: str = Field(description="Filename returned by POST /analyze.")
+    manual_inputs: Optional[dict[str, Any]] = None
+    ifc_metadata: IFCMetadata = Field(default_factory=IFCMetadata)
+    validate_only: bool = False
+
+    model_config = {"extra": "forbid"}
+
+    @field_validator("analysis_file", mode="before")
+    @classmethod
+    def sanitize_required_filename(cls, value):
+        value = str(value or "").strip()
+        if not value or "/" in value or "\\" in value or ".." in value:
+            raise ValueError("analysis_file must be a plain filename")
+        return value
+
+
+class ExportIFCUploadForm(BaseModel):
+    bim_json: APIFileStorage
+    manual_inputs: Optional[dict[str, Any]] = None
+    ifc_metadata: Optional[dict[str, Any]] = None
+    validate_only: bool = False
+
+    model_config = {"extra": "forbid", "arbitrary_types_allowed": True}
+
+
+class ComplianceFromAnalysisRequest(BaseModel):
+    analysis_file: str
+    plan_name: Optional[str] = None
+    manual_inputs: Optional[dict[str, Any]] = None
+    ifc_metadata: IFCMetadata = Field(default_factory=IFCMetadata)
+
+    model_config = {"extra": "forbid"}
+
+    @field_validator("analysis_file", mode="before")
+    @classmethod
+    def sanitize_analysis_file(cls, value):
+        value = str(value or "").strip()
+        if not value or "/" in value or "\\" in value or ".." in value:
+            raise ValueError("analysis_file must be a plain filename")
+        return value
+
+
+class ComplianceIFCForm(BaseModel):
+    ifc_file: APIFileStorage
+    plan_name: Optional[str] = None
+    manual_inputs: Optional[dict[str, Any]] = None
+
+    model_config = {"extra": "forbid", "arbitrary_types_allowed": True}
+
+
+class ComplianceJobResponse(BaseModel):
+    success: Literal[True] = True
+    request_id: str
+    correlation_id: str
+    job_id: str
+    status: str
+    status_url: str
+    reports: dict[str, str]
+
+
+class ComplianceJobStatusResponse(BaseModel):
+    success: Literal[True] = True
+    request_id: str
+    correlation_id: str
+    job: dict[str, Any]
+
+
+class ComplianceWaitQuery(BaseModel):
+    timeout_seconds: float = Field(default=60.0, ge=0.1, le=300.0)
+    poll_interval_seconds: float = Field(default=1.0, ge=0.1, le=10.0)
+
+
+class JobPath(BaseModel):
+    job_id: str = Field(pattern=r"^[0-9a-f]{12}$")
+
+
+class ReportPath(JobPath):
+    kind: Literal["json", "html", "pdf", "bcf"]

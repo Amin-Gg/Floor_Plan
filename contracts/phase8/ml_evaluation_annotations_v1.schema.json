@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simsys.local/contracts/phase8/ml_evaluation_annotations_v1.schema.json",
+  "title": "FloorPlan ML Ground Truth Annotations v1",
+  "type": "object",
+  "required": ["schema_version", "sample_id", "instances"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "sample_id": {"type": "string", "minLength": 1},
+    "instances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "class_name", "bbox_xyxy"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "class_name": {"type": "string", "minLength": 1},
+          "bbox_xyxy": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {"type": "number", "minimum": 0}
+          },
+          "mask": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": ["type", "points"],
+                "properties": {
+                  "type": {"const": "polygon"},
+                  "points": {
+                    "type": "array",
+                    "minItems": 3,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {"type": "number"}
+                    }
+                  }
+                }
+              },
+              {
+                "required": ["type", "path"],
+                "properties": {
+                  "type": {"const": "png"},
+                  "path": {"type": "string"}
+                }
+              }
+            ]
+          },
+          "attributes": {"type": "object"}
+        }
+      }
+    },
+    "verdicts": {"type": "object", "additionalProperties": {"enum": ["PASS", "FAIL", "NEEDS_REVIEW", "NOT_EVALUATED"]}}
+  }
+}

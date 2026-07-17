@@ -116,6 +116,18 @@ class ReviewQueue:
                     "object":           f.get("object"),
                     "message":          f.get("message"),
                     "rule_text_en":     f.get("rule_text_en"),
+                    # Stage 8: the Finding contract fields, so the review UI
+                    # can (a) sort judgment items apart from outside-scope
+                    # items — very different per-item effort — and (b)
+                    # correlate a queue item with its BCF topic, whose GUID
+                    # is uuid5(finding_id).
+                    "finding_id":       f.get("finding_id"),
+                    "category":         f.get("category", "compliance"),
+                    "code":             f.get("code"),
+                    "unsupported":      bool(f.get("unsupported", False)),
+                    "review_kind":      ("outside_scope"
+                                         if f.get("unsupported")
+                                         else "judgment"),
                     "original_verdict": Verdict.NEEDS_REVIEW.value,
                     "status":           "pending",
                     "reviewer_verdict": None,

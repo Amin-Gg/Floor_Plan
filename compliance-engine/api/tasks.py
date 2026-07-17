@@ -22,7 +22,9 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from api.pipeline import run_pipeline, run_pipeline_from_ifc, load_clauses, clause_health
+from api.pipeline import configure_advisory, load_clauses, clause_health
+from services.validation_pipeline import (PipelineRequest,
+                                          run_validation_pipeline)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 BROKER_URL    = os.environ.get("CELERY_BROKER_URL", "")   # e.g. redis://localhost:6379/0
@@ -97,11 +99,16 @@ def get_job(job_id: str) -> Optional[Dict[str, Any]]:
 # The actual work (shared by both modes)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _execute(job_id: str, bim_data: Dict[str, Any], meta: Dict[str, Any]) -> None:
+def _execute(job_id: str, bim_data: Dict[str, Any], meta: Dict[str, Any],
+             manual_inputs: Optional[Dict[str, Any]] = None) -> None:
     _set_job(job_id, status="running", started_at=datetime.now().isoformat())
     try:
-        out = run_pipeline(bim_data, _CLAUSES, out_dir=_job_dir(job_id), meta=meta)
-        _STORE.store_artifacts(job_id, _job_dir(job_id), out.get("reports") or {})
+        execution = run_validation_pipeline(configure_advisory(PipelineRequest(
+            source_type="bim_data", bim_data=bim_data, clauses=_CLAUSES,
+            out_dir=_job_dir(job_id), metadata=meta, manual_inputs=manual_inputs,
+        )))
+        out = execution.to_api_response()
+        _STORE.store_artifacts(job_id, _job_dir(job_id), execution.reports)
         _set_job(job_id, status="completed",
                  finished_at=datetime.now().isoformat(), result=out)
     except Exception as exc:
@@ -111,7 +118,7 @@ def _execute(job_id: str, bim_data: Dict[str, Any], meta: Dict[str, Any]) -> Non
 
 
 def _execute_ifc(job_id: str, ifc_path: str, meta: Dict[str, Any],
-                 building_params: Optional[Dict[str, Any]] = None) -> None:
+                 manual_inputs: Optional[Dict[str, Any]] = None) -> None:
     """Run the compliance pipeline from an uploaded IFC file (Issue 3)."""
     _set_job(job_id, status="running", started_at=datetime.now().isoformat())
     try:
@@ -125,11 +132,18 @@ def _execute_ifc(job_id: str, ifc_path: str, meta: Dict[str, Any],
                     f"copy in the job store — API and worker share neither "
                     f"a volume nor a Redis job store")
             ifc_path = fetched
-        out = run_pipeline_from_ifc(ifc_path, _CLAUSES, out_dir=_job_dir(job_id),
-                                    meta=meta, building_params=building_params)
-        _STORE.store_artifacts(job_id, _job_dir(job_id), out.get("reports") or {})
-        _set_job(job_id, status="completed",
-                 finished_at=datetime.now().isoformat(), result=out)
+        execution = run_validation_pipeline(configure_advisory(PipelineRequest(
+            source_type="ifc", ifc_path=ifc_path, clauses=_CLAUSES,
+            out_dir=_job_dir(job_id), metadata=meta, manual_inputs=manual_inputs,
+        )))
+        out = execution.to_api_response()
+        _STORE.store_artifacts(job_id, _job_dir(job_id), execution.reports)
+        if execution.blocked:
+            _set_job(job_id, status="failed", finished_at=datetime.now().isoformat(),
+                     error=execution.blocked_reason, result=out)
+        else:
+            _set_job(job_id, status="completed",
+                     finished_at=datetime.now().isoformat(), result=out)
     except Exception as exc:
         _set_job(job_id, status="failed",
                  finished_at=datetime.now().isoformat(),
@@ -146,20 +160,22 @@ if BROKER_URL:
     celery_app = Celery("compliance", broker=BROKER_URL, backend=BROKER_URL)
 
     @celery_app.task(name="run_compliance_job")
-    def _celery_run(job_id: str, bim_data: Dict[str, Any], meta: Dict[str, Any]) -> None:
-        _execute(job_id, bim_data, meta)
+    def _celery_run(job_id: str, bim_data: Dict[str, Any], meta: Dict[str, Any],
+                    manual_inputs: Optional[Dict[str, Any]] = None) -> None:
+        _execute(job_id, bim_data, meta, manual_inputs)
 
     @celery_app.task(name="run_compliance_job_ifc")
     def _celery_run_ifc(job_id: str, ifc_path: str, meta: Dict[str, Any],
-                        building_params: Optional[Dict[str, Any]] = None) -> None:
-        _execute_ifc(job_id, ifc_path, meta, building_params)
+                        manual_inputs: Optional[Dict[str, Any]] = None) -> None:
+        _execute_ifc(job_id, ifc_path, meta, manual_inputs)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Public submit/poll API used by the FastAPI layer
 # ═══════════════════════════════════════════════════════════════════════════
 
-def submit_job(bim_data: Dict[str, Any], meta: Dict[str, Any]) -> str:
+def submit_job(bim_data: Dict[str, Any], meta: Dict[str, Any],
+               manual_inputs: Optional[Dict[str, Any]] = None) -> str:
     """Create a job, start it (async via Celery or a thread), return its id."""
     _guard_clauses()
     job_id = uuid.uuid4().hex[:12]
@@ -167,23 +183,18 @@ def submit_job(bim_data: Dict[str, Any], meta: Dict[str, Any]) -> str:
              plan_name=meta.get("plan_name", "Floor plan"))
 
     if celery_app is not None:
-        _celery_run.delay(job_id, bim_data, meta)        # real async
+        _celery_run.delay(job_id, bim_data, meta, manual_inputs)        # real async
     else:
         # No broker → run in a daemon thread so the API returns immediately.
-        t = threading.Thread(target=_execute, args=(job_id, bim_data, meta), daemon=True)
+        t = threading.Thread(target=_execute, args=(job_id, bim_data, meta, manual_inputs), daemon=True)
         t.start()
 
     return job_id
 
 
 def submit_ifc_job(ifc_path: str, meta: Dict[str, Any],
-                   building_params: Optional[Dict[str, Any]] = None) -> str:
-    """Create an IFC-based compliance job (Issue 3), start it, return its id.
-
-    ``building_params`` is the already-validated operator parameter dict from
-    api.pipeline.parse_building_params — validation happens at the API
-    boundary, never here, so the worker can trust its input shape.
-    """
+                   manual_inputs: Optional[Dict[str, Any]] = None) -> str:
+    """Create an IFC-based compliance job and return its id."""
     _guard_clauses()
     job_id = uuid.uuid4().hex[:12]
     _set_job(job_id, status="queued", created_at=datetime.now().isoformat(),
@@ -194,10 +205,10 @@ def submit_ifc_job(ifc_path: str, meta: Dict[str, Any],
         # the upload into the job store (Redis blob; no-op in local mode) so
         # the worker can fetch it if the path below is not on its filesystem.
         _STORE.store_upload(job_id, ifc_path)
-        _celery_run_ifc.delay(job_id, ifc_path, meta, building_params)
+        _celery_run_ifc.delay(job_id, ifc_path, meta, manual_inputs)
     else:
         t = threading.Thread(target=_execute_ifc,
-                             args=(job_id, ifc_path, meta, building_params),
+                             args=(job_id, ifc_path, meta, manual_inputs),
                              daemon=True)
         t.start()
 

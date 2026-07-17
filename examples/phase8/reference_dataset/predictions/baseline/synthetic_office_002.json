@@ -1,0 +1,114 @@
+{
+  "instances": [
+    {
+      "attributes": {
+        "centerline": [
+          [
+            15,
+            162
+          ],
+          [
+            185,
+            162
+          ]
+        ],
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        15,
+        152,
+        185,
+        171
+      ],
+      "class_name": "wall",
+      "confidence": 0.88,
+      "id": "p_wall",
+      "mask": {
+        "points": [
+          [
+            15,
+            152
+          ],
+          [
+            185,
+            152
+          ],
+          [
+            185,
+            171
+          ],
+          [
+            15,
+            171
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        26,
+        46,
+        75,
+        105
+      ],
+      "class_name": "stairs",
+      "confidence": 0.58,
+      "id": "p_stairs"
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0
+      },
+      "bbox_xyxy": [
+        132,
+        137,
+        159,
+        172
+      ],
+      "class_name": "door",
+      "confidence": 0.55,
+      "id": "p_door",
+      "mask": {
+        "points": [
+          [
+            132,
+            137
+          ],
+          [
+            159,
+            137
+          ],
+          [
+            159,
+            172
+          ],
+          [
+            132,
+            172
+          ]
+        ],
+        "type": "polygon"
+      }
+    }
+  ],
+  "model": {
+    "model_id": "synthetic-baseline",
+    "purpose": "contract_test_only",
+    "variant": "baseline"
+  },
+  "sample_id": "synthetic_office_002",
+  "scale": {
+    "mm_per_pixel": 4.3,
+    "source": "synthetic"
+  },
+  "schema_version": "1.0",
+  "verdicts": {
+    "door_width": "NEEDS_REVIEW",
+    "railing_presence": "NOT_EVALUATED",
+    "stair_width": "NEEDS_REVIEW"
+  }
+}

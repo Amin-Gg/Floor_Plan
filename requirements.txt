@@ -1,3 +1,8 @@
+# PHASE 6 NOTICE: this file is retained as a human-readable compatibility
+# specification. Production Docker and CI installations MUST use the hashed
+# *.lock files documented in requirements/README.md. Do not use this file to
+# claim a reproducible release build.
+#
 # Dependencies for FloorPlanTo3D API  —  UBUNTU SERVER build
 # Detector: Mask R-CNN (Keras/TensorFlow) + Supplementary YOLO (PyTorch)
 #
@@ -19,8 +24,8 @@
 # Core ML  (Mask R-CNN — Keras / TensorFlow)
 # ==========================================
 # CPU build (works everywhere; Mask R-CNN inference ~2–5 s/image on CPU).
-tensorflow==2.13.0
-keras==2.13.1
+tensorflow==2.14.0
+keras==2.14.0
 # --- GPU (optional): TF 2.13 needs CUDA 11.8 + cuDNN 8.6 on the host.
 #     If that toolkit is installed, the line above already enables the GPU.
 #     Set GUNICORN_PRELOAD=false (gunicorn.conf.py) so CUDA isn't forked.
@@ -41,7 +46,7 @@ imgaug==0.4.0
 # OCR  (kept from your upgrade — PaddleOCR + fuzzy matching)
 # ==========================================
 paddleocr==2.7.3
-paddlepaddle==2.5.2
+paddlepaddle==2.6.2
 thefuzz==0.20.0
 python-Levenshtein==0.23.0
 
@@ -65,8 +70,8 @@ Werkzeug==2.3.7
 # ==========================================
 # Validation & API Documentation (kept from your upgrade)
 # ==========================================
-pydantic>=2.0.0
-flask-openapi3>=3.0.0
+pydantic>=2.0.0,<3.0.0
+flask-openapi3>=3.0.0,<4.0.0
 
 # ==========================================
 # IFC Export (kept from your upgrade)
@@ -117,6 +122,6 @@ torchvision==0.16.2
 ultralytics>=8.4.0,<9.0.0
 
 # ==========================================
-# (Removed in Phase 1: Mask2Former / training-only stack)
-# NOTE: torch/torchvision were previously removed, but added back above for Phase 4 YOLO.
+# Mask2Former and the training-only stack are intentionally excluded.
+# Torch/Torchvision are provided by the sealed local CUDA wheels for optional YOLO.
 # ==========================================

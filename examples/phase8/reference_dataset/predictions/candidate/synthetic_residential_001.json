@@ -1,0 +1,170 @@
+{
+  "instances": [
+    {
+      "attributes": {
+        "centerline": [
+          [
+            10,
+            20
+          ],
+          [
+            190,
+            20
+          ]
+        ],
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        10,
+        10,
+        190,
+        30
+      ],
+      "class_name": "wall",
+      "confidence": 0.96,
+      "id": "p_wall",
+      "mask": {
+        "points": [
+          [
+            10,
+            10
+          ],
+          [
+            190,
+            10
+          ],
+          [
+            190,
+            30
+          ],
+          [
+            10,
+            30
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        70,
+        10,
+        110,
+        30
+      ],
+      "class_name": "window",
+      "confidence": 0.91,
+      "id": "p_window",
+      "mask": {
+        "points": [
+          [
+            70,
+            10
+          ],
+          [
+            110,
+            10
+          ],
+          [
+            110,
+            30
+          ],
+          [
+            70,
+            30
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 90
+      },
+      "bbox_xyxy": [
+        135,
+        10,
+        165,
+        45
+      ],
+      "class_name": "door",
+      "confidence": 0.93,
+      "id": "p_door",
+      "mask": {
+        "points": [
+          [
+            135,
+            10
+          ],
+          [
+            165,
+            10
+          ],
+          [
+            165,
+            45
+          ],
+          [
+            135,
+            45
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        30,
+        70,
+        50,
+        90
+      ],
+      "class_name": "column",
+      "confidence": 0.88,
+      "id": "p_column",
+      "mask": {
+        "points": [
+          [
+            30,
+            70
+          ],
+          [
+            50,
+            70
+          ],
+          [
+            50,
+            90
+          ],
+          [
+            30,
+            90
+          ]
+        ],
+        "type": "polygon"
+      }
+    }
+  ],
+  "model": {
+    "model_id": "synthetic-candidate",
+    "purpose": "contract_test_only",
+    "variant": "candidate"
+  },
+  "sample_id": "synthetic_residential_001",
+  "scale": {
+    "mm_per_pixel": 5.02,
+    "source": "synthetic"
+  },
+  "schema_version": "1.0",
+  "verdicts": {
+    "column_clearance": "FAIL",
+    "door_width": "PASS",
+    "window_width": "PASS"
+  }
+}

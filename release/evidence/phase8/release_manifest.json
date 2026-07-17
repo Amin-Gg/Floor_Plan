@@ -1,0 +1,143 @@
+{
+  "acceptance": {
+    "compileall": "passed",
+    "container_contract": true,
+    "dependency_locks": true,
+    "empirical_model_accuracy": "blocked_external_evidence",
+    "empirical_release_gate": "blocked",
+    "engine_tests": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 572,
+      "skipped": 0,
+      "tests": 572
+    },
+    "evaluation_infrastructure": "passed",
+    "openapi_snapshots": "passed",
+    "phase3_trust_boundary": "passed",
+    "phase4_semantics": true,
+    "phase6_reproducibility": true,
+    "phase7_authenticated_http": true,
+    "phase8_focused_tests": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 15,
+      "tests": 15
+    },
+    "ruff": "passed",
+    "security_contract": true,
+    "stage1_tests": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 174,
+      "skipped": 0,
+      "tests": 174
+    },
+    "verdict_summary": {
+      "FAIL": 3,
+      "NEEDS_REVIEW": 1,
+      "NOT_EVALUATED": 0,
+      "PASS": 1
+    }
+  },
+  "claim_safety": {
+    "confidence_diagnostics_are_accuracy": false,
+    "critical_false_pass_required": 0,
+    "holdout_tuning_forbidden": true,
+    "human_verified_or_adjudicated_holdout_required": true,
+    "synthetic_metrics_publishable_as_model_accuracy": false
+  },
+  "empirical_evaluation": {
+    "completed": false,
+    "missing_artifacts": [
+      "weights/maskrcnn_15_epochs.h5",
+      "weights/yolo_best.pt"
+    ],
+    "real_dataset_manifest": null,
+    "reason": "Real model weights and an adjudicated holdout dataset were not available in the audit environment. Synthetic metrics validate evaluator behavior only.",
+    "release_gate": "blocked",
+    "status": "blocked_external_evidence"
+  },
+  "evidence_sha256": {
+    "PHASE8_CHANGELOG_FA.md": "725668ee4ce8b7671181c955f56c2ddabc5005b0129662517af7fff130a758f5",
+    "PHASE8_COMPLETION_REPORT_FA.md": "c607f9cac9a8e1f03cfa00e38fe038a95485ecbdd9d8b506b32e1fe73ee67dcb",
+    "PHASE8_RUNBOOK_FA.md": "05a9a0d5485dea74b923e12e6de5c8334798e8bb7e9c22b2254c7aa1c02d24a2",
+    "baseline/phase8/acceptance_result.json": "9ea418c5ef27d85049963c8a2fa9d2b12178bd7a16f707ed657b08ec28807faf",
+    "baseline/phase8/compileall.json": "b1c95da5e181d95c3a837b01b04513e2725984388b2256107771b77a2407ce77",
+    "baseline/phase8/container_contracts.json": "e1242451a13e9c92c9e72a8f9ee42456ced42e209bb5d18b1de29c546867709f",
+    "baseline/phase8/dependency_locks.json": "01bd7f59b8c15af5e55deae7ceec24a4ef3a9d7f89a1c3f6ca911ec893567ac4",
+    "baseline/phase8/empirical_evaluation_status.json": "e027e347e42eaff0540abfd312191ea116806e8fbdeb7f6c526942eb577e6c0a",
+    "baseline/phase8/engine_test_summary.json": "0520b0fbacd626d3da06bbe80c7985cd5136940361a998c176d90f8635618fee",
+    "baseline/phase8/phase3/acceptance_result.json": "65a0d02fcac396a0b2e65a4018e7783c7c2481dad800b028e5d35c9f65119830",
+    "baseline/phase8/phase4/acceptance_result.json": "026a9bcd67d0af9ae5b4b468432d95d57f8a3a68333248178b6f9c4b29263441",
+    "baseline/phase8/phase6_acceptance.json": "e861017b988908bf3e89127b03a1068afa4278eccd5eab12fc9bc45041464f2c",
+    "baseline/phase8/phase7/acceptance_result.json": "b014076e4a17ea124baca3d13d33b92d5185fa3e26244a949355372974074076",
+    "baseline/phase8/phase8_focused.junit.xml": "14c87e99cb688525e7e6eaa4aa22a2c7b5d79c023d75d76734961213c916cb9f",
+    "baseline/phase8/reference_evaluation/evaluation_summary.json": "736eeda9358052e1fb53db043be363126f1e7e808c9554b79c4fa6899901cf0b",
+    "baseline/phase8/ruff_stage1.json": "c915fe828625d11dde2f48ffcf66f975835048606d8e8677cdf1e0abafd0e048",
+    "baseline/phase8/security_contracts.json": "0da3df73966ad607215df01b2c9b905c0dd3a198bf619353257487127c47bb90",
+    "baseline/phase8/stage1_test_summary.json": "5bc0f69545e5c547e4e22ef57a17c5028a2655c9b504aa29aa3e0c6959b2d9ab",
+    "compliance-engine/docs/contracts/openapi_phase8.json": "a0b309af66d4d5bff5e3713557d303ef2f67f61dbd0840b62a0db0ae3769f0b9",
+    "config/phase8_evaluation_policy.json": "ca5248c6d43b43f83fe4b864ef16c304609ec48ba857768a5760d45823b6594a",
+    "contracts/openapi_stage1_phase8.json": "4f6fbe50e2b5965e1371520e5a5d7d2b5e1a9b96e6f279c87ab0a8dfbe71ffdb",
+    "contracts/phase8/ml_evaluation_annotations_v1.schema.json": "5581b3eb4a1ec7fce9bbf53d4b80b8127119ac759ec8cbd4abddd12e85f019be",
+    "contracts/phase8/ml_evaluation_dataset_v1.schema.json": "2b8be6204c809f7b25a552d107f227de17d85ba71461c7c5001b5631b9071c3a",
+    "contracts/phase8/ml_evaluation_predictions_v1.schema.json": "fbe7fd77c4741952b199b07af19caca101d6b7221993792b5dc3fe51721148b3",
+    "docs/ADR-008_GROUND_TRUTH_ML_EVALUATION.md": "e2a11626d7273e62d07db68b57483da18d9e091859e5a235e1c55f4aff3d62a4",
+    "docs/phase8/HOLDOUT_DATASET_PROTOCOL_FA.md": "8d5a1abce29d027150e770cc196eef7198d13f0914741ba3504158e96173bf1b",
+    "docs/phase8/REAL_EVALUATION_CHECKLIST_FA.md": "df32e5876256b9fd57636dd21620a1ede92798ac4efe6acff0c262e590458a01"
+  },
+  "external_evaluation_evidence_required": [
+    "An adjudicated, SHA-256-sealed holdout dataset stored outside the source repository",
+    "Sealed Mask R-CNN and YOLO weights",
+    "Reference and predicted engine reports for verdict-impact evaluation"
+  ],
+  "external_runtime_artifacts_not_bundled": [
+    "wheels/torch-2.1.2+cu118-cp311-cp311-linux_x86_64.whl",
+    "wheels/torchvision-0.16.2+cu118-cp311-cp311-linux_x86_64.whl",
+    "weights/maskrcnn_15_epochs.h5",
+    "weights/yolo_best.pt",
+    "compliance-engine/models/huggingface",
+    "compliance-engine/models/bge_reranker"
+  ],
+  "file_changes_vs_phase7": {
+    "added": 202,
+    "deleted": 0,
+    "modified": 8
+  },
+  "generated_at": "2026-07-13T10:42:00.177356+00:00",
+  "integrity": {
+    "algorithm": "SHA-256",
+    "checksums_file": "PHASE8_SHA256SUMS.txt",
+    "file_count": 1105
+  },
+  "known_limitations": [
+    "No real mAP, F1, IoU, calibration, scale, or verdict-impact claim is available because real weights and an adjudicated holdout were absent.",
+    "Synthetic reference metrics validate evaluator behavior only.",
+    "Policy thresholds are provisional until the first adjudicated holdout baseline is reviewed.",
+    "Docker images and real GPU inference were not executed in the audit environment.",
+    "The official deployment target remains Python 3.11.15; the audit host used Python 3.13."
+  ],
+  "reference_contract_test": {
+    "publishable_as_real_model_performance": false,
+    "purpose": "Evaluator mathematics and release-gate behavior only",
+    "summary_path": "baseline/phase8/reference_evaluation/evaluation_summary.json"
+  },
+  "release_id": "FloorPlan_Phase8_Completed",
+  "schema_version": "floorplan-phase8-release-v1",
+  "source_release": {
+    "file": "FloorPlan_Phase7_Completed.zip",
+    "sha256": "3e63daacbc5972ea5589b50df68d808d3b4163bf750e12ff0b70a9f311efbe0a"
+  },
+  "versions": {
+    "compliance_engine_api": "1.4.0-phase7",
+    "compliance_engine_package": "1.4.0",
+    "ifc_contract": "1.2",
+    "phase8_dataset_contract": "1.0",
+    "phase8_policy": "floorplan-phase8-provisional-release-gate-v1",
+    "python_audit": "3.13.5",
+    "python_target": "3.11.15",
+    "stage1_api": "2.8.0-phase8",
+    "stage1_package": "2.8.0-phase8"
+  }
+}

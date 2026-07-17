@@ -1,0 +1,49 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/ultralytics@8.4.72",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "10befe077c8bb5b265c958a5181a905de5e592208e8ec6358f151c17d0b909e1"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b38e73a339ea256a69f41f14b4418cdcbdd6e45449ff9d2adac386406cf6cfbb"
+        }
+      ],
+      "name": "ultralytics",
+      "purl": "pkg:pypi/ultralytics@8.4.72",
+      "type": "library",
+      "version": "8.4.72"
+    },
+    {
+      "bom-ref": "pkg:pypi/ultralytics-thop@2.0.20",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ef1b326404aeb10954f50db58982ec8dcab5946ee04a9b10e1107ec7ba4d5c22"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f3595e0d8c6fd0b9f62fc2cd9be921755e2649a05c34f1fabaea0bff7295d641"
+        }
+      ],
+      "name": "ultralytics-thop",
+      "purl": "pkg:pypi/ultralytics-thop@2.0.20",
+      "type": "library",
+      "version": "2.0.20"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "stage1-ml-overlay",
+      "type": "application",
+      "version": "2.8.0"
+    }
+  },
+  "serialNumber": "urn:uuid:3ffb8d70-4f0e-dfef-b329-95e2bfd87923",
+  "specVersion": "1.5",
+  "version": 1
+}

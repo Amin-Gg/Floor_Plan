@@ -1,0 +1,240 @@
+# Semantic Property Catalog v1.0
+# Single source of truth for IFC extraction, quality requirements, units,
+# and compliance dependency declarations.
+catalog_version: "1.0"
+
+units:
+  length:
+    canonical_internal: mm
+    supported_input: [mm, cm, m]
+  area:
+    canonical_internal: m2
+    supported_input: [mm2, cm2, m2]
+  boolean:
+    canonical_internal: boolean
+    supported_input: [boolean]
+  text:
+    canonical_internal: text
+    supported_input: [text]
+
+psets:
+  contract:
+    name: Pset_SimsysContract
+    properties:
+      contract_version: ContractVersion
+      scale_mm_per_pixel: ScaleMmPerPixel
+      scale_source: ScaleSource
+      scale_confidence: ScaleConfidence
+      wall_height_mm: WallHeightMm
+      door_height_mm: DoorHeightMm
+      window_height_mm: WindowHeightMm
+      window_sill_mm: WindowSillHeightMm
+      floor_thickness_mm: FloorThicknessMm
+      params_provided: BuildingParamsProvided
+  provenance:
+    name: Pset_SimsysProvenance
+    properties:
+      original_id: OriginalId
+      source: Source
+      confidence: Confidence
+      needs_review: NeedsReview
+      review_reason: ReviewReason
+      name_source: NameSource
+      width_source: WidthSource
+  wall_common:
+    name: Pset_WallCommon
+    properties:
+      is_external: IsExternal
+  window_common:
+    name: Pset_WindowCommon
+    properties:
+      is_external: IsExternal
+  space_common:
+    name: Pset_SpaceCommon
+    properties:
+      category: Category
+      gross_floor_area: GrossFloorArea
+  qto_wall:
+    name: Qto_WallBaseQuantities
+    properties:
+      width: Width
+      length: Length
+      height: Height
+  qto_space:
+    name: Qto_SpaceBaseQuantities
+    properties:
+      net_floor_area: NetFloorArea
+
+compatibility:
+  required_pset_properties:
+    contract:
+      - contract_version
+      - scale_mm_per_pixel
+      - scale_source
+      - scale_confidence
+      - wall_height_mm
+      - door_height_mm
+      - window_height_mm
+      - window_sill_mm
+      - floor_thickness_mm
+      - params_provided
+    provenance:
+      - original_id
+      - source
+      - confidence
+      - needs_review
+      - review_reason
+      - name_source
+      - width_source
+
+param_map:
+  wall_height_mm: wall_height
+  door_height_mm: door_height
+  window_height_mm: window_height
+  window_sill_mm: window_sill_height
+  floor_thickness_mm: floor_thickness
+
+elements:
+  wall:
+    ifc_entities: [IfcWall, IfcWallStandardCase]
+    properties:
+      thickness_mm:
+        aliases: [thickness, wall thickness]
+        ifc_mappings:
+          - {pset: qto_wall, property: width, source: quantity}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.wall_thickness]
+        min_value: 1
+      length_mm:
+        aliases: [length, wall length]
+        ifc_mappings:
+          - {pset: qto_wall, property: length, source: quantity}
+        data_type: number
+        unit: mm
+        required: false
+        required_for: [opening_host_geometry]
+        min_value: 1
+      height_mm:
+        aliases: [height, wall height]
+        ifc_mappings:
+          - {pset: qto_wall, property: height, source: quantity}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.wall_height, opening_vertical_fit]
+        min_value: 1
+      is_exterior:
+        aliases: [is external, exterior]
+        ifc_mappings:
+          - {pset: wall_common, property: is_external, source: property}
+        data_type: boolean
+        unit: boolean
+        required: false
+  door:
+    ifc_entities: [IfcDoor]
+    properties:
+      width_mm:
+        aliases: [width, clear width, door width]
+        ifc_mappings:
+          - {attribute: OverallWidth, source: attribute}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.door_width, opening_position]
+        min_value: 1
+      height_mm:
+        aliases: [height, clear height, door height]
+        ifc_mappings:
+          - {attribute: OverallHeight, source: attribute}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.door_height, opening_vertical_fit]
+        min_value: 1
+  window:
+    ifc_entities: [IfcWindow]
+    properties:
+      width_mm:
+        aliases: [width, clear width, window width]
+        ifc_mappings:
+          - {attribute: OverallWidth, source: attribute}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.window_width, opening_position]
+        min_value: 1
+      height_mm:
+        aliases: [height, clear height, window height]
+        ifc_mappings:
+          - {attribute: OverallHeight, source: attribute}
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.window_height, opening_vertical_fit]
+        min_value: 1
+      sill_height_mm:
+        aliases: [sill, sill height, window sill height]
+        ifc_mappings: []
+        data_type: number
+        unit: mm
+        required: true
+        required_for: [trusted_measurements, compliance.numeric.window_sill, opening_vertical_fit]
+        min_value: 0
+      is_exterior:
+        aliases: [is external, exterior]
+        ifc_mappings:
+          - {pset: window_common, property: is_external, source: property}
+        data_type: boolean
+        unit: boolean
+        required: false
+  space:
+    ifc_entities: [IfcSpace]
+    properties:
+      canonical_type:
+        aliases: [category, room type, space type]
+        ifc_mappings:
+          - {pset: space_common, property: category, source: property}
+        data_type: controlled_value
+        unit: text
+        required: true
+        required_for: [space_type_rules]
+      area_m2:
+        aliases: [area, floor area, net floor area, gross floor area]
+        ifc_mappings:
+          - {pset: qto_space, property: net_floor_area, source: quantity}
+          - {pset: space_common, property: gross_floor_area, source: property}
+        data_type: number
+        unit: m2
+        required: true
+        required_for: [room_area, compliance.numeric.room_area]
+        min_value: 0.000001
+
+compliance:
+  clause_properties:
+    area:
+      aliases: [area, floor area, net area, gross area]
+      dimension: area
+      canonical_unit: m2
+      capabilities: [room_area]
+    width:
+      aliases: [width, clear width, minimum width, min width, diameter]
+      dimension: length
+      canonical_unit: m
+      capabilities: [trusted_measurements]
+    height:
+      aliases: [height, clear height, ceiling height, headroom]
+      dimension: length
+      canonical_unit: m
+      capabilities: [trusted_measurements]
+    length:
+      aliases: [length, depth]
+      dimension: length
+      canonical_unit: m
+      capabilities: [trusted_measurements]
+    sill:
+      aliases: [sill, sill height, window sill]
+      dimension: length
+      canonical_unit: m
+      capabilities: [trusted_measurements]

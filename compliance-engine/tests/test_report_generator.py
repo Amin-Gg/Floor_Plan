@@ -1,7 +1,7 @@
 """tests/test_report_generator.py — Step 11 smoke tests."""
 import sys, os, zipfile
 sys.path.insert(0, ".")
-from report_generator import generate_reports
+from reporting.generator import generate_report_bundle
 
 # A synthetic ComplianceResult.to_dict() with all three verdict types
 RESULT = {
@@ -29,7 +29,7 @@ META = {"plan_name":"Plan_04","occupancy":"M-4 residential","date":"2026-05-29"}
 
 def run():
     out = "/tmp/step11_out"
-    paths = generate_reports(RESULT, META, out_dir=out)
+    paths = generate_report_bundle(RESULT, META, output_dir=out)
 
     # 1. HTML exists and contains key content
     assert os.path.exists(paths["html"]), "HTML not created"
@@ -75,7 +75,7 @@ def run():
     # 5. Compliant plan → green status
     clean = {"summary":{"PASS":5,"FAIL":0,"NEEDS_REVIEW":0},"duration_s":0.1,
              "findings":[{"article_id":"x","verdict":"PASS","message":"ok","object":"a","rule_text_en":"r"}]}
-    p2 = generate_reports(clean, META, out_dir="/tmp/step11_clean")
+    p2 = generate_report_bundle(clean, META, output_dir="/tmp/step11_clean")
     h2 = open(p2["html"], encoding="utf-8").read()
     assert "compliant" in h2 and "non-compliant" not in h2
     print("PASS: all-pass plan → 'compliant' status")

@@ -92,7 +92,7 @@ def test_room_ceiling_height_default_forces_review():
     chk = NumericChecker(BIM)  # default ceiling_height_mm = 2800, unasserted
     f = _only(chk.check_clause(
         _clause("ROOM-H", "dwelling_space", "ceiling height", ">=", 2.4, "m")))
-    assert f.verdict == Verdict.NEEDS_REVIEW, f.message
+    assert f.verdict == Verdict.NOT_EVALUATED, f.message
     assert "building_params.wall_height" in f.message
     assert "user building parameter" not in f.message
 

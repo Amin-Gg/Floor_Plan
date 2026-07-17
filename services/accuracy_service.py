@@ -1,12 +1,16 @@
 """
-Accuracy analysis services
+Prediction confidence diagnostics.
+
+This module does not use ground truth and therefore must never call its output
+accuracy, precision, recall, F1, IoU, or mAP. Ground-truth evaluation lives in
+the :mod:`evaluation` package and Phase-8 CLI tools.
 """
 
 import numpy
 import logging
 from utils.geometry import calculateOverlap
 from image_processing.image_loader import getClassName
-from config.classes import PROJECT_ID_TO_NAME
+from config.runtime_classes import PRIMARY_CLASS_ID_TO_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +21,7 @@ logger = logging.getLogger(__name__)
 # By convention, the accuracy report uses plural forms ("walls" not "wall").
 # For names that just need an "s" appended this is automatic; the overrides
 # below handle the few irregular cases. If you add a new class to
-# config/classes.py whose pluralization is non-standard, add it here.
+# the active runtime registry whose pluralization is non-standard, add it here.
 _PLURAL_OVERRIDES = {
     "balcony":       "balconies",
     "terrace":       "terraces",
@@ -40,7 +44,12 @@ def _plural_name(class_name: str) -> str:
 
 
 def performAccuracyAnalysis(model_results, image_width, image_height):
-    """Perform comprehensive accuracy analysis of model predictions"""
+    """Return confidence/reliability diagnostics without an accuracy claim.
+
+    The legacy function name is retained for compatibility. The response is
+    explicitly marked as ground-truth-free so clients cannot mistake model
+    confidence for measured correctness.
+    """
 
     bboxes    = model_results['rois']
     class_ids = model_results['class_ids']
@@ -48,14 +57,21 @@ def performAccuracyAnalysis(model_results, image_width, image_height):
     masks     = model_results['masks']
 
     # Build object_analysis dynamically from the project's class registry.
-    # New classes added to config/classes.py are picked up automatically.
+    # The registry contains only classes emitted by the active Mask R-CNN model.
     empty_stat = {"count": 0, "avg_confidence": 0.0, "avg_size": 0.0}
     object_analysis = {
         _plural_name(name): dict(empty_stat)
-        for name in PROJECT_ID_TO_NAME.values()
+        for name in PRIMARY_CLASS_ID_TO_NAME.values()
     }
 
     analysis = {
+        "report_kind": "prediction_confidence_diagnostics",
+        "ground_truth_used": False,
+        "accuracy_claim": False,
+        "metric_warning": (
+            "Confidence diagnostics are not accuracy metrics. Use the Phase-8 "
+            "ground-truth evaluator for precision, recall, F1, IoU, mAP, and calibration."
+        ),
         "overall_metrics": {
             "total_detections": len(bboxes),
             "image_coverage": 0.0,
@@ -81,7 +97,7 @@ def performAccuracyAnalysis(model_results, image_width, image_height):
     # class_data has one bucket per project class, plus bucket 0 for any
     # unexpected class IDs that slip through (e.g. detections from a model
     # version using a different class space than the current code).
-    class_data = {pid: [] for pid in PROJECT_ID_TO_NAME}
+    class_data = {pid: [] for pid in PRIMARY_CLASS_ID_TO_NAME}
     class_data[0] = []   # safety bucket for unknown class IDs
 
     for i in range(len(bboxes)):
@@ -121,7 +137,7 @@ def performAccuracyAnalysis(model_results, image_width, image_height):
         total_area_covered / image_area * 100) if image_area > 0 else 0.0
 
     # Fill object_analysis from class_data, driven by the live class registry.
-    for class_id, class_name in PROJECT_ID_TO_NAME.items():
+    for class_id, class_name in PRIMARY_CLASS_ID_TO_NAME.items():
         plural = _plural_name(class_name)
         if class_data[class_id]:
             data = class_data[class_id]
@@ -185,11 +201,11 @@ def performAccuracyAnalysis(model_results, image_width, image_height):
         recommendations.append(
             f"Found {len(analysis['spatial_analysis']['size_anomalies'])} size anomalies. Review unusual object sizes.")
     if analysis["reliability_score"] > 80:
-        recommendations.append("High reliability score! Results appear very accurate.")
+        recommendations.append("High internal-confidence score. This is not a measured accuracy result.")
     elif analysis["reliability_score"] > 60:
-        recommendations.append("Good reliability score. Results are generally trustworthy.")
+        recommendations.append("Moderate internal-confidence score. Ground-truth evaluation is still required.")
     else:
-        recommendations.append("Low reliability score. Carefully review all detections.")
+        recommendations.append("Low internal-confidence score. Carefully review all detections.")
 
     analysis["recommendations"] = recommendations
     return analysis

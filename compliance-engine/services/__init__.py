@@ -1,13 +1,8 @@
-"""
-services — the deterministic compliance engine (spatial graph, the four agents,
-orchestrator, report generator, review queue).
+"""Deterministic engine implementation modules.
 
-The engine modules import one another by bare module name (e.g.
-``from numeric_checker import Verdict``), a flat-layout convention kept from the
-original codebase. To let ``from services.orchestrator import run_compliance``
-work from a plain checkout (no PYTHONPATH needed), this package adds its own
-directory to ``sys.path`` on import. Under pytest the same is achieved via
-``[tool.pytest.ini_options] pythonpath`` in pyproject.toml.
+Public requests must enter through ``services.validation_pipeline``.  Agent
+modules remain implementation details and may use the historical flat-import
+layout while migration continues.
 """
 import os as _os
 import sys as _sys

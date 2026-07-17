@@ -41,7 +41,6 @@ weights/*
 # ── Runtime outputs — mounted as a writable volume ───────────────────────────
 outputs/
 output/
-export/
 *.ifc
 *.json.gz
 
@@ -59,12 +58,14 @@ build/
 dist/
 
 
-# ── Data-preparation and conversion scripts ───────────────────────────────────
-# scripts/ contains only convert_cubicasa_to_coco.py — a one-off dataset tool.
-scripts/
+# ── Scripts ───────────────────────────────────────────────────────────────────
+# Production images need the artifact verifier during the builder stage.
+# All other release, test and data-preparation scripts stay outside the image.
+scripts/*
+!scripts/verify_external_artifacts.py
 
 
-# ── Removed features — still present on disk, must not enter the image ────────
+# ── Separate compliance service — excluded from the Stage-1 image ─────────────
 compliance-engine/
 
 
@@ -91,7 +92,7 @@ Thumbs.db
 # ── Documentation ────────────────────────────────────────────────────────────
 docs/
 *.md
-!readme.md
+!README.md
 !weights/README.md
 TODO
 NOTES

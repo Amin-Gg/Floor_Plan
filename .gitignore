@@ -242,3 +242,6 @@ checkpoint
 # Coverage
 .coverage
 htmlcov/
+# Phase 7 runtime secrets
+secrets/*.txt
+!secrets/README.md

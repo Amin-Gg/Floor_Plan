@@ -6,8 +6,8 @@ Extracts room names and binds them to spatial coordinates for BIM integration.
 import cv2
 import numpy as np
 import logging
-from paddleocr import PaddleOCR
-from thefuzz import process
+import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,28 @@ class SpatialOCRDetector:
     def __init__(self, lang='fa'): # Changed to 'fa' to support Farsi and numeric parsing
         # use_angle_cls=True allows reading rotated text (crucial for floor plans)
         logger.info("Initializing PaddleOCR Engine...")
-        self.ocr_engine = PaddleOCR(use_angle_cls=True, lang=lang, show_log=False)
+        try:
+            from paddleocr import PaddleOCR
+            from thefuzz import process as fuzzy_process
+        except Exception as exc:
+            raise RuntimeError(f"OCR dependencies are unavailable: {exc}") from exc
+        self._fuzzy_process = fuzzy_process
+        enabled_default = "0" if os.getenv("APP_ENV", "development").lower() == "production" else "1"
+        if os.getenv("OCR_ENABLED", enabled_default) != "1":
+            raise RuntimeError("OCR is disabled by OCR_ENABLED")
+        kwargs = {"use_angle_cls": True, "lang": lang, "show_log": False}
+        model_root = os.getenv("PADDLEOCR_MODEL_DIR", "").strip()
+        if os.getenv("APP_ENV", "development").lower() == "production":
+            if not model_root:
+                raise RuntimeError("PADDLEOCR_MODEL_DIR is required when OCR is enabled in production")
+            root = Path(model_root)
+            expected = {"det_model_dir": root / "det", "rec_model_dir": root / "rec", "cls_model_dir": root / "cls"}
+            missing = [str(path) for path in expected.values() if not path.is_dir()]
+            if missing:
+                raise RuntimeError(f"Offline PaddleOCR model directories are missing: {missing}")
+            kwargs.update({key: str(value) for key, value in expected.items()})
+        kwargs["use_gpu"] = os.getenv("OCR_USE_GPU", "0") == "1"
+        self.ocr_engine = PaddleOCR(**kwargs)
         self.min_confidence = 0.6
         self.fuzzy_threshold = 80  # Minimum similarity score for word correction (out of 100)
         
@@ -123,7 +144,7 @@ class SpatialOCRDetector:
             return {"english": text_upper, "farsi": raw_text, "category": "Unclassified"}
 
         # For longer words, use fuzzy matching
-        best_match, score = process.extractOne(text_upper, self.all_variants)
+        best_match, score = self._fuzzy_process.extractOne(text_upper, self.all_variants)
         
         if score >= self.fuzzy_threshold:
             # Return the rich dictionary object mapped to this variant

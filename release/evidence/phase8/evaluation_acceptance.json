@@ -1,0 +1,141 @@
+{
+  "checks": {
+    "annotation_schema_present": true,
+    "baseline_false_pass_detected": true,
+    "candidate_has_no_false_pass": true,
+    "candidate_improves_calibration": true,
+    "candidate_improves_macro_f1": true,
+    "candidate_improves_map": true,
+    "candidate_improves_scale": true,
+    "confidence_report_has_no_accuracy_claim": true,
+    "dataset_schema_present": true,
+    "inference_cli_imports_without_ml_runtime": true,
+    "legacy_route_explicitly_not_accuracy": true,
+    "prediction_schema_present": true,
+    "reference_dataset_generation": true,
+    "reference_dataset_is_non_empirical": true,
+    "synthetic_baseline_gate_blocked": true,
+    "synthetic_candidate_gate_blocked": true
+  },
+  "claim_policy": {
+    "critical_false_pass_allowed": 0,
+    "human_verified_holdout_required": true,
+    "synthetic_metrics_publishable_as_model_accuracy": false
+  },
+  "comparison": {
+    "baseline": "baseline",
+    "comparisons": {
+      "candidate": {
+        "critical_false_pass": 0,
+        "delta_ece": -0.23785714285714288,
+        "delta_macro_f1": 0.33333333333333337,
+        "delta_map_50_95": 0.6749174917491749,
+        "delta_scale_relative_error_mean": -0.07425000000000008,
+        "delta_verdict_exact_agreement": 0.8333333333333334
+      }
+    }
+  },
+  "empirical_evaluation": {
+    "completed": false,
+    "missing_artifacts": [
+      "weights/maskrcnn_15_epochs.h5",
+      "weights/yolo_best.pt"
+    ],
+    "real_dataset_manifest": null,
+    "reason": "Real model weights and an adjudicated holdout dataset were not available in the audit environment. Synthetic metrics validate evaluator behavior only.",
+    "release_gate": "blocked",
+    "status": "blocked_external_evidence"
+  },
+  "passed": true,
+  "reference_metrics": {
+    "baseline": {
+      "instances": 8,
+      "macro_f1": 0.6666666666666666,
+      "macro_precision": 0.6666666666666666,
+      "macro_recall": 0.6666666666666666,
+      "map_50": 0.6666666666666666,
+      "map_50_95": 0.3250825082508251,
+      "map_75": 0.20874587458745875,
+      "samples": 2
+    },
+    "candidate": {
+      "instances": 8,
+      "macro_f1": 1.0,
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "map_50": 1.0,
+      "map_50_95": 1.0,
+      "map_75": 1.0,
+      "samples": 2
+    }
+  },
+  "reference_verdict_impact": {
+    "baseline": {
+      "compared_rules": 6,
+      "confusion_matrix": {
+        "FAIL": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 1,
+          "NOT_EVALUATED": 0,
+          "PASS": 1
+        },
+        "NEEDS_REVIEW": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 0
+        },
+        "NOT_EVALUATED": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 0
+        },
+        "PASS": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 2,
+          "NOT_EVALUATED": 1,
+          "PASS": 1
+        }
+      },
+      "critical_false_pass": 1,
+      "exact_agreement": 0.16666666666666666,
+      "false_fail": 0,
+      "needs_review_to_pass": 0
+    },
+    "candidate": {
+      "compared_rules": 6,
+      "confusion_matrix": {
+        "FAIL": {
+          "FAIL": 2,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 0
+        },
+        "NEEDS_REVIEW": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 0
+        },
+        "NOT_EVALUATED": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 0
+        },
+        "PASS": {
+          "FAIL": 0,
+          "NEEDS_REVIEW": 0,
+          "NOT_EVALUATED": 0,
+          "PASS": 4
+        }
+      },
+      "critical_false_pass": 0,
+      "exact_agreement": 1.0,
+      "false_fail": 0,
+      "needs_review_to_pass": 0
+    }
+  },
+  "schema_version": "phase8-acceptance-v1"
+}

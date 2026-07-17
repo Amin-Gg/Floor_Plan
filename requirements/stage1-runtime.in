@@ -1,0 +1,126 @@
+# Dependencies for FloorPlanTo3D API  —  UBUNTU SERVER build
+# Detector: Mask R-CNN (Keras/TensorFlow) + Supplementary YOLO (PyTorch)
+#
+# ┌────────────────────────────────────────────────────────────────────────┐
+# │ IMPORTANT — Python version:                                             │
+# │   TensorFlow 2.14 targets Python 3.9–3.11; this release is locked to Python 3.11.            │
+# │   YOLO (ultralytics) supports >=3.8.                                    │
+# │   Use Python 3.10 or 3.11 on the server:                               │
+# │       python3.11 -m venv venv && source venv/bin/activate              │
+# │                                                                        │
+# │ System packages (install once, before pip):                            │
+# │   sudo apt-get update                                                   │
+# │   sudo apt-get install -y libgomp1                                      │
+# │   (libgomp1 is required by paddlepaddle. opencv-python-headless below   │
+# │    needs no libGL, so no further system libs are required.)             │
+# └────────────────────────────────────────────────────────────────────────┘
+
+# ==========================================
+# Core ML  (Mask R-CNN — Keras / TensorFlow)
+# ==========================================
+# TensorFlow 2.14 runtime used by the Mask R-CNN path.
+tensorflow==2.14.0
+keras==2.14.0
+# --- GPU runtime is built on CUDA 11.8 + cuDNN 8 in the production image.
+#     If that toolkit is installed, the line above already enables the GPU.
+#     Set GUNICORN_PRELOAD=false (gunicorn.conf.py) so CUDA isn't forked.
+
+# ==========================================
+# Computer Vision & Image Processing
+# ==========================================
+# PaddleOCR 2.7.3 declares both opencv-python and opencv-contrib-python
+# <=4.6.0.66. They are therefore resolved at the same exact version by the
+# hashed lock. pdf2docx (a PaddleOCR dependency) also declares the headless
+# distribution; all three are deliberately aligned to the exact same build to
+# avoid mixed cv2 binaries. Do not change one without regenerating the lock.
+opencv-python-headless==4.6.0.66
+scikit-image==0.21.0
+Pillow==10.0.1
+imageio==2.31.5
+imgaug==0.4.0
+
+# ==========================================
+# OCR  (kept from your upgrade — PaddleOCR + fuzzy matching)
+# ==========================================
+paddleocr==2.7.3
+paddlepaddle==2.6.2
+thefuzz==0.20.0
+python-Levenshtein==0.23.0
+
+# ==========================================
+# Scientific Computing
+# ==========================================
+# ⚠️ CRITICAL: numpy pinned to 1.24.3 for TensorFlow 2.14 + ultralytics compatibility.
+#    (Latest ultralytics needs >=1.23.0, but TensorFlow breaks on numpy 2.x.
+#     DO NOT upgrade numpy beyond 1.24.3.)
+numpy==1.24.3
+scipy==1.11.3
+matplotlib==3.7.2
+
+# ==========================================
+# Web Framework
+# ==========================================
+Flask==2.3.3
+Flask-Cors==4.0.0
+Werkzeug==2.3.7
+
+# ==========================================
+# Validation & API Documentation (kept from your upgrade)
+# ==========================================
+pydantic>=2.0.0,<3.0.0
+flask-openapi3>=3.0.0,<4.0.0
+
+# ==========================================
+# IFC Export (kept from your upgrade)
+# ==========================================
+# NOTE (review fix C1): export/ifc_exporter.py uses the modular high-level API
+# (ifcopenshell.api.geometry.add_wall_representation, api.root.create_entity,
+# api.feature/api.void.add_opening, ...). That API is the 0.8.x line.
+# The previous pin "ifcopenshell==0.7.0" did NOT exist on PyPI (lowest is
+# 0.7.10, current 0.8.5), so `pip install -r requirements.txt` aborted and the
+# IFC/3D export endpoint could never run. Pinned to the 0.8.x line below.
+# After install, verify with:
+#   python -c "import ifcopenshell, ifcopenshell.api.geometry; print(ifcopenshell.version)"
+ifcopenshell>=0.8.0,<0.9
+
+# ==========================================
+# Utilities
+# ==========================================
+h5py==3.9.0
+PyYAML==6.0.1
+requests==2.31.0
+Cython==3.0.2
+psutil>=5.9.0
+python-dateutil==2.8.2
+
+# ==========================================
+# Production server
+# ==========================================
+gunicorn>=21.2.0
+
+# ── The NumPy pin is the load-bearing line ──────────────────────────────────
+# TensorFlow 2.14 (Mask R-CNN) is kept on the validated NumPy 1.24 line.
+# The latest ultralytics (8.4.x) declares `numpy>=1.23.0` with NO upper cap.
+#   → numpy 1.24.3 satisfies BOTH, so they coexist in ONE process.
+# BUT: ultralytics has no upper bound, so a fresh `pip install` would pull
+# numpy 2.x and BREAK TensorFlow. Keeping numpy==1.24.3 pinned in your main
+# requirements.txt forces pip to keep 1.24.3 (it satisfies ultralytics' >=1.23.0).
+# DO NOT let pip upgrade numpy. Verify after install:
+#   python -c "import numpy;print(numpy.__version__)"  → must print 1.24.3
+
+# CPU PyTorch — torch>=1.8 satisfies the latest ultralytics; 2.1.2 is numpy-1.24-safe.
+# (Optional: bump to torch==2.2.2 / torchvision==0.17.2 — also numpy-1.24-safe —
+#  to pair with a newer ultralytics; not required for inference.)
+
+# Latest YOLO runtime (8.4.x). Capped <9 to avoid a hypothetical future major break.
+# To pin the exact latest at install time: ultralytics==8.4.72
+
+# ==========================================
+# Mask2Former and the training-only stack are intentionally excluded.
+# Torch/Torchvision are provided by the sealed local CUDA wheels for optional YOLO.
+# ==========================================
+
+# Ultralytics transitive dependencies are locked here; the package itself
+# is installed from the no-deps overlay after the sealed CUDA wheels.
+polars>=0.20.0
+nvidia-ml-py>=12.0.0

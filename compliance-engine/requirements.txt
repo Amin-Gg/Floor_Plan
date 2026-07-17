@@ -17,7 +17,6 @@ torch>=2.0               # required by sentence-transformers; reranker probes to
 
 # ---- LLM providers (each tied to one stage) ----
 anthropic>=0.39.0        # Stage 1 contextual retrieval — one-time index pass (contextualize.py)
-groq>=0.11.0             # Stage 2 query transforms — qwen/qwen3-32b (groq_client.py, query_transforms.py)
 openai>=1.0.0            # Step 1 offline Mabhas classification (classification/mabhas_classify.py) + AgentRouter gateway client (rag/agentrouter_client.py)
 
 # ---- Document input (Step 1) ----
@@ -25,6 +24,14 @@ python-docx>=1.1.0       # reads the Mabhas Word document into structured clause
 
 # ---- IFC ingestion (Step 2 entry: reconstruct bim_data from the Step-1 IFC) ----
 ifcopenshell>=0.8.0,<0.9   # ingest/ifc_to_bim_data.py reads the enriched plan.ifc
+pyyaml>=6.0            # versioned semantic catalog + controlled values (standards/*.yaml)
+
+# ---- Versioned report validation (Phase 7) ----
+jsonschema>=4.21.0      # validates every Validation Report v1.0 JSON artifact
+
+# ---- Full BCF XML 2.1 export (Phase 8) ----
+lxml>=5.0              # BCF XML generation and local XSD conformance validation
+Pillow>=10.0           # deterministic BCF snapshot PNG rendering
 
 # ---- Web service (optional — only to run the FastAPI app) ----
 fastapi>=0.110.0

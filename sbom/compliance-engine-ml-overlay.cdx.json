@@ -1,0 +1,32 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/sentence-transformers@3.4.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "68daa57504ff548340e54ff117bd86c1d2f784b21e0fb2689cf3272b8937b24b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "e026dc6d56801fd83f74ad29a30263f401b4b522165c19386d8bc10dcca805da"
+        }
+      ],
+      "name": "sentence-transformers",
+      "purl": "pkg:pypi/sentence-transformers@3.4.1",
+      "type": "library",
+      "version": "3.4.1"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "compliance-engine-ml-overlay",
+      "type": "application",
+      "version": "1.4.0"
+    }
+  },
+  "serialNumber": "urn:uuid:76b0a081-a473-cfcf-f6f5-97dddcd0a5af",
+  "specVersion": "1.5",
+  "version": 1
+}

@@ -24,6 +24,7 @@ Run:
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -39,7 +40,7 @@ for p in (str(_ROOT), str(_SERVICES)):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from orchestrator import run_compliance  # noqa: E402
+from validation.compliance.runner import _run_compliance_core  # noqa: E402
 from numeric_checker import Verdict  # noqa: E402
 
 # Reuse the established BIM fixture (known FAIL: kitchen↔bathroom door;
@@ -97,8 +98,14 @@ class NewDefaultMockRetriever:
 def _context_sensitive_llm(prompt: str) -> str:
     """Fake LLM whose advisory text depends on the retrieved context, so
     advisory notes MUST differ between the two retrievers — proving the
-    test tolerates exactly (and only) that difference."""
-    return f"Reviewer note derived from context fingerprint {hash(prompt) & 0xffff:04x}."
+    test tolerates exactly (and only) that difference.
+
+    SHA-256, not built-in hash(): hash() is process-randomized
+    (PYTHONHASHSEED) and 16 retained bits give a small collision chance —
+    either could make this test flake. A cryptographic digest of the prompt
+    is deterministic across runs and collision-free in practice."""
+    fingerprint = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:12]
+    return f"Reviewer note derived from context fingerprint {fingerprint}."
 
 
 # ---------------------------------------------------------------------------
@@ -124,14 +131,43 @@ def _pass_fail_messages(result):
 
 
 # ---------------------------------------------------------------------------
+# Fixture clause set
+# ---------------------------------------------------------------------------
+# Stage 7 (2026-07) excluded UNSUPPORTED findings (engine-limitation
+# NEEDS_REVIEW, Finding.unsupported=True) from the LLM advisory pass — a
+# deliberate budget decision: a note cannot help where the engine simply
+# lacks a mapping. The shared BIM/CLAUSES fixture's only NEEDS_REVIEW item
+# (O1, unmapped window_area ratio) is exactly such an unsupported finding,
+# which left this module's "teeth" test with nothing to annotate.
+#
+# To keep exercising the advisory invariant we extend the clause set with a
+# genuinely INTERPRETIVE clause: a conditional numeric rule. Conditional
+# rules always yield NEEDS_REVIEW with unsupported=False (numeric_checker
+# step 1 — the condition needs human judgment, not an engine fix), so the
+# LLM pass annotates them. This is local to the eval suite; the shared
+# fixture used by the core tests is untouched.
+_INTERPRETIVE_CLAUSE = {
+    "article_id": "C1",
+    "rule_type": "numeric",
+    "text_en": "Bedroom min area 8 m2 when adjacent to open space",
+    "entities": {
+        "object": "bedroom", "property": "area", "comparator": ">=",
+        "value": 8, "unit": "m2", "condition": "adjacent to open space",
+    },
+}
+
+CLAUSES_EVAL = CLAUSES + [_INTERPRETIVE_CLAUSE]
+
+
+# ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
 def runs():
-    old = run_compliance(BIM, CLAUSES, retriever=OldDenseMockRetriever(),
+    old = _run_compliance_core(BIM, CLAUSES_EVAL, retriever=OldDenseMockRetriever(),
                          llm=_context_sensitive_llm, use_langgraph=False)
-    new = run_compliance(BIM, CLAUSES, retriever=NewDefaultMockRetriever(),
+    new = _run_compliance_core(BIM, CLAUSES_EVAL, retriever=NewDefaultMockRetriever(),
                          llm=_context_sensitive_llm, use_langgraph=False)
     return old, new
 
@@ -184,6 +220,38 @@ def test_advisory_text_differs_proving_test_has_teeth(runs):
         "advisory notes identical across different retrieval contexts — "
         "the regression test would be vacuous"
     )
+
+
+def test_advisory_eligibility_product_decision(runs):
+    """Pin the Stage 7 product decision (STAGE8_BASELINE.md §3) directly in
+    the regression suite:
+
+    * O1 (engine limitation — unmapped window_area) is NEEDS_REVIEW with
+      unsupported=True and must receive NO advisory note;
+    * C1 (genuinely interpretive — conditional rule) is NEEDS_REVIEW with
+      unsupported=False and MUST receive an advisory note.
+
+    If either assertion flips, the advisory-eligibility contract changed and
+    that change must be an explicit product decision, not a side effect."""
+    for res in runs:
+        by_id = {}
+        for f in res.findings:
+            if f.verdict == Verdict.NEEDS_REVIEW:
+                by_id.setdefault(f.article_id, []).append(f)
+
+        assert "O1" in by_id, "unsupported fixture finding O1 missing"
+        for f in by_id["O1"]:
+            assert getattr(f, "unsupported", False) is True
+            assert "[AI note:" not in f.message, (
+                "unsupported finding received an advisory note — Stage 7 "
+                "budget exclusion regressed")
+
+        assert "C1" in by_id, "interpretive fixture finding C1 missing"
+        for f in by_id["C1"]:
+            assert getattr(f, "unsupported", False) is False
+            assert "[AI note:" in f.message, (
+                "interpretive finding received no advisory note — LLM "
+                "advisory pass regressed")
 
 
 def test_default_factory_routes_to_hybrid_rerank(monkeypatch):

@@ -1,213 +1,171 @@
-"""
-utils/error_handlers.py
-=======================
-Centralised error handling for the FloorPlanTo3D Flask API.
-
-Usage
------
-In application.py:
-
-    from utils.error_handlers import register_error_handlers
-    register_error_handlers(application)
-
-In any route:
-
-    from utils.error_handlers import (
-        APIError, ValidationError, ImageValidationError, ModelNotReadyError
-    )
-
-    raise ValidationError("scale_factor must be positive")
-    raise ModelNotReadyError()
-
-Every error — whether raised explicitly or as an unhandled exception —
-returns the same JSON envelope so clients only need one error-handling path:
-
-    {
-        "success":    false,
-        "request_id": "a3f1b2c4",
-        "error": {
-            "message": "Missing required field 'image'",
-            "code":    400,
-            "type":    "ValidationError",
-            "details": { ... }     ← optional, only present when useful
-        }
-    }
-"""
+"""Machine-readable API errors shared by every Stage-1 endpoint."""
+from __future__ import annotations
 
 import logging
 import traceback
-import uuid
+from typing import Any
 
-from flask import jsonify, request, g
+from flask import g, jsonify, request
 
 logger = logging.getLogger(__name__)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Custom exception hierarchy
-# ─────────────────────────────────────────────────────────────────────────────
-
 class APIError(Exception):
-    """
-    Base class for all API errors.
-    Raise subclasses in route handlers — the registered error handler converts
-    them to a consistent JSON response automatically.
-    """
-    status_code: int = 500
-    error_type:  str = "APIError"
+    status_code = 500
+    error_type = "APIError"
+    error_code = "internal_error"
 
-    def __init__(self, message: str, details: dict = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(message)
         self.message = message
         self.details = details or {}
 
-    def to_dict(self) -> dict:
-        body = {
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "code": self.error_code,
             "message": self.message,
-            "code":    self.status_code,
-            "type":    self.error_type,
+            "status": self.status_code,
+            "type": self.error_type,
+            "details": self.details,
         }
-        if self.details:
-            body["details"] = self.details
-        return body
 
 
 class ValidationError(APIError):
-    """
-    Raised when a request parameter fails validation.
-    Results in HTTP 400 Bad Request.
-
-    Example:
-        raise ValidationError(
-            "scale_factor_mm_per_pixel must be between 0.01 and 100",
-            details={"received": 0, "min": 0.01, "max": 100}
-        )
-    """
     status_code = 400
-    error_type  = "ValidationError"
+    error_type = "ValidationError"
+    error_code = "invalid_request"
 
 
 class ImageValidationError(ValidationError):
-    """
-    Raised when the uploaded image is missing, empty, or unreadable.
-    Results in HTTP 400 Bad Request.
-    """
     error_type = "ImageValidationError"
+    error_code = "invalid_image"
 
 
 class ModelNotReadyError(APIError):
-    """
-    Raised when a route requires the AI model but it is not yet initialized.
-    Results in HTTP 503 Service Unavailable.
-    """
     status_code = 503
-    error_type  = "ModelNotReadyError"
+    error_type = "ModelNotReadyError"
+    error_code = "model_not_ready"
 
     def __init__(self):
         super().__init__(
-            "The AI model is not yet initialized. "
-            "Check /health for status and server logs for details."
+            "The AI model is not initialized. Check /health and the server logs."
         )
 
 
 class NotFoundError(APIError):
-    """HTTP 404."""
     status_code = 404
-    error_type  = "NotFoundError"
+    error_type = "NotFoundError"
+    error_code = "not_found"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Internal helpers
-# ─────────────────────────────────────────────────────────────────────────────
+class ConflictError(APIError):
+    status_code = 409
+    error_type = "ConflictError"
+    error_code = "resource_conflict"
+
+
+class UpstreamServiceError(APIError):
+    status_code = 502
+    error_type = "UpstreamServiceError"
+    error_code = "upstream_protocol_error"
+
+
+class UpstreamUnavailableError(APIError):
+    status_code = 503
+    error_type = "UpstreamUnavailableError"
+    error_code = "upstream_unavailable"
+
+
+class GatewayTimeoutError(APIError):
+    status_code = 504
+    error_type = "GatewayTimeoutError"
+    error_code = "upstream_timeout"
+
 
 def _request_id() -> str:
-    """Return the request-scoped ID if available, otherwise a fallback."""
     return getattr(g, "request_id", "n/a")
 
 
-def _build_response(error_dict: dict, status_code: int):
-    """Wrap an error dict in the standard envelope and return a Flask response."""
-    body = {
-        "success":    False,
+def _build_response(error_dict: dict[str, Any], status_code: int):
+    return jsonify({
+        "success": False,
         "request_id": _request_id(),
-        "error":      error_dict,
+        "error": error_dict,
+    }), status_code
+
+
+def openapi_validation_error_response(exc):
+    """flask-openapi3 validation callback using the public error envelope."""
+    details = []
+    try:
+        details = exc.errors(include_url=False)
+    except Exception:
+        details = [{"message": str(exc)}]
+    body = {
+        "success": False,
+        "request_id": _request_id(),
+        "error": {
+            "code": "schema_validation_failed",
+            "message": "Request payload failed schema validation.",
+            "status": 422,
+            "type": "RequestValidationError",
+            "details": {"violations": details},
+        },
     }
-    return jsonify(body), status_code
+    response = jsonify(body)
+    response.status_code = 422
+    return response
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Registration
-# ─────────────────────────────────────────────────────────────────────────────
 
 def register_error_handlers(app) -> None:
-    """
-    Attach all error handlers to the Flask application.
-    Call this once in application.py after creating the Flask app.
-
-        from utils.error_handlers import register_error_handlers
-        register_error_handlers(application)
-    """
-
-    # ── Our custom exceptions ─────────────────────────────────────────────────
     @app.errorhandler(APIError)
     def handle_api_error(exc: APIError):
-        if exc.status_code >= 500:
-            logger.error(
-                "[%s] %s: %s",
-                _request_id(), exc.error_type, exc.message,
-                exc_info=True
-            )
-        else:
-            logger.warning(
-                "[%s] %s: %s",
-                _request_id(), exc.error_type, exc.message
-            )
+        log = logger.error if exc.status_code >= 500 else logger.warning
+        log("[%s] %s: %s", _request_id(), exc.error_type, exc.message)
         return _build_response(exc.to_dict(), exc.status_code)
 
-    # ── Standard HTTP errors ──────────────────────────────────────────────────
-    @app.errorhandler(400)
-    def handle_bad_request(exc):
+    def standard(status: int, code: str, message: str, error_type: str):
         return _build_response({
-            "message": "Bad request — check your request format and parameters.",
-            "code":    400,
-            "type":    "BadRequest",
-        }, 400)
+            "code": code,
+            "message": message,
+            "status": status,
+            "type": error_type,
+            "details": {},
+        }, status)
+
+    @app.errorhandler(400)
+    def handle_bad_request(_exc):
+        return standard(400, "bad_request", "Malformed request.", "BadRequest")
 
     @app.errorhandler(404)
-    def handle_not_found(exc):
-        return _build_response({
-            "message": f"Endpoint not found: {request.method} {request.path}",
-            "code":    404,
-            "type":    "NotFound",
-        }, 404)
+    def handle_not_found(_exc):
+        return standard(
+            404, "endpoint_not_found",
+            f"Endpoint not found: {request.method} {request.path}", "NotFound",
+        )
 
     @app.errorhandler(405)
-    def handle_method_not_allowed(exc):
-        return _build_response({
-            "message": f"Method {request.method} is not allowed on {request.path}.",
-            "code":    405,
-            "type":    "MethodNotAllowed",
-        }, 405)
+    def handle_method_not_allowed(_exc):
+        return standard(
+            405, "method_not_allowed",
+            f"Method {request.method} is not allowed on {request.path}.",
+            "MethodNotAllowed",
+        )
 
     @app.errorhandler(413)
-    def handle_payload_too_large(exc):
-        return _build_response({
-            "message": "Uploaded file exceeds the maximum allowed size.",
-            "code":    413,
-            "type":    "PayloadTooLarge",
-        }, 413)
+    def handle_payload_too_large(_exc):
+        return standard(
+            413, "payload_too_large",
+            "Uploaded payload exceeds the configured limit.", "PayloadTooLarge",
+        )
 
-    # ── Catch-all for unhandled exceptions ────────────────────────────────────
     @app.errorhandler(Exception)
-    def handle_unhandled_exception(exc):
+    def handle_unhandled_exception(_exc):
         logger.error(
             "[%s] Unhandled exception in %s %s:\n%s",
-            _request_id(), request.method, request.path,
-            traceback.format_exc()
+            _request_id(), request.method, request.path, traceback.format_exc(),
         )
-        return _build_response({
-            "message": "An unexpected server error occurred. "
-                       "Check the server logs for details.",
-            "code":    500,
-            "type":    "InternalServerError",
-        }, 500)
+        return standard(
+            500, "internal_error",
+            "An unexpected server error occurred.", "InternalServerError",
+        )

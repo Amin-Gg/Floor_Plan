@@ -36,9 +36,11 @@ Design principles (so this stays easy to edit after model training)
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Dict, List, Optional, Union
+
+from domain.findings import Finding, Verdict
+from domain.units import area_to_m2, length_to_mm, normalise_unit_name
+from standards.catalog_api import clause_property_semantics, supported_units
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +63,7 @@ def _as_text(value):
 # CONFIG — the only things you normally edit
 # ═══════════════════════════════════════════════════════════════════════════
 
-class Verdict(str, Enum):
-    PASS = "PASS"
-    FAIL = "FAIL"
-    NEEDS_REVIEW = "NEEDS_REVIEW"
+# Verdict is the shared domain contract (re-exported for compatibility).
 
 
 # ── BUILDING PARAMETERS (user-supplied, not measured from the plan) ──────────
@@ -161,20 +160,8 @@ OBJECT_MAP: Dict[str, tuple] = {
 # must match `area` before the `width`/`length` substrings. Unknown phrasing →
 # None → NEEDS_REVIEW (never measured as the wrong thing).
 def _quantity_of(prop: str) -> Optional[str]:
-    p = (prop or "").lower()
-    if "area" in p:
-        return "area"
-    if "sill" in p:                           # window sill height
-        return "sill"
-    if "height" in p or "headroom" in p:      # "clear height", "ceiling height"
-        return "height"
-    if "width" in p:                          # "clear width", "min width"
-        return "width"
-    if "length" in p or "depth" in p:
-        return "length"
-    if "diameter" in p:                       # treat as a least-dimension check
-        return "width"
-    return None
+    semantics = clause_property_semantics(prop)
+    return str(semantics["key"]) if semantics is not None else None
 
 
 # (element_kind, canonical_quantity) → concrete measure_kind for bim_data.
@@ -202,47 +189,13 @@ def _resolve_measure(element_kind: str, quantity: Optional[str]) -> Optional[str
 
 
 # ── UNIT NORMALISATION ──────────────────────────────────────────────────────
-# Everything is converted to canonical units before comparison:
-#   lengths → metres, areas → m².  Edit here if a new unit appears.
-_LENGTH_TO_M = {"mm": 0.001, "cm": 0.01, "m": 1.0}
-_AREA_TO_M2  = {"mm2": 1e-6, "cm2": 1e-4, "m2": 1.0}
-
-# Units we understand. Anything else (ratio, percent, count, lux, dB, …) is NOT
-# auto-checkable here → NEEDS_REVIEW. (Ratios like glazing are the Opening
-# agent's job; percent slopes need geometry we don't extract; etc.)
-_LENGTH_UNITS = set(_LENGTH_TO_M)
-_AREA_UNITS   = set(_AREA_TO_M2)
+# Supported unit vocabulary and property dimensions come from the Phase-5
+# semantic catalog. Generic arithmetic conversion remains in domain.units.
+_LENGTH_UNITS = {normalise_unit_name(v) for v in supported_units("length")}
+_AREA_UNITS = {normalise_unit_name(v) for v in supported_units("area")}
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Finding data structure
-# ═══════════════════════════════════════════════════════════════════════════
-
-@dataclass
-class Finding:
-    article_id:   str
-    verdict:      Verdict
-    message:      str
-    object:       Optional[str] = None
-    measured:     Optional[float] = None
-    required:     Optional[Any] = None
-    unit:         Optional[str] = None
-    element_id:   Optional[str] = None   # which room/door/window, if applicable
-    rule_text_en: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "article_id":  self.article_id,
-            "verdict":     self.verdict.value,
-            "message":     self.message,
-            "object":      self.object,
-            "measured":    self.measured,
-            "required":    self.required,
-            "unit":        self.unit,
-            "element_id":  self.element_id,
-            "rule_text_en": self.rule_text_en,
-        }
-
+# Finding is the shared domain contract imported above.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # bim_data adapter — the ONLY place that reads bim_data field names
@@ -406,7 +359,8 @@ class NumericChecker:
         """Handle both single-dict and list-of-dict entity forms."""
         ents = clause.get("entities")
         if ents is None:
-            return [self._review(clause, "No entities to check")]
+            return [self._review(clause, "No entities to check",
+                                 unsupported=True)]
         if isinstance(ents, dict):
             ents = [ents]
         out: List[Finding] = []
@@ -436,13 +390,15 @@ class NumericChecker:
         # 2. Comparator must be one we handle
         if comp not in (">=", "<=", ">", "<", "range"):
             return [self._review(clause,
-                f"Unsupported comparator '{comp}' — needs review", object=obj)]
+                f"Unsupported comparator '{comp}' — needs review", object=obj,
+                unsupported=True)]
 
         # 3. Object must map to an element (and, for rooms, a category)
         mapping = OBJECT_MAP.get(obj)
         if mapping is None:
             return [self._review(clause,
                 f"Object '{obj}' not mapped to a measurable value — needs review",
+                unsupported=True,
                 object=obj)]
 
         element_kind, category = mapping
@@ -463,6 +419,7 @@ class NumericChecker:
         if canonical_value is None:
             return [self._review(clause,
                 f"Unit '{unit}' for property '{prop}' not auto-checkable — needs review",
+                unsupported=True,
                 object=obj)]
 
         # 5. Measure from bim_data and compare
@@ -483,8 +440,9 @@ class NumericChecker:
         if measure_kind == "room_area":
             rooms = self.bim.rooms_of_category(category)
             if not rooms:
-                return [self._review(clause,
-                    f"No '{category}' rooms in plan to check — needs review",
+                return [self._blocked(clause,
+                    f"No '{category}' rooms in plan to check — not evaluated "
+                    f"(add/tag the room or confirm it is absent)",
                     object=obj)]
             for r in rooms:
                 measured_items.append((self.bim.room_id(r), self.bim.room_area_m2(r)))
@@ -527,11 +485,12 @@ class NumericChecker:
         else:
             return [self._review(clause,
                 f"Measure kind '{measure_kind}' not implemented — needs review",
+                unsupported=True,
                 object=obj)]
 
         if not measured_items:
-            return [self._review(clause,
-                f"Nothing measurable for '{obj}' in this plan — needs review",
+            return [self._blocked(clause,
+                f"Nothing measurable for '{obj}' in this plan — not evaluated",
                 object=obj)]
 
         # Honest provenance: room "height" comes from a building parameter
@@ -548,20 +507,21 @@ class NumericChecker:
                 src_note = (f"  [ceiling height = {_mm} mm, "
                             f"user building parameter — not measured]")
             else:
-                return [self._review(clause,
+                return [self._blocked(clause,
                     f"{elem_id}: ceiling height not asserted — the plan "
                     f"cannot yield it and the engine default ({_mm} mm) is "
                     f"not used for a verdict. Supply building_params."
                     f"wall_height (mm) to assert the real floor-to-slab "
-                    f"height and get a PASS/FAIL verdict — needs review",
+                    f"height and get a PASS/FAIL verdict — not evaluated",
                     object=obj, element_id=elem_id)
                     for elem_id, _ in measured_items]
 
         # Compare each measured element against the threshold
         for elem_id, measured in measured_items:
             if measured is None:
-                out.append(self._review(clause,
-                    f"Could not measure {prop} of {elem_id} — needs review",
+                out.append(self._blocked(clause,
+                    f"Could not measure {prop} of {elem_id} — not evaluated "
+                    f"(value missing from the model)",
                     object=obj, element_id=elem_id))
                 continue
             passed = self._compare(measured, comp, required)
@@ -614,23 +574,40 @@ class NumericChecker:
             v = float(value)
         except (TypeError, ValueError):
             return None
-        # area properties expect area units; everything else expects length
-        is_area = prop in ("area",) or unit in _AREA_UNITS
-        if is_area:
-            if unit in _AREA_TO_M2:
-                return v * _AREA_TO_M2[unit]
-            return None
-        if unit in _LENGTH_TO_M:
-            return v * _LENGTH_TO_M[unit]
+        normalized_unit = normalise_unit_name(unit)
+        semantics = clause_property_semantics(prop)
+        dimension = semantics.get("dimension") if semantics else None
+        if dimension == "area" or normalized_unit in _AREA_UNITS:
+            return area_to_m2(v, normalized_unit)
+        if dimension == "length" or normalized_unit in _LENGTH_UNITS:
+            millimetres = length_to_mm(v, normalized_unit)
+            return None if millimetres is None else millimetres / 1000.0
         return None   # ratio / percent / count / lux / etc → not auto-checkable
 
     @staticmethod
     def _review(clause: Dict[str, Any], msg: str,
                 object: Optional[str] = None,
-                element_id: Optional[str] = None) -> Finding:
+                element_id: Optional[str] = None,
+                unsupported: bool = False) -> Finding:
         return Finding(
             article_id=clause.get("article_id", "?"),
             verdict=Verdict.NEEDS_REVIEW,
+            message=msg, object=object, element_id=element_id,
+            rule_text_en=clause.get("text_en"),
+            unsupported=unsupported,
+        )
+
+    @staticmethod
+    def _blocked(clause: Dict[str, Any], msg: str,
+                 object: Optional[str] = None,
+                 element_id: Optional[str] = None) -> Finding:
+        """Data-absence finding: the engine HAS logic for this clause but the
+        plan/model lacks the required data. Distinct from _review (judgment):
+        the fix is 'supply the data', so the verdict is NOT_EVALUATED and the
+        item is routed to the modeler, not the human review queue."""
+        return Finding(
+            article_id=clause.get("article_id", "?"),
+            verdict=Verdict.NOT_EVALUATED,
             message=msg, object=object, element_id=element_id,
             rule_text_en=clause.get("text_en"),
         )
@@ -640,8 +617,21 @@ class NumericChecker:
 # Convenience: summarise a findings list
 # ═══════════════════════════════════════════════════════════════════════════
 
-def summarise(findings: List[Finding]) -> Dict[str, int]:
-    out = {"PASS": 0, "FAIL": 0, "NEEDS_REVIEW": 0}
+def assign_finding_ordinals(findings: List[Finding]) -> List[Finding]:
+    """Disambiguate finding_ids for findings sharing an identity basis within
+    one run. MUST be called on the final merged list (order is deterministic:
+    agents iterate clauses and elements in stable order), otherwise duplicate
+    BCF topic GUIDs silently drop topics in BCF readers."""
+    seen: Dict[str, int] = {}
     for f in findings:
-        out[f.verdict.value] += 1
+        b = f._id_basis
+        f.ordinal = seen.get(b, 0)
+        seen[b] = f.ordinal + 1
+    return findings
+
+
+def summarise(findings: List[Finding]) -> Dict[str, int]:
+    out = {k: 0 for k in ("PASS", "FAIL", "NEEDS_REVIEW", "NOT_EVALUATED")}
+    for f in findings:
+        out[f.verdict.value] = out.get(f.verdict.value, 0) + 1
     return out

@@ -42,8 +42,12 @@ COVERAGE_CLASSES = [PASS, FAIL, NEEDS_REVIEW, UNSUPPORTED, BLOCKED]
 # element findings). FAIL first, UNSUPPORTED last.
 _PRIORITY = {FAIL: 0, NEEDS_REVIEW: 1, PASS: 2, BLOCKED: 3, UNSUPPORTED: 4}
 
-# Substrings (lowercased) in a NEEDS_REVIEW finding's message that mean the
-# engine had NO logic for the clause → UNSUPPORTED.
+# Substrings (lowercased) meaning the engine had NO logic for the clause.
+# Stage 6: DEMOTED to a legacy fallback — every live emitter now sets
+# Finding.unsupported=True (numeric_checker, topology_agent, opening_agent),
+# and classify_finding reads that field first. The markers apply ONLY to
+# dict findings serialized before Stage 6, which lack the field; they are
+# never consulted when the field is present.
 _UNSUPPORTED_MARKERS = (
     "not mapped to a measurable value",
     "not auto-checkable",
@@ -56,37 +60,52 @@ _UNSUPPORTED_MARKERS = (
     "could not map subject/object",
 )
 
-# Substrings meaning the engine COULD check it but the data was absent → BLOCKED.
-_BLOCKED_MARKERS = (
-    "rooms in plan to check",         # "No 'room_kitchen' rooms in plan to check"
-    "nothing measurable for",
-    "could not measure",
-    "no stair element detected",
-)
+# Substrings meaning the engine COULD check it but the data was absent.
+# Stage 5: RETIRED as a classification path — every emitter now sets the
+# NOT_EVALUATED verdict directly (numeric_checker Stage 1; topology/opening
+# agents Stage 5), so BLOCKED is verdict-level truth. The stair case
+# ("no stair element detected") was removed on semantic grounds: a missing
+# stair on a possibly single-storey plan is an APPLICABILITY judgment
+# (NEEDS_REVIEW), not missing data — its old presence here inflated
+# blocked_by_missing_data. Kept (empty) so the classification history is
+# greppable.
+_BLOCKED_MARKERS: tuple = ()
 
 
-def classify_finding(verdict_value: str, message: str) -> str:
-    """Map one finding to a coverage class. PASS/FAIL pass through; a
-    NEEDS_REVIEW is split into UNSUPPORTED / BLOCKED / NEEDS_REVIEW by message."""
+def classify_finding(verdict_value: str, message: str,
+                     unsupported: Optional[bool] = None) -> str:
+    """Map one finding to a coverage class.
+
+    PASS/FAIL pass through. NOT_EVALUATED → BLOCKED (verdict-level, Stage 5).
+    NEEDS_REVIEW splits on the Finding.unsupported FIELD (Stage 6): True →
+    UNSUPPORTED (engine limitation), False → NEEDS_REVIEW (human judgment).
+    Message-marker sniffing survives ONLY as a fallback for legacy dict
+    findings serialized before the field existed (unsupported=None)."""
     if verdict_value in (PASS, FAIL):
         return verdict_value
-    msg = (message or "").lower()
+    if verdict_value == "NOT_EVALUATED":
+        return BLOCKED
+    if unsupported is not None:
+        return UNSUPPORTED if unsupported else NEEDS_REVIEW
+    msg = (message or "").lower()                    # legacy fallback only
     for m in _UNSUPPORTED_MARKERS:
         if m in msg:
             return UNSUPPORTED
-    for m in _BLOCKED_MARKERS:
-        if m in msg:
-            return BLOCKED
     return NEEDS_REVIEW          # genuine interpretive / site-condition review
 
 
 def _finding_fields(f: Any) -> tuple:
-    """Accept either a Finding dataclass or its to_dict()."""
+    """Accept either a Finding dataclass or its to_dict().
+
+    Returns (verdict, message, article_id, unsupported) where unsupported is
+    None when the finding predates the Stage 6 field (legacy dicts)."""
     if isinstance(f, dict):
         v = f.get("verdict", NEEDS_REVIEW)
-        return str(v), str(f.get("message", "")), f.get("article_id", "?")
+        return (str(v), str(f.get("message", "")), f.get("article_id", "?"),
+                f.get("unsupported"))
     v = f.verdict.value if hasattr(f.verdict, "value") else str(f.verdict)
-    return v, str(getattr(f, "message", "")), getattr(f, "article_id", "?")
+    return (v, str(getattr(f, "message", "")), getattr(f, "article_id", "?"),
+            getattr(f, "unsupported", None))
 
 
 def build_coverage(result: Any,
@@ -111,8 +130,8 @@ def build_coverage(result: Any,
     findings_by_class = {c: 0 for c in COVERAGE_CLASSES}
     statuses_by_clause: Dict[str, List[str]] = {}
     for f in findings:
-        v, msg, art = _finding_fields(f)
-        cls = classify_finding(v, msg)
+        v, msg, art, unsup = _finding_fields(f)
+        cls = classify_finding(v, msg, unsup)
         findings_by_class[cls] += 1
         statuses_by_clause.setdefault(str(art), []).append(cls)
 

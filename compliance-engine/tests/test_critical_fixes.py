@@ -37,7 +37,7 @@ for _p in (_ROOT, os.path.join(_ROOT, "services")):
 from services.numeric_checker import NumericChecker, Verdict          # noqa: E402
 from services.opening_agent import OpeningAgent                       # noqa: E402
 from services.spatial_graph import SpatialGraph                       # noqa: E402
-from services.orchestrator import _llm_review_interpretive            # noqa: E402
+from validation.compliance.runner import _llm_review_interpretive            # noqa: E402
 from services.numeric_checker import Finding                          # noqa: E402
 from ingest.ifc_to_bim_data import _area_or_none, _bbox_dims_mm       # noqa: E402
 
@@ -92,7 +92,7 @@ def test_c3_single_dimension_is_never_guessed():
     """One dim present → cannot know if it is the short or long side."""
     bim = _room({"width_mm": 3000})
     f = NumericChecker(bim).check_all([_MIN_WIDTH_CLAUSE])[0]
-    assert f.verdict == Verdict.NEEDS_REVIEW
+    assert f.verdict == Verdict.NOT_EVALUATED   # Stage 1: data absent, not judgment
 
 
 def test_c3_ingest_bbox_orders_extents():
@@ -129,7 +129,7 @@ def test_h1_missing_area_is_review_not_fail():
                       "dimensions": {"width_mm": 3000, "length_mm": 3000}}],
            "doors": [], "windows": []}
     f = NumericChecker(bim).check_all([clause])[0]
-    assert f.verdict == Verdict.NEEDS_REVIEW, (
+    assert f.verdict == Verdict.NOT_EVALUATED, (
         "an UNMEASURED room must not FAIL with 'area = 0.0'")
 
 
@@ -188,7 +188,7 @@ def test_h1_unmeasured_room_downgrades_glazing_pass_to_review():
     sg = SpatialGraph(_glazing_bim(bed_area=None))
     findings = OpeningAgent(sg).check_all([_RATIO_CLAUSE])
     f = [x for x in findings if x.article_id == "T-H1-ratio"][0]
-    assert f.verdict == Verdict.NEEDS_REVIEW
+    assert f.verdict == Verdict.NOT_EVALUATED   # Stage 5: missing area = data absence
     assert "R_bed" in f.message
 
 
@@ -215,15 +215,19 @@ def test_h1_all_measured_glazing_pass_unchanged():
 # ═══════════════════════════════════════════════════════════════════════════
 
 def test_c2_rag_stack_imports_without_groq_package():
+    """Groq removal (2026-07): the rag stack must import with the groq pip
+    package absent AND with rag.groq_client absent — nothing may reference
+    either. The import block guards against a reintroduction regression."""
     script = (
         "import builtins, sys\n"
         "real = builtins.__import__\n"
         "def block(name, *a, **k):\n"
-        "    if name == 'groq' or name.startswith('groq.'):\n"
-        "        raise ModuleNotFoundError(\"No module named 'groq'\")\n"
+        "    if name == 'groq' or name.startswith('groq.') "
+        "or name == 'rag.groq_client':\n"
+        "        raise ModuleNotFoundError(name)\n"
         "    return real(name, *a, **k)\n"
         "builtins.__import__ = block\n"
-        "import rag.groq_client\n"
+        "import rag.llm_client\n"
         "import rag.query_transforms\n"
         "import rag.rag_retriever\n"
         "print('OK')\n"
@@ -234,15 +238,12 @@ def test_c2_rag_stack_imports_without_groq_package():
     assert "OK" in out.stdout
 
 
-def test_c2_groq_call_still_requires_keys(monkeypatch):
-    """The lazy import must not weaken the lazy KEY check: calling without
-    keys still raises the explicit RuntimeError, not an import error."""
-    monkeypatch.delenv("GROQ_API_KEYS", raising=False)
-    monkeypatch.delenv("GROQ_API_KEY", raising=False)
-    import rag.groq_client as gc
-    monkeypatch.setattr(gc, "_KEYS", None)     # reset the lazy cache
-    with pytest.raises(RuntimeError, match="GROQ_API_KEYS"):
-        gc.groq_chat(messages=[{"role": "user", "content": "hi"}])
+def test_c2_groq_pin_raises_removal_error(monkeypatch):
+    """The old groq path must fail with the explicit removal message on a
+    per-call override, never an import error."""
+    import rag.llm_client as lc
+    with pytest.raises(RuntimeError, match="Groq was removed"):
+        lc.llm_chat([{"role": "user", "content": "hi"}], provider="groq")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -352,9 +353,11 @@ def test_c4_no_keys_returns_none(_fresh_wiring, monkeypatch):
 def test_c4_keys_present_returns_callable_and_caches(_fresh_wiring, monkeypatch):
     monkeypatch.setenv("LLM_PASS_ENABLED", "1")
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
-    monkeypatch.delenv("AGENTROUTER_API_KEY", raising=False)
+    # Groq removal (2026-07): agentrouter is the only provider that builds
+    # the callable; groq keys select nothing.
+    monkeypatch.setenv("AGENTROUTER_API_KEY", "sk-dummy")
     monkeypatch.delenv("AGENT_ROUTER_TOKEN", raising=False)
-    monkeypatch.setenv("GROQ_API_KEY", "gsk_dummy")
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
     llm = _fresh_wiring._get_llm()
     assert callable(llm)                       # built, NOT called (dummy key)
     assert _fresh_wiring._get_llm() is llm     # cached across jobs
@@ -381,11 +384,24 @@ def test_c4_run_pipeline_end_to_end_appends_ai_note(_fresh_wiring, monkeypatch,
                       "condition": None}},
         {"article_id": "A-interp", "rule_type": "numeric",
          "text_en": "corridor width shall be adequate",
-         "entities": {"object": "corridor", "property": "width",
-                      "comparator": ">=", "value": 1.1, "unit": "m",
-                      "condition": None}},   # 'corridor' unmapped → review
+         "entities": {"object": "bedroom", "property": "area",
+                      "comparator": ">=", "value": 6.5, "unit": "m2",
+                      # Stage 7: the interpretive example must be a
+                      # CONDITIONAL clause on a mapped object. The previous
+                      # fixture ('corridor', unmapped) is unsupported=True
+                      # since Stage 6 and is now correctly excluded from the
+                      # LLM pass — unmapped vocabulary is an engine
+                      # limitation, not a judgment call.
+                      "condition": "adjacent to open space"}},
     ]
-    out = ap.run_pipeline(bim, clauses, out_dir=str(tmp_path))
+    from services.validation_pipeline import (PipelineRequest,
+                                              run_validation_pipeline)
+    request = PipelineRequest(
+        source_type="bim_data", bim_data=bim, clauses=clauses,
+        out_dir=str(tmp_path), metadata={"plan_name": "test"},
+    )
+    execution = run_validation_pipeline(ap.configure_advisory(request))
+    out = execution.to_api_response()
 
     assert llm.calls == 1
     assert out["summary"]["PASS"] == 1 and out["summary"]["NEEDS_REVIEW"] == 1

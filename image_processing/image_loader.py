@@ -112,10 +112,6 @@ def encodeMaskSummary(mask):
 	}
 
 def getClassName(classId):
-	"""Get class name from class ID.
-
-	Reads from config/classes.py (the single source of truth) so new classes
-	are picked up automatically with no edits to this function.
-	"""
-	from config.classes import PROJECT_ID_TO_NAME
-	return PROJECT_ID_TO_NAME.get(classId, 'unknown')
+	"""Return a class name from the active Mask R-CNN ID space."""
+	from config.runtime_classes import primary_class_name
+	return primary_class_name(classId)

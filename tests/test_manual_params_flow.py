@@ -144,16 +144,29 @@ def test_exporter_writes_contract_pset_and_engine_reads_it(tmp_path):
     assert win["sill_height"] == pytest.approx(950.0, abs=1.0)
 
 
-def test_explicit_export_params_override_embedded_block(tmp_path):
+def test_direct_geometry_override_is_rejected_and_manual_inputs_reexport_works(tmp_path):
     pytest.importorskip("ifcopenshell")
     import ifcopenshell
     import ifcopenshell.util.element as ue
-    from export.ifc_exporter import bim_json_to_ifc
+    from export.ifc_exporter import IfcExportError, bim_json_to_ifc
+    from stage1_contracts import build_measurement_provenance, resolve_manual_inputs
 
-    bim = _build_bim({"wall_height": 3000})          # embedded: provided wall
+    bim = _build_bim({"wall_height": 3000})
+    with pytest.raises(IfcExportError, match="Manual Inputs v1"):
+        bim_json_to_ifc(
+            bim, building_params={"wall_height": 3400},
+            output_path=str(tmp_path / "blocked.ifc"),
+        )
+
+    resolved, _ = resolve_manual_inputs(bim, {
+        "schema_version": "1.0",
+        "defaults": {"wall_height_mm": 3400},
+    })
+    resolved = build_measurement_provenance(
+        resolved, context={"model_version": "test", "weight_version": "test"}
+    )
     out = tmp_path / "plan.ifc"
-    bim_json_to_ifc(bim, building_params={"wall_height": 3400},
-                    output_path=str(out))
+    bim_json_to_ifc(resolved, output_path=str(out))
     contract = ue.get_psets(
         ifcopenshell.open(str(out)).by_type("IfcProject")[0]
     )["Pset_SimsysContract"]

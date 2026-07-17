@@ -1,0 +1,39 @@
+{
+  "bcf": {
+    "selected_ifc_guids": [
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "1JaBYJJAAqrjuxsk0cuM5Q",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "2Ms$XJv7rWoXN7Q4AbTi0A",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "33_QXrxDDNpQ$WZlMZnM19",
+      "37APn8YdAM5Hib8Eu7wjJn"
+    ],
+    "topics": 14,
+    "version": "2.1",
+    "viewpoints": 14
+  },
+  "compliance_summary": {
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8,
+    "PASS": 15
+  },
+  "ok": true,
+  "quality_status": "passed_with_alerts",
+  "reports": {
+    "bcf": "artifacts/phase8_acceptance/compliance_issues.bcf",
+    "bcf_manifest": "artifacts/phase8_acceptance/compliance_issues.bcf.manifest.json",
+    "html": "artifacts/phase8_acceptance/compliance_report.html",
+    "json": "artifacts/phase8_acceptance/compliance_result.json",
+    "pdf": "artifacts/phase8_acceptance/compliance_report.pdf"
+  },
+  "schema_status": "passed"
+}

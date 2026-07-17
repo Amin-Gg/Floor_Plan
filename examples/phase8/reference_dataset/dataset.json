@@ -1,0 +1,65 @@
+{
+  "classes": [
+    "wall",
+    "window",
+    "door",
+    "stairs",
+    "column",
+    "railing"
+  ],
+  "dataset_id": "phase8-synthetic-reference-v1",
+  "label_status": "synthetic_contract_test",
+  "purpose": "metric and contract acceptance only; never cite as real model accuracy",
+  "samples": [
+    {
+      "annotations_path": "annotations/synthetic_residential_001.json",
+      "annotations_sha256": "09212da964797941bd4eefde7f948625c04321440c7176ac17d6a32b88141502",
+      "height": 200,
+      "image_path": "images/synthetic_residential_001.png",
+      "image_sha256": "5e3a8c15fc1bc99150ddf516ece0d475bce03b384d89376ed64ded6a9d6ca97e",
+      "label_status": "synthetic_contract_test",
+      "mm_per_pixel": 5.0,
+      "prediction_sha256": {
+        "baseline": "5138778140a3e500d8423f169e1826e6a4bd0e890c47dc33a7de225888114de1",
+        "candidate": "a3358eb031eb64df84798add70a7e99a6c33dd1ef5b3b963185e107441b9ab46"
+      },
+      "predictions": {
+        "baseline": "predictions/baseline/synthetic_residential_001.json",
+        "candidate": "predictions/candidate/synthetic_residential_001.json"
+      },
+      "sample_id": "synthetic_residential_001",
+      "slices": {
+        "language": "fa",
+        "plan_style": "residential",
+        "scan_quality": "clean"
+      },
+      "width": 200
+    },
+    {
+      "annotations_path": "annotations/synthetic_office_002.json",
+      "annotations_sha256": "4c5d8a754d11466f5af4d287b3889133c9440a5bb5fa43eacbd1793d301f92cb",
+      "height": 200,
+      "image_path": "images/synthetic_office_002.png",
+      "image_sha256": "8d598e6aa1dd176027d89d3fc7599f7dfb4cfd0050516812bda2fdb82106aae2",
+      "label_status": "synthetic_contract_test",
+      "mm_per_pixel": 4.0,
+      "prediction_sha256": {
+        "baseline": "80a20dd193fe1213dcfaa36da7ee4e329f5792936d49b54f8d8413af5f2b65e5",
+        "candidate": "0aed0374d2669388fce6e13f529706301d84eca73e7fdf0abc4f8f56fc2b1f25"
+      },
+      "predictions": {
+        "baseline": "predictions/baseline/synthetic_office_002.json",
+        "candidate": "predictions/candidate/synthetic_office_002.json"
+      },
+      "sample_id": "synthetic_office_002",
+      "slices": {
+        "language": "en",
+        "plan_style": "office",
+        "scan_quality": "noisy"
+      },
+      "width": 200
+    }
+  ],
+  "schema_version": "1.0",
+  "split": "synthetic"
+}

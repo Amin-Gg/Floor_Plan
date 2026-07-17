@@ -1,36 +1,31 @@
 """
 rag/llm_client.py
 =================
-Provider-agnostic LLM seam: ONE function, llm_chat(), routed to whichever
-provider is configured. Everything in the engine that talks to an LLM (the
-CRAG query transforms, the interpretive advisory pass) calls this seam;
-provider choice is configuration, not code.
+Provider seam for the engine's ONE LLM gateway: AgentRouter. Everything that
+talks to an LLM (the CRAG query transforms, the interpretive advisory pass)
+calls llm_chat(); model choice per role is configuration, not code.
 
-Providers
----------
-    groq          rag.groq_client.groq_chat — the 9-key rotating pool,
-                  qwen/qwen3-32b (the original Stage 2 configuration).
-    agentrouter   rag.agentrouter_client.agentrouter_chat — the
-                  OpenAI-compatible gateway at agentrouter.org
-                  (AGENTROUTER_MODEL, default claude-sonnet-4-5-20250929).
+Groq removal (operator decision, 2026-07)
+-----------------------------------------
+Groq was dropped entirely — no fallback, no rotating key pool, no
+reasoning_effort knob. rag/groq_client.py is gone and GROQ_* environment
+variables are ignored. The seam is kept (llm_chat, resolve_provider) so a
+second provider can be reintroduced later without touching callers; the
+``reasoning_effort`` parameter is retained in the signature for caller
+compatibility and is dropped (AgentRouter's OpenAI-compatible gateway rejects
+unknown fields for routed models).
 
 Selection (resolve_provider)
 ----------------------------
-    LLM_PROVIDER=groq | agentrouter    explicit pin
-    LLM_PROVIDER=auto (default)        agentrouter if AGENTROUTER_API_KEY /
-                                       AGENT_ROUTER_TOKEN is set, else groq
-                                       if GROQ_API_KEYS / GROQ_API_KEY is
-                                       set, else None (no LLM configured —
-                                       the engine's fully-offline mode).
+    LLM_PROVIDER=agentrouter    explicit pin
+    LLM_PROVIDER=auto (default) agentrouter if AGENTROUTER_API_KEY /
+                                AGENT_ROUTER_TOKEN is set, else None (no LLM
+                                configured — the engine's fully-offline mode).
 
     An unrecognised LLM_PROVIDER value resolves to None with a LOUD warning
     (never a guess): a typo must switch the interpretive pass off visibly,
     not silently fall through to an unintended provider. Deterministic
     PASS/FAIL verdicts never depend on any of this.
-
-reasoning_effort is a Groq/qwen3-specific knob: it is forwarded to the groq
-provider and dropped for agentrouter (OpenAI-compatible gateways reject
-unknown fields for routed models).
 """
 
 from __future__ import annotations
@@ -41,7 +36,32 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_VALID = ("groq", "agentrouter")
+_VALID = ("agentrouter",)
+
+# ── Model tiers (operator decision, 2026-07) ────────────────────────────────
+# Two AgentRouter-routed roles with different cost/quality needs:
+#   search  CRAG query transforms (HyDE / step-back / multi-query). Fires on
+#           every low-confidence retrieval → high call volume, short outputs,
+#           quality bar is "good query rewrite". Cheap model: GLM.
+#   final   the reviewer-facing interpretive advisory pass. Low volume (one
+#           call per NEEDS_REVIEW clause), lands verbatim in the municipal
+#           report. Strongest model: claude-opus-4-8.
+# Resolution per tier: LLM_<TIER>_MODEL env > AGENTROUTER_MODEL (legacy
+# global pin) > the defaults below.
+_TIER_DEFAULTS = {
+    "search": "glm-5.2",
+    "final": "claude-opus-4-8",
+}
+
+
+def resolve_model(tier: str) -> str:
+    """Resolve the AgentRouter model id for a tier ('search' | 'final')."""
+    if tier not in _TIER_DEFAULTS:
+        raise ValueError(f"Unknown LLM tier {tier!r}; expected one of "
+                         f"{sorted(_TIER_DEFAULTS)}")
+    return (os.environ.get(f"LLM_{tier.upper()}_MODEL")
+            or os.environ.get("AGENTROUTER_MODEL")
+            or _TIER_DEFAULTS[tier])
 
 
 def _has_agentrouter_key() -> bool:
@@ -49,13 +69,8 @@ def _has_agentrouter_key() -> bool:
                 or os.environ.get("AGENT_ROUTER_TOKEN"))
 
 
-def _has_groq_key() -> bool:
-    return bool(os.environ.get("GROQ_API_KEYS")
-                or os.environ.get("GROQ_API_KEY"))
-
-
 def resolve_provider() -> Optional[str]:
-    """Return 'groq' | 'agentrouter' | None per the rules in the docstring."""
+    """Return 'agentrouter' | None per the rules in the module docstring."""
     raw = os.environ.get("LLM_PROVIDER", "auto").strip().lower()
     if raw in _VALID:
         return raw
@@ -63,12 +78,11 @@ def resolve_provider() -> Optional[str]:
         logger.warning(
             "LLM_PROVIDER=%r is not one of %s (or 'auto') — treating as NO "
             "provider so the misconfiguration is visible. Interpretive "
-            "clauses will stay NEEDS_REVIEW.", raw, list(_VALID))
+            "clauses will stay NEEDS_REVIEW. (Note: 'groq' was removed "
+            "2026-07; AgentRouter is the only provider.)", raw, list(_VALID))
         return None
     if _has_agentrouter_key():
         return "agentrouter"
-    if _has_groq_key():
-        return "groq"
     return None
 
 
@@ -76,42 +90,40 @@ def provider_status() -> dict:
     """Small status view (health endpoints / logs)."""
     provider = resolve_provider()
     status = {"provider": provider,
-              "agentrouter_key_present": _has_agentrouter_key(),
-              "groq_key_present": _has_groq_key()}
+              "agentrouter_key_present": _has_agentrouter_key()}
     if provider == "agentrouter":
-        from rag.agentrouter_client import _model
-        status["model"] = _model()
-    elif provider == "groq":
-        status["model"] = "qwen/qwen3-32b"
+        status["model_search"] = resolve_model("search")
+        status["model_final"] = resolve_model("final")
     return status
 
 
 def llm_chat(
     messages: list[dict],
     max_completion_tokens: int = 4096,
-    reasoning_effort: str = "default",
+    reasoning_effort: str = "default",   # retained for caller compat; dropped
     provider: Optional[str] = None,
+    tier: str = "final",
 ) -> str:
-    """Route one chat completion to the configured provider.
+    """Route one chat completion to AgentRouter.
 
     Call shape matches what the transforms and the interpretive pass need:
-    messages + a token budget. Model and temperature stay each provider's
-    sanctioned defaults (Groq: qwen/qwen3-32b @ 0.3; AgentRouter:
-    AGENTROUTER_MODEL @ 0.3) — configuration points, not call-site knobs.
-    ``provider`` overrides resolution per call (a hook for split routing,
-    e.g. transforms on Groq while advisory notes use AgentRouter).
+    messages + a token budget. ``tier`` selects the model per the two-tier
+    policy (search → GLM, final → claude-opus-4-8; see resolve_model).
+    Temperature stays the provider's sanctioned default (0.3). ``provider``
+    overrides resolution per call ('agentrouter' is the only valid value).
     """
     chosen = provider or resolve_provider()
     if chosen == "agentrouter":
         from rag.agentrouter_client import agentrouter_chat
         return agentrouter_chat(messages,
+                                model=resolve_model(tier),
                                 max_completion_tokens=max_completion_tokens)
     if chosen == "groq":
-        from rag.groq_client import groq_chat
-        return groq_chat(messages,
-                         max_completion_tokens=max_completion_tokens,
-                         reasoning_effort=reasoning_effort)
+        raise RuntimeError(
+            "Groq was removed from this engine (2026-07). Set "
+            "LLM_PROVIDER=agentrouter (or unset it) and configure "
+            "AGENTROUTER_API_KEY.")
     raise RuntimeError(
         "No LLM provider configured. Set AGENTROUTER_API_KEY (or "
-        "GROQ_API_KEYS), or pin one explicitly with "
-        "LLM_PROVIDER=agentrouter|groq.")
+        "AGENT_ROUTER_TOKEN), or pin explicitly with "
+        "LLM_PROVIDER=agentrouter.")

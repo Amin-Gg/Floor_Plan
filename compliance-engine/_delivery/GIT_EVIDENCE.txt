@@ -1,0 +1,33 @@
+Final R2 Git Evidence
+=====================
+Commit: 2fd6476351e1460d688e787eed2a71042004b54d
+Annotated tag object: 24f36a6fd9859bd483721afcd1a1866850f93614
+Tag: stage8-phase9-final-r2
+Branch: remediation/final-r2
+Parent Phase 9 commit: fc1c6f40242d5f30387560fea9d04bc23ec072b2
+
+Commit subject: Final R2: close review findings and remove obsolete paths
+Author date: 2026-07-12T05:52:14Z
+Committer date: 2026-07-12T05:52:14Z
+
+Bundle verification:
+_delivery/git/compliance-engine-final-r2.bundle is okay
+The bundle contains these 16 refs:
+2fd6476351e1460d688e787eed2a71042004b54d refs/heads/remediation/final-r2
+fc1c6f40242d5f30387560fea9d04bc23ec072b2 refs/heads/remediation/phase9
+fc1c6f40242d5f30387560fea9d04bc23ec072b2 refs/remotes/origin/HEAD
+a8e36b92b6712f40ca3fa000105c44b8d4f25b2a refs/remotes/origin/remediation/phase8
+fc1c6f40242d5f30387560fea9d04bc23ec072b2 refs/remotes/origin/remediation/phase9
+bce44e93585b2c27b2833c6bc4870a7075d08780 refs/tags/stage8-phase2
+c2adac2f9e3e67a69dedeb8eabdc9b4675933bff refs/tags/stage8-phase3
+d3cc0f2e9349d5b725c35e81530d01e7c87b2c10 refs/tags/stage8-phase4
+229a2425ac00d766a5ef44675a925f5e53ff9612 refs/tags/stage8-phase5
+9c07a009d7756e97d5dbe32203e2d0950488e910 refs/tags/stage8-phase6
+4c2066e20de2e68378348918fd771d9f9b27b91f refs/tags/stage8-phase7
+d151bd19cd305f3d5836f300cf45b20304e67740 refs/tags/stage8-phase8
+9f876d80293f8b73c8993e9f03e12cbc0df267ad refs/tags/stage8-phase9-final
+24f36a6fd9859bd483721afcd1a1866850f93614 refs/tags/stage8-phase9-final-r2
+9c015ba0ef276bb34d911160bbf237eccddefb9a refs/tags/stage8-zip-baseline
+2fd6476351e1460d688e787eed2a71042004b54d HEAD
+The bundle records a complete history.
+The bundle uses this hash algorithm: sha1

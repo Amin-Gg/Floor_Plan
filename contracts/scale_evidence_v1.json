@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simsys.local/contracts/scale-evidence-v1.json",
+  "title": "Simsys Scale Evidence v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "mm_per_pixel", "source"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "mm_per_pixel": {"type": "number", "exclusiveMinimum": 0, "maximum": 100},
+    "source": {
+      "enum": [
+        "user_dimension",
+        "recognized_scale_bar",
+        "recognized_dimension_text",
+        "document_metadata",
+        "default_unverified"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1, "maxLength": 128},
+          "kind": {"type": "string", "minLength": 1, "maxLength": 64},
+          "raw_pixel_measurement": {"type": "number", "exclusiveMinimum": 0},
+          "real_world_length_mm": {"type": "number", "exclusiveMinimum": 0},
+          "extracted_text": {"type": "string", "maxLength": 512},
+          "metadata_value": {"type": "string", "maxLength": 512},
+          "evidence_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "model_version": {"type": "string", "maxLength": 128},
+          "weight_version": {"type": "string", "maxLength": 256}
+        }
+      },
+      "default": []
+    }
+  }
+}

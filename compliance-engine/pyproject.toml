@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mabhas-compliance-engine"
-version = "0.1.0"
+version = "1.0.1"
 description = "AI-assisted compliance checking of Iranian residential floor plans against the National Building Regulations (Mabhas)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,7 +13,7 @@ dynamic = ["dependencies"]
 
 [tool.setuptools]
 # Runtime code lives in these packages; eval/ and tests/ are dev-only.
-packages = ["rag", "services", "api", "classification", "scripts", "ingest"]
+packages = ["rag", "services", "api", "classification", "scripts", "ingest", "domain", "validation", "validation.compliance", "validation.quality", "validation.quality.checks", "validation.schema", "reporting", "manual_inputs", "standards"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
@@ -25,3 +25,7 @@ dependencies = { file = ["requirements.txt"] }
 pythonpath = [".", "services"]
 testpaths = ["tests", "eval"]
 addopts = "-q"
+
+[tool.setuptools.package-data]
+reporting = ["schemas/*.json", "schemas/bcf_2_1/*.xsd"]
+standards = ["*.yaml"]

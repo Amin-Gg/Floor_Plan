@@ -46,8 +46,8 @@ def _clean_bim():
         ],
         "rooms": [
             {"id": "Room_1", "name": "Bedroom", "category": "Bedroom",
-             "needs_review": False, "name_source": "ocr", "area_m2": 20.0,
-             "perimeter_m": 18.0, "centroid_mm": [2500, 2000],
+             "needs_review": False, "name_source": "ocr", "area_m2": 18.24,
+             "perimeter_m": 17.2, "centroid_mm": [2500, 2000],
              "polygon": [[100, 100], [4900, 100], [4900, 3900], [100, 3900], [100, 100]]},
         ],
         "stairs": [], "slabs": [],

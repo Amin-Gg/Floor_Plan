@@ -30,10 +30,14 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
-from api.pipeline import parse_building_params, BuildingParamsError
+from standards import validate_standards
+from manual_inputs import ManualInputsError, parse_manual_inputs, reject_legacy_building_params
 from api.tasks import (submit_job, submit_ifc_job, get_job, get_report,
                        clause_status, EmptyClauseCorpusError, BROKER_URL,
                        INCOMING_DIR)
+
+# Fail fast during service startup when either standards contract is invalid.
+validate_standards()
 
 app = FastAPI(
     title="Mabhas Compliance Service",
@@ -47,6 +51,7 @@ app = FastAPI(
 class AnalyzeRequest(BaseModel):
     bim_data: Dict[str, Any]
     meta: Optional[Dict[str, Any]] = None
+    manual_inputs: Optional[Dict[str, Any]] = None
 
 
 class AnalyzeResponse(BaseModel):
@@ -72,7 +77,7 @@ def health() -> Dict[str, Any]:
     # healthy compliance service that would produce empty reports (Issue 9).
     status = "ok" if cs["clause_count"] > 0 or cs["allow_empty"] else "degraded"
     # LLM provider visibility (AgentRouter integration, 2026-07): shows WHICH
-    # provider the interpretive pass resolved to (agentrouter | groq | None)
+    # provider the interpretive pass resolved to (agentrouter | None)
     # without making any LLM call — so a misconfigured key is visible here,
     # not as silent NEEDS_REVIEW-only reports. Never breaks health.
     llm: Dict[str, Any] = {"provider": None}
@@ -97,16 +102,22 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     if not req.bim_data or "rooms" not in req.bim_data:
         raise HTTPException(status_code=400,
                             detail="bim_data must include at least a 'rooms' list")
-    if "building_params" in req.bim_data:
-        # Validate at the boundary (400 now) rather than failing the async job.
+    # Symmetric with /analyze-ifc: the removed flat building_params input is
+    # rejected at the boundary instead of queuing a job that would either
+    # silently ignore it or let unvalidated values drive verdicts.
+    try:
+        reject_legacy_building_params(req.bim_data)
+    except ManualInputsError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    manual_payload = None
+    if req.manual_inputs is not None:
         try:
-            req.bim_data["building_params"] = parse_building_params(
-                req.bim_data["building_params"])
-        except BuildingParamsError as exc:
+            manual_payload = parse_manual_inputs(req.manual_inputs).to_wire_dict()
+        except ManualInputsError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
     meta = req.meta or {}
     try:
-        job_id = submit_job(req.bim_data, meta)
+        job_id = submit_job(req.bim_data, meta, manual_inputs=manual_payload)
     except EmptyClauseCorpusError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
     return AnalyzeResponse(job_id=job_id, status="queued")
@@ -122,19 +133,27 @@ def analyze_ifc(file: UploadFile = File(...),
                 plan_name: Optional[str] = Form(None),
                 building_params: Optional[str] = Form(
                     None,
-                    description="Optional JSON object of operator-supplied "
-                                "building parameters (mm), e.g. "
-                                '{"ceiling_height_mm": 2900}. Values passed '
-                                "here override any embedded in the IFC "
-                                "contract Pset.")) -> AnalyzeResponse:
+                    description="Removed in Phase 9. Use manual_inputs schema v1.0."),
+                manual_inputs: Optional[str] = Form(
+                    None,
+                    description="Manual Inputs Schema v1.0 JSON. Use this for "
+                                "project defaults and per-window/door/wall overrides.")) -> AnalyzeResponse:
     """Issue 3 — primary IFC compliance path: upload a Step-1 enriched plan.ifc,
     the engine ingests it, runs compliance, and produces reports."""
+    if building_params is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="building_params was removed in Phase 9; use manual_inputs schema_version 1.0",
+        )
     name = file.filename or "plan.ifc"
     if not name.lower().endswith((".ifc", ".ifczip")):
         raise HTTPException(status_code=400, detail="file must be an .ifc")
     try:
-        bp = parse_building_params(building_params)
-    except BuildingParamsError as exc:
+        manual_payload = (
+            parse_manual_inputs(manual_inputs).to_wire_dict()
+            if manual_inputs is not None else None
+        )
+    except ManualInputsError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     limit = MAX_IFC_UPLOAD_MB * 1024 * 1024
     dest = os.path.join(INCOMING_DIR, f"{uuid.uuid4().hex[:12]}_{os.path.basename(name)}")
@@ -161,7 +180,7 @@ def analyze_ifc(file: UploadFile = File(...),
         file.file.close()
     meta = {"plan_name": plan_name or name}
     try:
-        job_id = submit_ifc_job(dest, meta, building_params=bp)
+        job_id = submit_ifc_job(dest, meta, manual_inputs=manual_payload)
     except EmptyClauseCorpusError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
     return AnalyzeResponse(job_id=job_id, status="queued")

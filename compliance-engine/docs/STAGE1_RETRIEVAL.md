@@ -19,7 +19,7 @@ A permanent regression test now enforces this.
 | 4 | **Cross-encoder rerank** of fused top-50 (BAAI/bge-reranker-v2-m3) | `rag/reranker.py`, `hybrid_retrieve(rerank=True)`, `--rerank` flag, latency capture | `da307da` |
 | 5 | **Contextual retrieval** — LLM-generated `context_fa` prepended at index time | `rag/contextualize.py`, schema (`context_fa`, lexeme over stored `passage`), `eval/test_contextualize.py` | `7547e29` |
 | 6 | **Embedder ablation** — `EMBED_MODEL` env switch (e5 default ↔ `BAAI/bge-m3`) | `rag/embeddings.py`, `eval/test_embeddings.py` | `013658c` |
-| 7 | **Production wiring** + verdict **regression guard** + SUMMARY generator | `build_default_retriever()`, `services/orchestrator.py`, `api/pipeline.py`, `eval/test_verdict_regression.py`, `eval/make_summary.py`, `conftest.py` | `0953e4b` |
+| 7 | **Production wiring** + verdict **regression guard** + SUMMARY generator | `build_default_retriever()`, `validation/compliance/runner.py`, `api/pipeline.py`, `eval/test_verdict_regression.py`, `eval/make_summary.py`, `conftest.py` | `0953e4b` |
 
 ### Architecture after Stage 1
 
@@ -142,7 +142,7 @@ rag/rag_retriever.py              dense/lexical/hybrid(+rerank), rrf_fuse,
 rag/reranker.py                   lazy FlagReranker singleton
 rag/contextualize.py              one-time LLM context pass (FA/EN prompts inside)
 rag/schema.sql                    + passage, context_fa, lexeme migrations (idempotent)
-services/orchestrator.py          factory fallback for the LLM pass (verdicts untouched)
+validation/compliance/runner.py          factory fallback for the LLM pass (verdicts untouched)
 api/pipeline.py                   factory-built retriever passed through
 eval/metrics.py / test_metrics.py             pure metrics + 15 tests
 eval/retrieval_eval.py                        CLI harness (—run-name/—retriever/—rerank/—k)

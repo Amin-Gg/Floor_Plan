@@ -1,0 +1,656 @@
+{
+  "complete": true,
+  "errors": 0,
+  "failures": 0,
+  "files": [
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "domain__test_building_model.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "domain__test_finding_contract.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "domain__test_identity_preservation.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "domain__test_legacy_adapter.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "domain__test_units.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_contextualize.junit.xml",
+      "skipped": 0,
+      "tests": 10
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_crag_retriever.junit.xml",
+      "skipped": 0,
+      "tests": 12
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_embeddings.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_graph_retriever.junit.xml",
+      "skipped": 0,
+      "tests": 11
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_hybrid_rerank.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_metrics.junit.xml",
+      "skipped": 0,
+      "tests": 15
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_query_router.junit.xml",
+      "skipped": 0,
+      "tests": 26
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_query_transforms.junit.xml",
+      "skipped": 0,
+      "tests": 21
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_regulation_graph.junit.xml",
+      "skipped": 0,
+      "tests": 12
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_retrieval_evaluator.junit.xml",
+      "skipped": 0,
+      "tests": 11
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_rrf.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_stage2_retrieve_methods.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "eval__test_verdict_regression.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "ingest__test_normalization_request_isolation.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "manual_inputs__test_merger.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "manual_inputs__test_parser.junit.xml",
+      "skipped": 0,
+      "tests": 10
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "phase3__test_ifc_contract_v12_manual_trace.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_ifc_io.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_legacy_building_params_guard.junit.xml",
+      "skipped": 0,
+      "tests": 13
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_manual_inputs_api.junit.xml",
+      "skipped": 0,
+      "tests": 4
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_phase4_selective_blocking.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_phase9_acceptance.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "pipeline__test_unified_pipeline.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_bcf_phase8.junit.xml",
+      "skipped": 0,
+      "tests": 9
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_finding_serialization.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_json_element_identity.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_no_sensitive_paths.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_overall_status_policy.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_pipeline_report_v1.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_report_determinism.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_report_json_schema.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_skipped_stage_reason.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_stable_finding_ids.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "reporting__test_stage_status.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "standards__test_catalog_driven_compliance.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "standards__test_catalog_driven_ingest.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "standards__test_catalog_driven_quality.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "standards__test_catalog_schema.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "standards__test_controlled_values.junit.xml",
+      "skipped": 0,
+      "tests": 4
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_building_params.junit.xml",
+      "skipped": 0,
+      "tests": 16
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_critical_fixes.junit.xml",
+      "skipped": 0,
+      "tests": 21
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_engine_honesty.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_graph_linker.junit.xml",
+      "skipped": 0,
+      "tests": 13
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_ifc_roundtrip_verdicts.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_job_store.junit.xml",
+      "skipped": 0,
+      "tests": 35
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_llm_provider.junit.xml",
+      "skipped": 0,
+      "tests": 17
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_model_tiers.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_not_evaluated.junit.xml",
+      "skipped": 0,
+      "tests": 10
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_numeric_property_routing.junit.xml",
+      "skipped": 0,
+      "tests": 12
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase5_public_api.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase7_security.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_schema_validator.junit.xml",
+      "skipped": 0,
+      "tests": 9
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage2_contract_quality.junit.xml",
+      "skipped": 0,
+      "tests": 15
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage3_place_report.junit.xml",
+      "skipped": 0,
+      "tests": 13
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage4_catalog_bcf.junit.xml",
+      "skipped": 0,
+      "tests": 9
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage5_agents_contract.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage6_unsupported_llm.junit.xml",
+      "skipped": 0,
+      "tests": 9
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage7_llm_targeting.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_stage8_overlap_queue.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_check_order.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_checker_error_policy.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_checker_isolation.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_door_connectivity_crosscheck.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_door_space_connectivity.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_identity_integrity.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_ifc_body_consistency.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_legacy_wrapper.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_opening_endpoint_extent.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_opening_insertion_conventions.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_opening_missing_geometry.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_opening_vertical_fit.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_pipeline_uses_plugins.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_registry.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_required_properties.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_space_area.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_space_boundary.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_space_identity.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_space_overlap.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_storey_consistency.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_units_phase4.junit.xml",
+      "skipped": 0,
+      "tests": 3
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_untagged_regions.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__quality__test_window_internal_connection.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__schema__test_duplicate_guids.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__schema__test_mandatory_attributes.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__schema__test_single_parse.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__schema__test_spatial_hierarchy.junit.xml",
+      "skipped": 0,
+      "tests": 4
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "validation__schema__test_supported_versions.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    }
+  ],
+  "junit_files": 92,
+  "passed": 572,
+  "schema_version": "phase8-engine-test-summary-v1",
+  "skipped": 0,
+  "tests": 572
+}

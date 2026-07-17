@@ -69,9 +69,14 @@ def test_classify_finding_splits_review_into_classes():
     assert classify_finding(
         "NEEDS_REVIEW", "Object 'x' not mapped to a measurable value — needs review"
     ) == UNSUPPORTED
+    # Stage 5: BLOCKED is verdict-level truth only — the legacy message no
+    # longer sniffs; the NOT_EVALUATED verdict maps regardless of wording.
+    assert classify_finding(
+        "NOT_EVALUATED", "No 'room_kitchen' rooms in plan to check"
+    ) == BLOCKED
     assert classify_finding(
         "NEEDS_REVIEW", "No 'room_kitchen' rooms in plan to check — needs review"
-    ) == BLOCKED
+    ) == NEEDS_REVIEW
     assert classify_finding(
         "NEEDS_REVIEW", "Conditional rule (condition: x) — needs human review"
     ) == NEEDS_REVIEW
@@ -90,7 +95,7 @@ def test_build_coverage_counts_clause_level():
             _F("A", "PASS", "ok"),
             _F("B", "FAIL", "too small"),
             _F("C", "NEEDS_REVIEW", "Conditional rule — needs human review"),
-            _F("D", "NEEDS_REVIEW", "No 'room_kitchen' rooms in plan to check"),
+            _F("D", "NOT_EVALUATED", "No 'room_kitchen' rooms in plan to check"),
             _F("E", "NEEDS_REVIEW", "Object 'x' not mapped to a measurable value"),
         ]
 

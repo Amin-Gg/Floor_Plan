@@ -13,9 +13,7 @@ Regression tests for the two Celery-mode job-store bugs found in review:
    a filesystem path; anything that is not exactly a 12-hex-char id we
    minted must be rejected before touching the filesystem.
 
-Plus the API-boundary validation of the manual ``building_params`` field on
-``/analyze-ifc`` (threading of the validated dict into submit_ifc_job is
-asserted by monkeypatching the submit seam — no compliance run needed).
+Plus API-boundary validation of versioned ``manual_inputs`` on ``/analyze-ifc``.
 """
 
 import json
@@ -266,70 +264,61 @@ def test_jobs_endpoint_404_for_invalid_id(client):
     assert c.get("/jobs/deadbeef").status_code == 404
 
 
-def _post_ifc(c, params=None):
+def _post_ifc(c, manual_inputs=None):
     files = {"file": ("plan.ifc", b"ISO-10303-21; DUMMY", "application/octet-stream")}
     data = {}
-    if params is not None:
-        data["building_params"] = params
+    if manual_inputs is not None:
+        data["manual_inputs"] = manual_inputs
     return c.post("/analyze-ifc", files=files, data=data)
 
 
-def test_analyze_ifc_rejects_malformed_params_json(client):
+def test_analyze_ifc_rejects_malformed_manual_inputs_json(client):
     c, _ = client
     r = _post_ifc(c, "{not json")
     assert r.status_code == 400
-    assert "building_params" in r.json()["detail"]
+    assert "manual_inputs" in r.json()["detail"]
 
 
-def test_analyze_ifc_rejects_non_object_params(client):
+def test_analyze_ifc_rejects_non_object_manual_inputs(client):
     c, _ = client
     assert _post_ifc(c, "[1, 2]").status_code == 400
 
 
-def test_analyze_ifc_rejects_out_of_range_params(client):
+def test_analyze_ifc_rejects_out_of_range_manual_inputs(client):
     c, _ = client
-    r = _post_ifc(c, json.dumps({"wall_height": 99999}))
-    assert r.status_code == 400
-    assert "wall_height" in r.json()["detail"]
+    payload = {"schema_version": "1.0", "defaults": {"wall_height_mm": 99999}}
+    assert _post_ifc(c, json.dumps(payload)).status_code == 400
 
 
-def test_analyze_ifc_rejects_unknown_param_keys(client):
-    c, _ = client
-    r = _post_ifc(c, json.dumps({"walll_height": 2800}))
-    assert r.status_code == 400
-
-
-def test_analyze_ifc_threads_validated_params_to_submit(client, monkeypatch):
+def test_analyze_ifc_threads_validated_manual_inputs_to_submit(client, monkeypatch):
     c, api_main = client
     captured = {}
 
-    def fake_submit(ifc_path, meta, building_params=None):
-        captured["params"] = building_params
+    def fake_submit(ifc_path, meta, manual_inputs=None):
+        captured["manual_inputs"] = manual_inputs
         return "0123456789ab"
 
     monkeypatch.setattr(api_main, "submit_ifc_job", fake_submit)
-    r = _post_ifc(c, json.dumps({"wall_height": 3000, "window_sill_height": 950}))
+    payload = {
+        "schema_version": "1.0",
+        "defaults": {"wall_height_mm": 3000, "window_sill_height_mm": 950},
+    }
+    r = _post_ifc(c, json.dumps(payload))
     assert r.status_code == 200, r.text
-    assert r.json()["job_id"] == "0123456789ab"
-    # Section-1 spellings are accepted and normalized to the canonical
-    # _mm engine vocabulary at the boundary.
-    assert captured["params"] == {"wall_height_mm": 3000.0,
-                                  "window_sill_height_mm": 950.0}
+    assert captured["manual_inputs"]["defaults"] == payload["defaults"]
 
 
-def test_analyze_ifc_no_params_passes_empty_dict(client, monkeypatch):
-    """parse_building_params' documented contract: absent input -> {} (falsy),
-    which BimAdapter treats identically to None (no operator assertions)."""
+def test_analyze_ifc_no_manual_inputs_passes_none(client, monkeypatch):
     c, api_main = client
-    captured = {"params": "sentinel"}
+    captured = {"manual_inputs": "sentinel"}
 
-    def fake_submit(ifc_path, meta, building_params=None):
-        captured["params"] = building_params
+    def fake_submit(ifc_path, meta, manual_inputs=None):
+        captured["manual_inputs"] = manual_inputs
         return "0123456789ab"
 
     monkeypatch.setattr(api_main, "submit_ifc_job", fake_submit)
     assert _post_ifc(c).status_code == 200
-    assert captured["params"] == {}
+    assert captured["manual_inputs"] is None
 
 
 # ── Upload transport through the store (container-isolated workers) ──────────

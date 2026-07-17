@@ -60,9 +60,11 @@ def test_resolve_auto_prefers_agentrouter(monkeypatch):
     assert lc.resolve_provider() == "agentrouter"
 
 
-def test_resolve_auto_falls_back_to_groq(monkeypatch):
+def test_groq_keys_are_ignored(monkeypatch):
+    """Groq removal (2026-07): GROQ_* keys no longer select any provider."""
     monkeypatch.setenv("GROQ_API_KEY", "gsk_dummy")
-    assert lc.resolve_provider() == "groq"
+    monkeypatch.setenv("GROQ_API_KEYS", "gsk_a,gsk_b")
+    assert lc.resolve_provider() is None
 
 
 def test_resolve_accepts_codex_style_token_name(monkeypatch):
@@ -71,11 +73,15 @@ def test_resolve_accepts_codex_style_token_name(monkeypatch):
     assert lc.resolve_provider() == "agentrouter"
 
 
-def test_resolve_explicit_pin_wins(monkeypatch):
-    monkeypatch.setenv("AGENTROUTER_API_KEY", "sk-dummy")
+def test_resolve_explicit_groq_pin_is_loud_none(monkeypatch, caplog):
+    """Groq removal: LLM_PROVIDER=groq is an unknown value now — visible
+    off-switch, never a silent fallthrough to agentrouter."""
+    import logging
     monkeypatch.setenv("GROQ_API_KEY", "gsk_dummy")
     monkeypatch.setenv("LLM_PROVIDER", "groq")
-    assert lc.resolve_provider() == "groq"
+    with caplog.at_level(logging.WARNING):
+        assert lc.resolve_provider() is None
+    assert any("groq" in r.message.lower() for r in caplog.records)
 
 
 def test_resolve_unknown_value_is_loud_none(monkeypatch, caplog):
@@ -97,8 +103,11 @@ _MSGS = [{"role": "user", "content": "hi"}]
 def test_dispatch_routes_to_agentrouter(monkeypatch):
     seen = {}
 
-    def fake_ar(messages, max_completion_tokens=4096):
-        seen.update(messages=messages, budget=max_completion_tokens)
+    def fake_ar(messages, model=None, max_completion_tokens=4096):
+        # Stage 6: signature aligned with the current agentrouter_chat
+        # contract (llm_chat passes model=resolve_model(tier)).
+        seen.update(messages=messages, model=model,
+                    budget=max_completion_tokens)
         return "note"
 
     monkeypatch.setattr(arc, "agentrouter_chat", fake_ar)
@@ -110,22 +119,9 @@ def test_dispatch_routes_to_agentrouter(monkeypatch):
     assert seen["messages"] == _MSGS
 
 
-def test_dispatch_routes_to_groq_with_reasoning_effort(monkeypatch):
-    import rag.groq_client as gc
-    seen = {}
-
-    def fake_groq(messages, max_completion_tokens=4096,
-                  reasoning_effort="default"):
-        seen.update(budget=max_completion_tokens, effort=reasoning_effort)
-        return "note"
-
-    monkeypatch.setattr(gc, "groq_chat", fake_groq)
-    monkeypatch.setenv("GROQ_API_KEY", "gsk_dummy")
-    out = lc.llm_chat(_MSGS, max_completion_tokens=300,
-                      reasoning_effort="none")
-    assert out == "note"
-    assert seen["effort"] == "none"        # forwarded to groq
-    assert seen["budget"] == 300
+def test_dispatch_groq_override_raises_removal_error():
+    with pytest.raises(RuntimeError, match="Groq was removed"):
+        lc.llm_chat(_MSGS, provider="groq")
 
 
 def test_dispatch_explicit_provider_arg_overrides_env(monkeypatch):

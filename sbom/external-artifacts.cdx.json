@@ -1,0 +1,126 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "name": "torch-cu118",
+      "properties": [
+        {
+          "name": "path",
+          "value": "wheels/torch-2.1.2+cu118-cp311-cp311-linux_x86_64.whl"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "2.1.2+cu118"
+    },
+    {
+      "name": "torchvision-cu118",
+      "properties": [
+        {
+          "name": "path",
+          "value": "wheels/torchvision-0.16.2+cu118-cp311-cp311-linux_x86_64.whl"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "0.16.2+cu118"
+    },
+    {
+      "name": "maskrcnn-weights",
+      "properties": [
+        {
+          "name": "path",
+          "value": "weights/maskrcnn_15_epochs.h5"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "project-trained-15-epochs"
+    },
+    {
+      "name": "yolo-weights",
+      "properties": [
+        {
+          "name": "path",
+          "value": "weights/yolo_best.pt"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "project-trained"
+    },
+    {
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b7d5de70c7515f5fb8cb22a99acee7158c1fe77720799588a7c89d682c80c870"
+        }
+      ],
+      "name": "mabhas-corpus",
+      "properties": [
+        {
+          "name": "path",
+          "value": "compliance-engine/data/mabhas_clauses.json"
+        },
+        {
+          "name": "status",
+          "value": "verified-local"
+        }
+      ],
+      "type": "file",
+      "version": "final-r2"
+    },
+    {
+      "name": "compliance-hf-cache",
+      "properties": [
+        {
+          "name": "path",
+          "value": "compliance-engine/models/huggingface"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "operator-provisioned-offline-snapshot"
+    },
+    {
+      "name": "compliance-reranker",
+      "properties": [
+        {
+          "name": "path",
+          "value": "compliance-engine/models/bge_reranker"
+        },
+        {
+          "name": "status",
+          "value": "external-not-bundled"
+        }
+      ],
+      "type": "file",
+      "version": "bge-reranker-v2-m3-compatible"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "floorplan-external-artifacts",
+      "type": "application",
+      "version": "2.8.0"
+    }
+  },
+  "serialNumber": "urn:uuid:cb124d41-ee2c-b958-e7e1-1046feeddd9d",
+  "specVersion": "1.5",
+  "version": 1
+}

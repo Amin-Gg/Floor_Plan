@@ -1,0 +1,104 @@
+{
+  "schema_version": "2.0",
+  "target": {
+    "python_abi": "cp311",
+    "platform": "linux_x86_64",
+    "container_architecture": "linux/amd64",
+    "cuda": "11.8",
+    "python": "3.11.x",
+    "glibc_min": "2.31"
+  },
+  "generated_at": "2026-07-12T07:20:56.335276+00:00",
+  "artifacts": [
+    {
+      "id": "torch-cu118",
+      "kind": "python-wheel",
+      "path": "wheels/torch-2.1.2+cu118-cp311-cp311-linux_x86_64.whl",
+      "version": "2.1.2+cu118",
+      "required_for": [
+        "floorplan-image",
+        "full-pipeline"
+      ],
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    },
+    {
+      "id": "torchvision-cu118",
+      "kind": "python-wheel",
+      "path": "wheels/torchvision-0.16.2+cu118-cp311-cp311-linux_x86_64.whl",
+      "version": "0.16.2+cu118",
+      "required_for": [
+        "floorplan-image",
+        "full-pipeline"
+      ],
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    },
+    {
+      "id": "maskrcnn-weights",
+      "kind": "model-weight",
+      "path": "weights/maskrcnn_15_epochs.h5",
+      "version": "project-trained-15-epochs",
+      "required_for": [
+        "floorplan-runtime",
+        "full-pipeline"
+      ],
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    },
+    {
+      "id": "yolo-weights",
+      "kind": "model-weight",
+      "path": "weights/yolo_best.pt",
+      "version": "project-trained",
+      "required_for": [
+        "floorplan-runtime",
+        "full-pipeline"
+      ],
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    },
+    {
+      "id": "mabhas-corpus",
+      "kind": "regulation-corpus",
+      "path": "compliance-engine/data/mabhas_clauses.json",
+      "version": "final-r2",
+      "required_for": [
+        "full-pipeline"
+      ],
+      "size_bytes": 567831,
+      "sha256": "b7d5de70c7515f5fb8cb22a99acee7158c1fe77720799588a7c89d682c80c870",
+      "status": "verified-local"
+    },
+    {
+      "id": "compliance-hf-cache",
+      "kind": "model-directory",
+      "path": "compliance-engine/models/huggingface",
+      "version": "operator-provisioned-offline-snapshot",
+      "required_for": [
+        "full-pipeline"
+      ],
+      "file_count": null,
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    },
+    {
+      "id": "compliance-reranker",
+      "kind": "model-directory",
+      "path": "compliance-engine/models/bge_reranker",
+      "version": "bge-reranker-v2-m3-compatible",
+      "required_for": [
+        "full-pipeline"
+      ],
+      "file_count": null,
+      "size_bytes": null,
+      "sha256": null,
+      "status": "external-not-bundled"
+    }
+  ]
+}

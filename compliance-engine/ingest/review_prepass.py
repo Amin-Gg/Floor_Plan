@@ -133,14 +133,18 @@ def downgrade_flagged_findings(result: Any, bim_data: Dict[str, Any]) -> Any:
         if eid in flagged and f.verdict in (Verdict.PASS, Verdict.FAIL):
             reason = flagged[eid] or "element flagged uncertain by detector"
             original = f.verdict.value
-            f.verdict = Verdict.NEEDS_REVIEW
-            f.message = (f"{f.message}  [downgraded {original}→NEEDS_REVIEW: "
+            # Stage 1 semantics: an untrusted element means the check CANNOT
+            # be performed on reliable data — that is a model-quality problem
+            # (NOT_EVALUATED, fix the input), not an interpretive judgment
+            # call (NEEDS_REVIEW, human decides). CORENET X L2 gating.
+            f.verdict = Verdict.NOT_EVALUATED
+            f.message = (f"{f.message}  [downgraded {original}→NOT_EVALUATED: "
                          f"{reason}]")
             n_downgraded += 1
 
     if n_downgraded:
         result.summary = summarise(result.findings)
-        logger.info("Honest-degradation: downgraded %d verdict(s) to NEEDS_REVIEW "
+        logger.info("Honest-degradation: downgraded %d verdict(s) to NOT_EVALUATED "
                     "for flagged elements", n_downgraded)
     # Record the count where the caller/report can surface it, WITHOUT polluting
     # result.summary (which feeds the report's PASS/FAIL/NEEDS_REVIEW counts).

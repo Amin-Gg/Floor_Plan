@@ -1,0 +1,5 @@
+# Deprecated Phase-4 path. The canonical, validated source is now:
+#   standards/semantic_property_catalog.yaml
+# Set SEMANTIC_PROPERTY_CATALOG to override it.
+deprecated: true
+canonical_path: standards/semantic_property_catalog.yaml

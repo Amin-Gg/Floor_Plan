@@ -1,0 +1,15 @@
+{
+  "images": {
+    "cuda_devel": "nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04@sha256:8f9dd0d09d3ad3900357a1cf7f887888b5b74056636cd6ef03c160c3cd4b1d95",
+    "cuda_runtime": "nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04@sha256:85fb7ac694079fff1061a0140fd5b5a641997880e12112d92589c3bbb1e8b7ca",
+    "python_311": "python:3.11.15-slim-bookworm@sha256:f5cf0344c9886ff24d34797578d5d7dd6e8911ae0fe5962bb55d0f89603ec361",
+    "redis": "redis:7.4.2-alpine@sha256:02419de7eddf55aa5bcf49efb74e88fa8d931b4d77c07eff8a6b2144472b6952"
+  },
+  "platform": "linux/amd64",
+  "python_source": {
+    "sha256": "272179ddd9a2e41a0fc8e42e33dfbdca0b3711aa5abf372d3f2d51543d09b625",
+    "url": "https://www.python.org/ftp/python/3.11.15/Python-3.11.15.tar.xz",
+    "version": "3.11.15"
+  },
+  "schema_version": "phase6-container-images-v1"
+}

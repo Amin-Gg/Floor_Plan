@@ -1,7 +1,7 @@
 """tests/test_orchestrator.py — Step 8 smoke tests."""
 import sys
 sys.path.insert(0, ".")
-from orchestrator import run_compliance, ComplianceResult
+from validation.compliance.runner import _run_compliance_core, ComplianceResult
 from numeric_checker import Verdict
 
 def _rect(x0,y0,x1,y1): return [[x0,y0],[x1,y0],[x1,y1],[x0,y1],[x0,y0]]
@@ -40,7 +40,7 @@ CLAUSES = [
 
 def run():
     # 1. Sequential path (no langgraph dependency)
-    res = run_compliance(BIM, CLAUSES, use_langgraph=False)
+    res = _run_compliance_core(BIM, CLAUSES, use_langgraph=False)
     assert isinstance(res, ComplianceResult)
     assert res.summary["PASS"] + res.summary["FAIL"] + res.summary["NEEDS_REVIEW"] == len(res.findings)
     print(f"PASS: sequential run → {res.summary}")
@@ -59,13 +59,13 @@ def run():
     print("PASS: bedroom area → PASS")
 
     # 5. LangGraph path produces the SAME summary
-    res2 = run_compliance(BIM, CLAUSES, use_langgraph=True)
+    res2 = _run_compliance_core(BIM, CLAUSES, use_langgraph=True)
     assert res2.summary == res.summary, f"{res2.summary} != {res.summary}"
     print(f"PASS: LangGraph path matches sequential → {res2.summary}")
 
     # 6. Optional LLM pass — supply a fake llm, confirm it annotates NEEDS_REVIEW only
     def fake_llm(prompt): return "Check the site condition manually."
-    res3 = run_compliance(BIM, CLAUSES, llm=fake_llm, use_langgraph=False)
+    res3 = _run_compliance_core(BIM, CLAUSES, llm=fake_llm, use_langgraph=False)
     # deterministic verdicts unchanged
     assert res3.summary["PASS"] == res.summary["PASS"]
     assert res3.summary["FAIL"] == res.summary["FAIL"]

@@ -1,0 +1,128 @@
+{
+  "instances": [
+    {
+      "attributes": {
+        "centerline": [
+          [
+            10,
+            160
+          ],
+          [
+            190,
+            160
+          ]
+        ],
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        10,
+        150,
+        190,
+        170
+      ],
+      "class_name": "wall",
+      "confidence": 0.95,
+      "id": "p_wall",
+      "mask": {
+        "points": [
+          [
+            10,
+            150
+          ],
+          [
+            190,
+            150
+          ],
+          [
+            190,
+            170
+          ],
+          [
+            10,
+            170
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        20,
+        40,
+        80,
+        110
+      ],
+      "class_name": "stairs",
+      "confidence": 0.87,
+      "id": "p_stairs"
+    },
+    {
+      "attributes": {
+        "orientation_deg": 90
+      },
+      "bbox_xyxy": [
+        90,
+        45,
+        100,
+        120
+      ],
+      "class_name": "railing",
+      "confidence": 0.84,
+      "id": "p_railing"
+    },
+    {
+      "attributes": {
+        "orientation_deg": 90
+      },
+      "bbox_xyxy": [
+        130,
+        135,
+        160,
+        175
+      ],
+      "class_name": "door",
+      "confidence": 0.9,
+      "id": "p_door",
+      "mask": {
+        "points": [
+          [
+            130,
+            135
+          ],
+          [
+            160,
+            135
+          ],
+          [
+            160,
+            175
+          ],
+          [
+            130,
+            175
+          ]
+        ],
+        "type": "polygon"
+      }
+    }
+  ],
+  "model": {
+    "model_id": "synthetic-candidate",
+    "purpose": "contract_test_only",
+    "variant": "candidate"
+  },
+  "sample_id": "synthetic_office_002",
+  "scale": {
+    "mm_per_pixel": 4.01,
+    "source": "synthetic"
+  },
+  "schema_version": "1.0",
+  "verdicts": {
+    "door_width": "PASS",
+    "railing_presence": "PASS",
+    "stair_width": "FAIL"
+  }
+}

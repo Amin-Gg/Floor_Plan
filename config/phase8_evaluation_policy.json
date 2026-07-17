@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "floorplan-phase8-provisional-release-gate-v1",
+  "status": "provisional_pending_human_dataset_baseline",
+  "minimum_dataset": {
+    "samples": 100,
+    "instances": 1000,
+    "instances_per_class": {
+      "wall": 300,
+      "window": 150,
+      "door": 150,
+      "stairs": 30,
+      "column": 30,
+      "railing": 30
+    }
+  },
+  "thresholds": {
+    "classes": {
+      "wall": {"ap50": 0.85, "recall": 0.85},
+      "window": {"ap50": 0.75, "recall": 0.75},
+      "door": {"ap50": 0.75, "recall": 0.75},
+      "stairs": {"ap50": 0.65, "recall": 0.65},
+      "column": {"ap50": 0.65, "recall": 0.65},
+      "railing": {"ap50": 0.60, "recall": 0.60}
+    },
+    "maximum_ece": 0.10,
+    "maximum_scale_relative_error_mean": 0.02,
+    "minimum_verdict_exact_agreement": 0.98
+  },
+  "hard_safety_rule": "critical_false_pass must equal zero",
+  "notes": [
+    "Thresholds are provisional until the first adjudicated holdout baseline is reviewed.",
+    "Synthetic contract-test metrics never satisfy the human_verified_labels gate.",
+    "No production release may cite mAP/F1 from a train or validation split as final test performance."
+  ]
+}

@@ -149,7 +149,7 @@ in the corresponding `eval/results/<run>_<lang>.json`).
 
 **Primary query language: English.** The production retrieval consumer is
 the LLM interpretive pass, which queries with the clause's English rule
-text (`services/orchestrator.py`, `retriever.retrieve(rule_text[:120])`);
+text (`validation/compliance/runner.py`, `retriever.retrieve(rule_text[:120])`);
 the deterministic agents do not query the retriever at all. Persian is
 reported as the secondary language for the Persian-facing UI path.
 

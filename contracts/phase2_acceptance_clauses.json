@@ -1,0 +1,44 @@
+[
+  {
+    "article_id": "PH2-N1",
+    "rule_type": "numeric",
+    "text_en": "Bedroom minimum area is 8 m2",
+    "entities": {
+      "object": "bedroom",
+      "property": "area",
+      "comparator": ">=",
+      "value": 8,
+      "unit": "m2",
+      "condition": null
+    }
+  },
+  {
+    "article_id": "PH2-S1",
+    "rule_type": "spatial",
+    "text_en": "Kitchen must not connect directly to bathroom",
+    "entities": {
+      "subject": "kitchen",
+      "relation": "must_not_connect_to",
+      "object": "bathroom"
+    }
+  },
+  {
+    "article_id": "PH2-O1",
+    "rule_type": "numeric",
+    "text_en": "Window area ratio must be at least 0.125",
+    "entities": {
+      "object": "window_area",
+      "property": "ratio_to_floor_area",
+      "comparator": ">=",
+      "value": 0.125,
+      "unit": "ratio",
+      "condition": null
+    }
+  },
+  {
+    "article_id": "PH2-D1",
+    "rule_type": "definition",
+    "text_en": "A habitable room is a room intended for regular occupancy.",
+    "entities": null
+  }
+]

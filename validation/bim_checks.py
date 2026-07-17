@@ -29,8 +29,10 @@ import math
 from typing import Any, Dict, List, Optional, Tuple
 
 from .report import (
-    ValidationReport, Severity,
-    LAYER_GEOMETRY, LAYER_COMPLETENESS, LAYER_CODE_READINESS,
+    LAYER_CODE_READINESS,
+    LAYER_COMPLETENESS,
+    LAYER_GEOMETRY,
+    ValidationReport,
 )
 
 # ── Plausibility ranges (mm, and m² for area). Tune these to your stock. ──────
@@ -102,9 +104,21 @@ def validate_bim_data(bim_data: Dict[str, Any],
     wall_index: Dict[Any, Dict[str, Any]] = {}
     for w in walls:
         wid = w.get("id")
-        a = _xy(w.get("start_point")); b = _xy(w.get("end_point"))
-        wall_index[wid] = {"raw": w, "a": a, "b": b,
-                           "len": (_dist(a, b) if a and b else 0.0)}
+        points = [_xy(point) for point in (w.get("centerline") or [])]
+        points = [point for point in points if point is not None]
+        if len(points) < 2:
+            a = _xy(w.get("start_point"))
+            b = _xy(w.get("end_point"))
+            points = [point for point in (a, b) if point is not None]
+        segments = list(zip(points, points[1:])) if len(points) >= 2 else []
+        total_length = sum(_dist(a, b) for a, b in segments)
+        wall_index[wid] = {
+            "raw": w,
+            "a": points[0] if points else None,
+            "b": points[-1] if points else None,
+            "len": total_length,
+            "segments": segments,
+        }
 
     _check_units(bim_data, r)
     _check_walls(walls, wall_index, r)
@@ -242,13 +256,18 @@ def _check_openings(items: List[Dict[str, Any]], kind: str,
 
         # geometry: opening centre lies ON its host wall, and fits within it
         a, b, length = wi.get("a"), wi.get("b"), wi.get("len", 0.0)
+        segments = wi.get("segments") or ([(a, b)] if a is not None and b is not None else [])
         ip = _xy(it.get("insertion_point"))
-        if ip is None or a is None or b is None:
+        if ip is None or not segments:
             r.warn(f"GEOM.{kind.upper()}.NO_PLACEMENT", LAYER_GEOMETRY,
                    f"{kind} '{oid}' has no usable insertion point to verify "
                    f"against its host wall.", element=eid)
             continue
-        t, perp = _project_param(ip, a, b)
+        candidates = [
+            (*_project_param(ip, seg_a, seg_b), _dist(seg_a, seg_b))
+            for seg_a, seg_b in segments
+        ]
+        t, perp, host_segment_length = min(candidates, key=lambda item: item[1])
         if perp > ON_WALL_TOL_MM:
             r.critical(f"GEOM.{kind.upper()}.OFF_WALL", LAYER_GEOMETRY,
                        f"{kind} '{oid}' sits {perp:.0f}mm off the centerline of "
@@ -258,10 +277,10 @@ def _check_openings(items: List[Dict[str, Any]], kind: str,
             r.critical(f"GEOM.{kind.upper()}.PAST_END", LAYER_GEOMETRY,
                        f"{kind} '{oid}' projects beyond the ends of host wall "
                        f"'{host}' (t={t:.2f}).", element=eid)
-        elif width and length > 0 and width > length:
+        elif width and host_segment_length > 0 and width > host_segment_length:
             r.warn(f"GEOM.{kind.upper()}.WIDER_THAN_WALL", LAYER_GEOMETRY,
                    f"{kind} '{oid}' is wider ({width:.0f}mm) than its host wall "
-                   f"({length:.0f}mm).", element=eid)
+                   f"segment ({host_segment_length:.0f}mm).", element=eid)
 
 
 def _check_rooms(rooms: List[Dict[str, Any]], r: ValidationReport) -> None:

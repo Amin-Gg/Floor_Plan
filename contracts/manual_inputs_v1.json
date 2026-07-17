@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simsys.local/contracts/manual-inputs-v1.json",
+  "title": "Simsys Manual Inputs Schema v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0", "default": "1.0"},
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_storey_height_mm": {"type": "number", "minimum": 500, "maximum": 10000},
+        "finished_floor_level_mm": {"type": "number", "minimum": -100000, "maximum": 100000},
+        "floor_thickness_mm": {"type": "number", "minimum": 50, "maximum": 1000}
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ceiling_height_mm": {"type": "number", "minimum": 2000, "maximum": 6000},
+        "wall_height_mm": {"type": "number", "minimum": 500, "maximum": 6000},
+        "door_height_mm": {"type": "number", "minimum": 1800, "maximum": 3000},
+        "window_width_mm": {"type": "number", "minimum": 300, "maximum": 5000},
+        "window_height_mm": {"type": "number", "minimum": 200, "maximum": 3000},
+        "window_sill_height_mm": {"type": "number", "minimum": 0, "maximum": 2000},
+        "floor_thickness_mm": {"type": "number", "minimum": 50, "maximum": 600}
+      }
+    },
+    "element_overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "windows": {"$ref": "#/$defs/windowOverrides"},
+        "doors": {"$ref": "#/$defs/doorOverrides"},
+        "walls": {"$ref": "#/$defs/wallOverrides"}
+      }
+    },
+    "allow_unmatched_overrides": {"type": "boolean", "default": false}
+  },
+  "$defs": {
+    "windowOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "width_mm": {"type": "number", "minimum": 300, "maximum": 5000},
+          "height_mm": {"type": "number", "minimum": 200, "maximum": 3000},
+          "sill_height_mm": {"type": "number", "minimum": 0, "maximum": 3000}
+        }
+      }
+    },
+    "doorOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "width_mm": {"type": "number", "minimum": 300, "maximum": 5000},
+          "height_mm": {"type": "number", "minimum": 500, "maximum": 5000}
+        }
+      }
+    },
+    "wallOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "height_mm": {"type": "number", "minimum": 500, "maximum": 10000},
+          "thickness_mm": {"type": "number", "minimum": 20, "maximum": 2000}
+        }
+      }
+    }
+  }
+}

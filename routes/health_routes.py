@@ -24,14 +24,16 @@ import os
 import platform
 import sys
 
-from flask_openapi3 import APIBlueprint
+from flask_openapi3 import APIBlueprint, Tag
 from flask import jsonify, g
 
-from models.mask_rcnn_model import get_model_config, is_model_initialized
+from models.mask_rcnn_model import get_model_config
+from services.model_runtime import is_runtime_ready, runtime_status
 
 logger = logging.getLogger(__name__)
 
 bp = APIBlueprint("health", __name__)
+TAG = Tag(name="System", description="Service health and runtime status")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,23 +78,15 @@ def _model_device() -> str:
 
 
 def _ocr_status() -> dict:
-    """
-    Report OCR library availability.
-
-    PaddleOCR is lazy-initialized on first request, so we only check whether
-    the library is importable here — not whether the singleton is loaded.
-    A future health probe could trigger initialization, but that defeats the
-    purpose of a fast health check.
-    """
-    try:
-        import paddleocr  # noqa: F401 — import test
-        return {"available": True, "engine": "PaddleOCR", "lazy_loaded": True}
-    except ImportError as exc:
-        return {"available": False, "engine": "PaddleOCR", "error": str(exc)}
-    except Exception as exc:
-        # Some PaddleOCR installs raise non-ImportError at import time
-        # (e.g., missing libgomp). Report it cleanly.
-        return {"available": False, "engine": "PaddleOCR", "error": str(exc)}
+    """Probe OCR package metadata without importing PaddleOCR itself."""
+    import importlib.util
+    available = importlib.util.find_spec("paddleocr") is not None
+    return {
+        "available": available,
+        "engine": "PaddleOCR",
+        "lazy_loaded": True,
+        **({} if available else {"error": "paddleocr package is not installed"}),
+    }
 
 
 def _model_path() -> str:
@@ -115,7 +109,27 @@ def _model_path() -> str:
 # Endpoint
 # ─────────────────────────────────────────────────────────────────────────────
 
-@bp.route("/health", methods=["GET"])
+
+@bp.get("/livez", tags=[TAG], summary="Process liveness probe")
+def liveness_check():
+    """Minimal unauthenticated probe: the HTTP process can answer requests."""
+    return jsonify({"status": "alive"}), 200
+
+
+@bp.get("/readyz", tags=[TAG], summary="Inference readiness probe")
+def readiness_check():
+    """Minimal unauthenticated probe used by container orchestrators."""
+    ready = is_runtime_ready()
+    status = runtime_status()
+    payload = {
+        "status": "ready" if ready else "not_ready",
+        "inference_mode": status.get("mode"),
+        "hard_timeout": bool(status.get("hard_timeout")),
+    }
+    return jsonify(payload), 200 if ready else 503
+
+
+@bp.get("/health", tags=[TAG], summary="Stage-1 model readiness")
 def health_check():
     """
     Structured health check.
@@ -128,13 +142,16 @@ def health_check():
     status object here, not a generic API error structure.
     """
     request_id = getattr(g, "request_id", "-")
-    model_loaded = is_model_initialized()
+    model_loaded = is_runtime_ready()
+    inference = runtime_status()
 
     # ── Common diagnostic block (returned on both success and failure) ──────
     base = {
         "status":         "healthy" if model_loaded else "unavailable",
         "model_loaded":   model_loaded,
         "model_path":     _model_path(),
+        "model_error":    inference.get("last_error"),
+        "inference":      inference,
         "environment":    os.getenv("APP_ENV", "development"),
         "python_version": sys.version.split()[0],
         "platform":       platform.platform(),

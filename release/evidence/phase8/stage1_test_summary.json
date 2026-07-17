@@ -1,0 +1,145 @@
+{
+  "complete": true,
+  "errors": 0,
+  "failures": 0,
+  "files": [
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_geometry_confidence.junit.xml",
+      "skipped": 0,
+      "tests": 10
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_ifc_contract.junit.xml",
+      "skipped": 0,
+      "tests": 17
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_ifc_phase1_geometry.junit.xml",
+      "skipped": 0,
+      "tests": 12
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_ifc_phase2_contract.junit.xml",
+      "skipped": 0,
+      "tests": 11
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_ifc_roundtrip.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_manual_params_flow.junit.xml",
+      "skipped": 0,
+      "tests": 19
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase3_manual_scale_provenance.junit.xml",
+      "skipped": 0,
+      "tests": 18
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase4_detection_semantics.junit.xml",
+      "skipped": 0,
+      "tests": 11
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase4_detector_pipeline.junit.xml",
+      "skipped": 0,
+      "tests": 7
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase5_api_orchestration.junit.xml",
+      "skipped": 0,
+      "tests": 8
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase6_packaging.junit.xml",
+      "skipped": 0,
+      "tests": 10
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase7_container_security.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase7_inference_isolation.junit.xml",
+      "skipped": 0,
+      "tests": 2
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase7_security.junit.xml",
+      "skipped": 0,
+      "tests": 6
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_phase8_evaluation.junit.xml",
+      "skipped": 0,
+      "tests": 11
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_provenance_gate_bridge.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_provenance_gate_export.junit.xml",
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_room_binding.junit.xml",
+      "skipped": 0,
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "test_validation.junit.xml",
+      "skipped": 0,
+      "tests": 12
+    }
+  ],
+  "junit_files": 19,
+  "passed": 174,
+  "schema_version": "phase8-stage1-test-summary-v1",
+  "skipped": 0,
+  "tests": 174
+}

@@ -12,7 +12,7 @@ so these elements carry approximate (box-derived) geometry, flagged as such.
 
 Why a separate config file
 --------------------------
-This keeps the YOLO concern self-contained: it does not touch config/classes.py
+This keeps the YOLO concern self-contained: it does not reuse the primary Mask R-CNN numeric ID space
 (the 15-class Mask2Former scheme) or config/settings.py (the Mask R-CNN config).
 The two detectors are wired together only at the bim_data layer.
 

@@ -30,18 +30,17 @@ Production:
     APP_ENV=production gunicorn --config gunicorn.conf.py application:application
 """
 
+import logging
+import logging.config
 import os
 import sys
 import uuid
-import logging
-import logging.config
 
 from flask import g, request
 from flask_cors import CORS
-from flask_openapi3 import OpenAPI, Info, Tag
+from flask_openapi3 import Info, OpenAPI, Tag
 
 from config.settings import get_config
-from utils.inference_executor import InferenceExecutor
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 app_config = get_config()
@@ -84,7 +83,7 @@ logger = logging.getLogger(__name__)
 
 _info = Info(
     title="FloorPlanTo3D API",
-    version="2.0.0",
+    version="2.8.0",
     description=(
         "AI-powered floor plan analysis system. "
         "Accepts a photograph of a floor plan and returns structured BIM data "
@@ -92,9 +91,11 @@ _info = Info(
         "plus a downloadable IFC4 file for Revit, ArchiCAD, and FreeCAD.\n\n"
         "**Workflow:**\n"
         "1. `POST /analyze` → upload image → receive `bim_data` JSON\n"
-        "2. `POST /export/ifc` → convert `bim_data` to IFC4 file\n"
-        "3. Open IFC in Revit / run Dynamo scripts for code compliance\n\n"
-        "**Authentication:** None (add via reverse proxy for production)"
+        "2. `POST /export/ifc` → resolve Manual Inputs v1 and export IFC Contract 1.2\n"
+        "3. `POST /compliance/jobs/ifc` or `/compliance/jobs/from-analysis` "
+        "→ submit to the public compliance-engine API\n"
+        "4. Poll `/compliance/jobs/{job_id}` and download JSON/HTML/PDF/BCF reports\n\n"
+        "**Authentication:** API key required in production via `Authorization: Bearer` or `X-API-Key`."
     ),
 )
 
@@ -119,8 +120,20 @@ def create_app(cfg=None) -> OpenAPI:
     if cfg is None:
         cfg = app_config
 
+    from utils.security import validate_stage1_production_security
+    validate_stage1_production_security()
+
     # OpenAPI is a drop-in subclass of Flask — all Flask features work unchanged
-    app = OpenAPI(__name__, info=_info)
+    from utils.error_handlers import openapi_validation_error_response
+    app = OpenAPI(
+        __name__, info=_info,
+        security_schemes={
+            "ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "X-API-Key"},
+            "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "API key"},
+        },
+        validation_error_status=422,
+        validation_error_callback=openapi_validation_error_response,
+    )
     app.debug = cfg.DEBUG
 
     app.config["MAX_CONTENT_LENGTH"] = cfg.MAX_UPLOAD_MB * 1024 * 1024
@@ -134,39 +147,80 @@ def create_app(cfg=None) -> OpenAPI:
     # ── Per-request ID ────────────────────────────────────────────────────────
     @app.before_request
     def _assign_request_id():
-        g.request_id = str(uuid.uuid4())[:8]
+        incoming = (
+            request.headers.get("X-Correlation-ID")
+            or request.headers.get("X-Request-ID")
+            or ""
+        ).strip()
+        g.request_id = incoming[:128] if incoming else uuid.uuid4().hex[:16]
         logger.debug("→ %s %s", request.method, request.path)
 
     @app.after_request
     def _log_response(response):
         logger.debug("← %s %s → %d", request.method, request.path, response.status_code)
-        response.headers["X-Request-ID"] = getattr(g, "request_id", "-")
+        request_id = getattr(g, "request_id", "-")
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Correlation-ID"] = request_id
         return response
+
+    # Security is installed before route execution and is intentionally
+    # independent of the heavyweight ML runtime.
+    from utils.security import install_flask_security
+    install_flask_security(app)
 
     # ── Blueprints ────────────────────────────────────────────────────────────
     # flask-openapi3 uses APIBlueprint instead of Blueprint for documented routes.
     # Routes that use the old Blueprint still work — they just won't appear in Swagger.
-    from routes.health_routes        import bp as health_bp
-    from routes.accuracy_routes      import bp as accuracy_bp
+    from routes.accuracy_routes import bp as accuracy_bp
+    from routes.export_routes import bp as export_bp
+    from routes.health_routes import bp as health_bp
     from routes.visualization_routes import bp as visualization_bp
-    from routes.export_routes        import bp as export_bp
+    from routes.compliance_routes import bp as compliance_bp
 
     app.register_api(health_bp)
     app.register_api(accuracy_bp)
     app.register_api(visualization_bp)
     app.register_api(export_bp)
+    app.register_api(compliance_bp)
+
+    # Freeze the public contract with global authentication requirements.
+    # The two minimal orchestrator probes remain intentionally unauthenticated.
+    spec = app.api_doc
+    spec["security"] = [{"ApiKeyAuth": []}, {"BearerAuth": []}]
+    for probe in ("/livez", "/readyz"):
+        for operation in (spec.get("paths", {}).get(probe, {}) or {}).values():
+            if isinstance(operation, dict):
+                operation["security"] = []
 
     # ── Error handlers ────────────────────────────────────────────────────────
     from utils.error_handlers import register_error_handlers
     register_error_handlers(app)
 
     # ── AI model initialisation ───────────────────────────────────────────────
+    skip_model_init = (
+        os.getenv("FLOORPLAN_SKIP_MODEL_INIT", "0") == "1"
+        or os.getenv("APP_ENV", "development").lower() == "testing"
+    )
     with app.app_context():
-        logger.info("Initialising AI model (Mask R-CNN, ResNet-101 backbone)...")
+        if skip_model_init:
+            logger.info("Skipping AI model initialization for API/schema mode.")
+            return app
+        logger.info("Initialising AI inference runtime...")
         try:
-            from models.mask_rcnn_model import initialize_model
-            initialize_model()
-            logger.info("AI model initialised successfully.")
+            from utils.inference_executor import get_executor, isolation_mode
+            if isolation_mode() == "process":
+                get_executor().start()
+                logger.info("Process-isolated inference worker initialised successfully.")
+            else:
+                from models.mask_rcnn_model import initialize_model
+                initialize_model()
+                logger.info("Primary Mask R-CNN model initialised successfully.")
+                from models.yolo_detector import initialize_yolo, is_yolo_initialized
+                initialize_yolo()
+                if is_yolo_initialized():
+                    logger.info("Supplementary YOLO detector initialised successfully.")
+                else:
+                    logger.info("Supplementary YOLO detector is disabled or unavailable.")
         except Exception as exc:
             logger.error("AI model initialisation failed: %s", exc, exc_info=True)
             _env = os.getenv("APP_ENV", "development").lower()

@@ -1,0 +1,93 @@
+{
+  "schema_id": "simsys-ifc-contract-1.2",
+  "contract_version": "1.2",
+  "ifc_schema": "IFC4",
+  "project_pset": "Pset_SimsysContract",
+  "element_provenance_pset": "Pset_SimsysProvenance",
+  "supported_previous_versions": ["1.0", "1.1"],
+  "architecture": {
+    "layer_1": "Exporter prevention: strict Manual Inputs and Scale Evidence are resolved before Body creation; export is atomic and blocked on contract failure.",
+    "layer_2": "Independent Geometry and Traceability Gates: external, legacy, modified, or third-party IFC files are re-inspected by Stage 1 and the compliance engine."
+  },
+  "units": {
+    "length": "MILLIMETRE",
+    "area": "SQUARE_METRE",
+    "geometry_kernel_output": "SI_METRE"
+  },
+  "hosted_opening_semantics": {
+    "insertion_point": "CENTER_ON_HOST_CENTERLINE",
+    "orientation": "LOCAL_X_WALL_DIRECTION_LOCAL_Y_THICKNESS_LOCAL_Z_UP",
+    "opening_clearance_each_side_mm": 10.0
+  },
+  "required_project_properties": {
+    "ContractVersion": "1.2",
+    "ExporterVersion": "non_empty_string",
+    "ExpectedWallCount": "non_negative_integer",
+    "ExpectedDoorCount": "non_negative_integer",
+    "ExpectedWindowCount": "non_negative_integer",
+    "ExpectedSpaceCount": "non_negative_integer",
+    "ExpectedStairCount": "non_negative_integer",
+    "ExpectedSlabCount": "non_negative_integer",
+    "SourcePayloadSha256": "sha256_hex",
+    "ManualInputManifestSha256": "sha256_hex",
+    "ManualInputsSchemaVersion": "1.0",
+    "ManualInputsSha256": "sha256_hex",
+    "ManualInputsResolvedSha256": "sha256_hex",
+    "ScaleEvidenceSha256": "sha256_hex",
+    "ProvenanceSchemaVersion": "1.0",
+    "ProducerRequestId": "string",
+    "ModelVersion": "non_empty_string",
+    "WeightVersion": "non_empty_string",
+    "ScaleMmPerPixel": "positive_number_max_100",
+    "ScaleSource": "scale_source_enum",
+    "ScaleConfidence": "number_0_to_1",
+    "InsertionPointSemantics": "enum",
+    "OrientationConvention": "enum",
+    "LengthUnit": "enum",
+    "OpeningClearanceMm": "positive_number"
+  },
+  "scale_source_enum": [
+    "user_dimension",
+    "recognized_scale_bar",
+    "recognized_dimension_text",
+    "document_metadata",
+    "default_unverified"
+  ],
+  "required_element_provenance": {
+    "all_physical_elements": [
+      "OriginalId", "Source", "Confidence", "NeedsReview", "ReviewReason",
+      "ProvenanceContextJson"
+    ],
+    "walls_doors_windows": ["MeasurementsJson"],
+    "measurement_record": [
+      "value", "unit", "source", "confidence", "raw_pixel_measurement",
+      "raw_measurement_source", "scale_evidence_id", "scale_evidence_sha256",
+      "transformation_chain", "model_version", "weight_version", "request_id",
+      "override_history", "timestamp"
+    ]
+  },
+  "geometry_tolerances": {
+    "dimension_mm": 2.0,
+    "placement_mm": 5.0,
+    "orientation_degrees": 1.0,
+    "measurement_provenance_value_mm": 0.5,
+    "space_area_abs_m2": 0.1,
+    "space_area_relative": 0.02
+  },
+  "blocking_rules": [
+    "exporter_manual_input_bypass",
+    "unknown_or_invalid_manual_input",
+    "unverified_scale_promoted_to_trusted",
+    "body_missing_or_untriangulable",
+    "body_zero_or_non_finite",
+    "body_attribute_or_qto_mismatch",
+    "opening_relationship_missing_or_invalid",
+    "opening_host_or_filling_mismatch",
+    "hosted_placement_or_orientation_mismatch",
+    "manifest_count_mismatch",
+    "trace_manifest_missing_or_invalid",
+    "measurement_provenance_missing_or_inconsistent",
+    "manual_input_hash_conflict_at_engine_boundary",
+    "unknown_contract_version"
+  ]
+}

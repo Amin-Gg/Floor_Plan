@@ -35,6 +35,9 @@ import multiprocessing
 # ── Binding ───────────────────────────────────────────────────────────────────
 bind    = "0.0.0.0:8080"
 backlog = 64             # queued connections before refusing new ones
+limit_request_line = 4094
+limit_request_fields = 100
+limit_request_field_size = 8190
 
 # ── Workers ───────────────────────────────────────────────────────────────────
 # sync workers: each request occupies a worker until complete.
@@ -44,12 +47,15 @@ worker_class = "sync"
 # GPU-safe defaults: 1 worker loads the model once; scale up only after
 # profiling VRAM usage. Each extra worker = another full model in GPU memory.
 workers = int(os.getenv("GUNICORN_WORKERS", 1))
-threads      = 1         # one thread per sync worker — keeps PyTorch safe
+threads      = 1         # one thread per sync worker — keeps CUDA safe
+max_requests = int(os.getenv("GUNICORN_MAX_REQUESTS", 500))
+max_requests_jitter = int(os.getenv("GUNICORN_MAX_REQUESTS_JITTER", 50))
 
 # ── Timeouts ─────────────────────────────────────────────────────────────────
-# AI inference can take 10-60 seconds on CPU. Set timeout generously.
-# Gunicorn kills workers that do not respond within this window.
-timeout        = int(os.getenv("GUNICORN_TIMEOUT", 120))   # 2 minutes
+# The process-isolated inference worker enforces INFERENCE_TIMEOUT first.
+# Gunicorn remains a second, outer kill boundary and must be greater than that
+# limit plus response/serialization headroom.
+timeout        = int(os.getenv("GUNICORN_TIMEOUT", 150))
 graceful_timeout = 30    # seconds for in-flight requests to finish on shutdown
 keepalive      = 5       # seconds to keep idle connections open
 
@@ -77,6 +83,11 @@ def on_starting(server):
     server.log.info("FloorPlanTo3D API starting with %d worker(s)", workers)
 
 def worker_exit(server, worker):
+    try:
+        from utils.inference_executor import get_executor
+        get_executor().shutdown()
+    except Exception:
+        pass
     server.log.info("Worker %d exited cleanly", worker.pid)
 
 def on_exit(server):

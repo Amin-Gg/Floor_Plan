@@ -1,0 +1,51 @@
+version: "1.0"
+
+vocabularies:
+  room_types:
+    substring_match: true
+    ambiguous: ["", room, space, area, unknown, service, accommodation, other, misc, اتاق, فضا, نامشخص]
+    values:
+      room_kitchen:
+        aliases: [kitchen, kitchenette, آشپزخانه]
+      room_bedroom:
+        aliases: [bedroom, bed room, master bedroom, اتاق خواب, اتاق‌خواب, خواب]
+      room_bathroom:
+        aliases: [bathroom, bath, shower, حمام, دوش]
+      room_toilet:
+        aliases: [toilet, wc, water closet, restroom, powder room, توالت, دستشویی, سرویس بهداشتی, سرویس]
+      room_living:
+        aliases: [living, living room, lounge, sitting, sitting room, reception, salon, نشیمن, اتاق نشیمن, پذیرایی, هال]
+      room_entry:
+        aliases: [entry, entrance, hall, hallway, corridor, foyer, lobby, vestibule, راهرو, ورودی, سرسرا]
+      room_storage:
+        aliases: [storage, store, store room, storeroom, closet, pantry, انباری, انبار, کمد]
+  boolean:
+    substring_match: false
+    ambiguous: ["", unknown, نامشخص]
+    values:
+      "true":
+        aliases: [true, yes, "1", بله]
+      "false":
+        aliases: [false, no, "0", خیر]
+  occupancy_types:
+    substring_match: true
+    ambiguous: ["", unknown, mixed, نامشخص]
+    values:
+      residential:
+        aliases: [residential, dwelling, housing, مسکونی]
+      commercial:
+        aliases: [commercial, retail, office, تجاری, اداری]
+      healthcare:
+        aliases: [healthcare, hospital, clinic, درمانی, بیمارستان]
+      educational:
+        aliases: [educational, school, university, آموزشی, مدرسه, دانشگاه]
+  door_types:
+    substring_match: true
+    ambiguous: ["", door, unknown, در, نامشخص]
+    values:
+      entrance:
+        aliases: [entrance door, main door, entry door, در ورودی, در اصلی]
+      internal:
+        aliases: [internal door, room door, interior door, در داخلی, در اتاق]
+      emergency_exit:
+        aliases: [emergency exit, exit door, fire exit, خروج اضطراری, در خروج]

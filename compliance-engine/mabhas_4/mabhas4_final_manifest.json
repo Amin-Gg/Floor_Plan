@@ -1,0 +1,82 @@
+{
+  "corpus": "مبحث چهارم مقررات ملّی ساختمان — الزامات عمومی ساختمان",
+  "edition": "ویرایش سوم",
+  "source_year": 1396,
+  "generated_for": "RAG",
+  "record_count": 776,
+  "chapter_counts": {
+    "1": 37,
+    "2": 55,
+    "3": 33,
+    "4": 67,
+    "5": 300,
+    "6": 32,
+    "7": 127,
+    "8": 8,
+    "9": 117
+  },
+  "rule_type_counts": {
+    "None": 255,
+    "definition": 171,
+    "spatial": 143,
+    "numeric": 196,
+    "exception": 11
+  },
+  "skip_category_counts": {
+    "administrative": 198,
+    "legal": 11,
+    "None": 396,
+    "energy_calc": 3,
+    "construction_method": 42,
+    "non_residential": 95,
+    "material_spec": 25,
+    "mep_detail": 5,
+    "quality_control": 1
+  },
+  "entity_record_count": 321,
+  "entity_count": 512,
+  "rag_included_count": 678,
+  "heading_excluded_count": 98,
+  "retrieval_priority_counts": {
+    "high": 339,
+    "medium": 182,
+    "low": 255
+  },
+  "validation": {
+    "duplicate_ids": 0,
+    "empty_fa": 0,
+    "empty_en": 0,
+    "replacement_chars": 0,
+    "persian_in_english": 0,
+    "arabic_forms_in_fa": 0,
+    "slash_decimals_fa": 0,
+    "slash_decimals_en": 0,
+    "unbalanced_parentheses_fa": 0,
+    "unbalanced_parentheses_en": 0,
+    "long_translation_ratio": 0,
+    "long_source_ratio": 0,
+    "unresolved_cross_references": 0
+  },
+  "files": {
+    "mabhas4_final_clean.json": {
+      "bytes": 1201557,
+      "sha256": "929659d6029eb5cd718084420e12e152b0878bd3330bd0884a1059757d8d8fc4"
+    },
+    "mabhas4_final_rag_ready.json": {
+      "bytes": 3981147,
+      "sha256": "844cc1e6db96fcd829f10050f237c741a28135e0c544bb547878b3faef370085"
+    },
+    "mabhas4_final_rag_ready.jsonl": {
+      "bytes": 3579319,
+      "sha256": "7a958232c1b3542c9cdc5962f5f2180481ed61cc35c614b1fc7aa235fb5c9be4"
+    },
+    "MABHAS4_RAG_QA_REPORT.md": {
+      "bytes": 6932,
+      "sha256": "4713fe2f07ce8aa1346d9ac066df91f649c23b599b113cbfb7eaf1acb4044a34"
+    },
+    "MABHAS4_RAG_SCHEMA.md": {
+      "bytes": 4372,
+      "sha256": "da330c5b2435bd9ed84e598f1ca115afff80692fa71f4d43416ef54469e88666"
+    }
+  }
+}

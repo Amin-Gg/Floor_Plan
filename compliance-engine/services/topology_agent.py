@@ -128,7 +128,8 @@ class TopologyAgent:
     def check_clause(self, clause: Dict[str, Any]) -> List[Finding]:
         ents = clause.get("entities")
         if ents is None:
-            return [self._review(clause, "No entities to check")]
+            return [self._review(clause, "No entities to check",
+                                 unsupported=True)]
         if isinstance(ents, dict):
             ents = [ents]
         out: List[Finding] = []
@@ -144,6 +145,7 @@ class TopologyAgent:
         if handler_name is None:
             return self._review(clause,
                 f"Relation '{relation}' not handled by topology agent — needs review",
+                unsupported=True,
                 subject=ent.get("subject"))
         handler: Callable = getattr(self, handler_name)
         return handler(clause, ent)
@@ -158,14 +160,14 @@ class TopologyAgent:
             return self._review(clause,
                 f"Could not map subject/object to room categories "
                 f"(subject={ent.get('subject')!r}, object={ent.get('object')!r})",
-                subject=ent.get("subject"))
+                subject=ent.get("subject"), unsupported=True)
 
         subj_rooms = self.sg.get_rooms_by_category(subj_cat)
         obj_rooms  = self.sg.get_rooms_by_category(obj_cat)
         if not subj_rooms or not obj_rooms:
-            return self._review(clause,
-                f"No {subj_cat} or {obj_cat} rooms in plan to check",
-                subject=ent.get("subject"))
+            return self._blocked(clause,
+                f"No {subj_cat} or {obj_cat} rooms in plan to check — "
+                f"not evaluated", subject=ent.get("subject"))
 
         violations = []
         for s in subj_rooms:
@@ -198,14 +200,14 @@ class TopologyAgent:
             return self._review(clause,
                 f"Could not map subject/object to room categories "
                 f"(subject={ent.get('subject')!r}, object={ent.get('object')!r})",
-                subject=ent.get("subject"))
+                subject=ent.get("subject"), unsupported=True)
 
         subj_rooms = self.sg.get_rooms_by_category(subj_cat)
         obj_rooms  = self.sg.get_rooms_by_category(obj_cat)
         if not subj_rooms or not obj_rooms:
-            return self._review(clause,
-                f"No {subj_cat} or {obj_cat} rooms in plan to check",
-                subject=ent.get("subject"))
+            return self._blocked(clause,
+                f"No {subj_cat} or {obj_cat} rooms in plan to check — "
+                f"not evaluated", subject=ent.get("subject"))
 
         for s in subj_rooms:
             if any(self.sg.are_directly_connected(s, o) for o in obj_rooms):
@@ -231,12 +233,13 @@ class TopologyAgent:
         if subj_cat is None:
             return self._review(clause,
                 f"Could not map subject {ent.get('subject')!r} to a room category",
-                subject=ent.get("subject"))
+                subject=ent.get("subject"), unsupported=True)
 
         subj_rooms = self.sg.get_rooms_by_category(subj_cat)
         if not subj_rooms:
-            return self._review(clause,
-                f"No {subj_cat} rooms in plan to check", subject=ent.get("subject"))
+            return self._blocked(clause,
+                f"No {subj_cat} rooms in plan to check — not evaluated",
+                subject=ent.get("subject"))
 
         obj_cat = self._phrase_to_category(ent.get("object"))
 
@@ -291,10 +294,25 @@ class TopologyAgent:
 
     @staticmethod
     def _review(clause: Dict[str, Any], msg: str,
-                subject: Optional[str] = None) -> Finding:
+                subject: Optional[str] = None,
+                unsupported: bool = False) -> Finding:
         return Finding(
             article_id=clause.get("article_id", "?"),
             verdict=Verdict.NEEDS_REVIEW,
+            message=msg, object=subject,
+            rule_text_en=clause.get("text_en"),
+            unsupported=unsupported,
+        )
+
+    @staticmethod
+    def _blocked(clause: Dict[str, Any], msg: str,
+                 subject: Optional[str] = None) -> Finding:
+        """Stage 5: data-absence finding — the engine has topology logic for
+        this clause but the plan lacks the rooms it applies to. Verdict-level
+        NOT_EVALUATED (fix/complete the model), not human judgment."""
+        return Finding(
+            article_id=clause.get("article_id", "?"),
+            verdict=Verdict.NOT_EVALUATED,
             message=msg, object=subject,
             rule_text_en=clause.get("text_en"),
         )

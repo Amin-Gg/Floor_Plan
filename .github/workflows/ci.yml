@@ -1,0 +1,111 @@
+name: FloorPlan Pipeline CI
+
+on:
+  push:
+    branches: [main, master, "fix/**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 1"
+
+jobs:
+  quality-contracts-and-sbom:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements/baseline.lock
+      - name: Install hashed verification environment
+        run: |
+          python -m pip install --upgrade pip==24.0
+          python -m pip install --require-hashes -r requirements/baseline.lock
+      - name: Final release acceptance
+        run: python scripts/run_final_acceptance.py --out release/ci/final
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorplan-final-ci-${{ github.sha }}
+          path: |
+            release/ci/
+            sbom/
+            contracts/openapi_stage1.json
+            compliance-engine/docs/contracts/openapi.json
+          retention-days: 30
+
+  compose-contract:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose profile expansion
+        run: |
+          docker compose --profile floorplan-only config > /tmp/floorplan-only.yml
+          docker compose --profile full-pipeline config > /tmp/full-pipeline.yml
+      - name: Dockerfile and Compose static contracts
+        run: |
+          python3 scripts/validate_container_contracts.py
+          python3 scripts/validate_security_contracts.py
+
+  dependency-reresolution:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install uv==0.8.4
+      - name: Prove lock files are reproducible
+        run: python scripts/lock_dependencies.py --check
+
+  strict-release-build:
+    if: ${{ vars.ENABLE_STRICT_RELEASE_BUILD == 'true' }}
+    runs-on: self-hosted
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Seal and verify provisioned external artifacts
+        run: python3.11 scripts/preflight.py --mode full-pipeline --refresh-manifest --strict --artifacts-only --json-out release/ci/strict-artifacts.json
+      - name: Full no-cache build
+        env:
+          VCS_REF: ${{ github.sha }}
+          BUILD_DATE: ${{ github.event.repository.updated_at }}
+        run: docker compose --profile full-pipeline build --no-cache
+      - name: Start and smoke test
+        run: |
+          docker compose --profile full-pipeline up -d
+          python3.11 scripts/run_final_acceptance.py --out release/ci/strict-final
+          docker compose --profile full-pipeline down -v
+
+  real-ml-holdout-evaluation:
+    if: ${{ vars.ENABLE_REAL_ML_EVALUATION == 'true' }}
+    runs-on: self-hosted
+    timeout-minutes: 240
+    env:
+      PHASE8_REAL_DATASET: ${{ vars.PHASE8_REAL_DATASET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify sealed runtime and holdout
+        run: |
+          test -n "$PHASE8_REAL_DATASET"
+          python3.11 scripts/preflight.py --mode full-pipeline --strict --artifacts-only
+          python3.11 scripts/audit_phase8_dataset.py --dataset "$PHASE8_REAL_DATASET" --out release/ci/phase8-real-audit.json
+      - name: Run sealed inference
+        run: |
+          python3.11 scripts/run_phase8_inference.py --dataset "$PHASE8_REAL_DATASET" --variant raw
+      - name: Evaluate holdout
+        run: |
+          ROOT=$(dirname "$PHASE8_REAL_DATASET")
+          python3.11 scripts/run_phase8_evaluation.py --dataset "$ROOT/dataset.raw.json" --out release/ci/phase8-real --variant raw
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase8-real-ml-evaluation-${{ github.sha }}
+          path: release/ci/phase8-real*
+          retention-days: 90

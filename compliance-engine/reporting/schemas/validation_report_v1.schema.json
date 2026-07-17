@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simsys.local/schemas/validation_report_v1.schema.json",
+  "title": "Simsys Validation Report v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema_version",
+    "engine_version",
+    "run_id",
+    "generated_at",
+    "mode",
+    "model",
+    "overall",
+    "stages",
+    "summary",
+    "findings",
+    "metadata",
+    "skipped_stages"
+  ],
+  "properties": {
+    "report_schema_version": {"const": "1.0"},
+    "engine_version": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "format": "uuid"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "mode": {"enum": ["precheck", "full_check"]},
+    "model": {"$ref": "#/$defs/model"},
+    "overall": {"$ref": "#/$defs/overall"},
+    "stages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "quality", "compliance"],
+      "properties": {
+        "schema": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/stage"}]},
+        "quality": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/stage"}]},
+        "compliance": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/stage"}]}
+      }
+    },
+    "summary": {"$ref": "#/$defs/summary"},
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "metadata": {"type": "object"},
+    "skipped_stages": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  },
+  "$defs": {
+    "nullableString": {"type": ["string", "null"]},
+    "jsonValue": {},
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source_type", "ifc_schema", "project_guid", "fingerprint"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nullableString"},
+        "source_type": {"type": "string", "minLength": 1},
+        "ifc_schema": {"$ref": "#/$defs/nullableString"},
+        "project_guid": {"$ref": "#/$defs/nullableString"},
+        "fingerprint": {"$ref": "#/$defs/nullableString"}
+      }
+    },
+    "overall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "label", "status", "reasons"],
+      "properties": {
+        "code": {
+          "enum": [
+            "rejected",
+            "non_compliant",
+            "incomplete",
+            "needs_review",
+            "compliant_with_quality_alerts",
+            "compliant",
+            "precheck_failed",
+            "precheck_ready_with_alerts",
+            "precheck_ready"
+          ]
+        },
+        "label": {"type": "string"},
+        "status": {"enum": ["success", "warning", "error", "incomplete"]},
+        "reasons": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "status",
+        "checker_version",
+        "started_at",
+        "completed_at",
+        "metadata",
+        "summary",
+        "coverage",
+        "duration_s",
+        "skipped",
+        "skip_reason",
+        "findings"
+      ],
+      "properties": {
+        "stage": {"enum": ["schema", "quality", "compliance"]},
+        "status": {"type": "string"},
+        "checker_version": {"$ref": "#/$defs/nullableString"},
+        "started_at": {"oneOf": [{"type": "null"}, {"type": "string", "format": "date-time"}]},
+        "completed_at": {"oneOf": [{"type": "null"}, {"type": "string", "format": "date-time"}]},
+        "metadata": {"type": "object"},
+        "summary": {"type": ["object", "null"]},
+        "coverage": {"type": ["object", "null"]},
+        "duration_s": {"type": ["number", "null"], "minimum": 0},
+        "skipped": {"type": "boolean"},
+        "skip_reason": {"$ref": "#/$defs/nullableString"},
+        "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findings_total",
+        "findings_by_stage",
+        "findings_by_severity",
+        "verdicts",
+        "coverage"
+      ],
+      "properties": {
+        "findings_total": {"type": "integer", "minimum": 0},
+        "findings_by_stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "quality", "compliance"],
+          "properties": {
+            "schema": {"type": "integer", "minimum": 0},
+            "quality": {"type": "integer", "minimum": 0},
+            "compliance": {"type": "integer", "minimum": 0}
+          }
+        },
+        "findings_by_severity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fail", "alert", "info"],
+          "properties": {
+            "fail": {"type": "integer", "minimum": 0},
+            "alert": {"type": "integer", "minimum": 0},
+            "info": {"type": "integer", "minimum": 0}
+          }
+        },
+        "verdicts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["PASS", "FAIL", "NEEDS_REVIEW", "NOT_EVALUATED", "NOT_APPLICABLE"],
+          "properties": {
+            "PASS": {"type": "integer", "minimum": 0},
+            "FAIL": {"type": "integer", "minimum": 0},
+            "NEEDS_REVIEW": {"type": "integer", "minimum": 0},
+            "NOT_EVALUATED": {"type": "integer", "minimum": 0},
+            "NOT_APPLICABLE": {"type": "integer", "minimum": 0}
+          }
+        },
+        "coverage": {"type": "object"}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "stage",
+        "category",
+        "code",
+        "severity",
+        "verdict",
+        "message",
+        "element_internal_id",
+        "element_ifc_guid",
+        "element_type",
+        "model_name",
+        "model_fingerprint",
+        "storey_id",
+        "requirement",
+        "expected",
+        "actual",
+        "unit",
+        "clause_id",
+        "clause_text",
+        "source",
+        "details",
+        "unsupported",
+        "article_id",
+        "object",
+        "measured",
+        "required",
+        "element_id",
+        "rule_text_en"
+      ],
+      "properties": {
+        "finding_id": {"type": "string", "format": "uuid"},
+        "stage": {"enum": ["schema", "quality", "compliance"]},
+        "category": {"enum": ["schema", "quality", "compliance"]},
+        "code": {"$ref": "#/$defs/nullableString"},
+        "severity": {"enum": ["fail", "alert", "info"]},
+        "verdict": {"enum": ["PASS", "FAIL", "NEEDS_REVIEW", "NOT_EVALUATED", "NOT_APPLICABLE"]},
+        "message": {"type": "string"},
+        "element_internal_id": {"$ref": "#/$defs/nullableString"},
+        "element_ifc_guid": {"$ref": "#/$defs/nullableString"},
+        "element_type": {"$ref": "#/$defs/nullableString"},
+        "model_name": {"$ref": "#/$defs/nullableString"},
+        "model_fingerprint": {"$ref": "#/$defs/nullableString"},
+        "storey_id": {"$ref": "#/$defs/nullableString"},
+        "requirement": {"$ref": "#/$defs/nullableString"},
+        "expected": {"$ref": "#/$defs/jsonValue"},
+        "actual": {"$ref": "#/$defs/jsonValue"},
+        "unit": {"$ref": "#/$defs/nullableString"},
+        "clause_id": {"$ref": "#/$defs/nullableString"},
+        "clause_text": {"$ref": "#/$defs/nullableString"},
+        "source": {"$ref": "#/$defs/nullableString"},
+        "details": {"type": "object"},
+        "unsupported": {"type": "boolean"},
+        "article_id": {"type": "string"},
+        "object": {"$ref": "#/$defs/nullableString"},
+        "measured": {"$ref": "#/$defs/jsonValue"},
+        "required": {"$ref": "#/$defs/jsonValue"},
+        "element_id": {"$ref": "#/$defs/nullableString"},
+        "rule_text_en": {"$ref": "#/$defs/nullableString"}
+      }
+    }
+  }
+}

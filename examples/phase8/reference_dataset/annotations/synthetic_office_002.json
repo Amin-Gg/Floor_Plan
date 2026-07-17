@@ -1,0 +1,157 @@
+{
+  "instances": [
+    {
+      "attributes": {
+        "centerline": [
+          [
+            10,
+            160
+          ],
+          [
+            190,
+            160
+          ]
+        ],
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        10,
+        150,
+        190,
+        170
+      ],
+      "class_name": "wall",
+      "id": "gt_wall",
+      "mask": {
+        "points": [
+          [
+            10,
+            150
+          ],
+          [
+            190,
+            150
+          ],
+          [
+            190,
+            170
+          ],
+          [
+            10,
+            170
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 0.0
+      },
+      "bbox_xyxy": [
+        20,
+        40,
+        80,
+        110
+      ],
+      "class_name": "stairs",
+      "id": "gt_stairs",
+      "mask": {
+        "points": [
+          [
+            20,
+            40
+          ],
+          [
+            80,
+            40
+          ],
+          [
+            80,
+            110
+          ],
+          [
+            20,
+            110
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 90
+      },
+      "bbox_xyxy": [
+        90,
+        45,
+        100,
+        120
+      ],
+      "class_name": "railing",
+      "id": "gt_railing",
+      "mask": {
+        "points": [
+          [
+            90,
+            45
+          ],
+          [
+            100,
+            45
+          ],
+          [
+            100,
+            120
+          ],
+          [
+            90,
+            120
+          ]
+        ],
+        "type": "polygon"
+      }
+    },
+    {
+      "attributes": {
+        "orientation_deg": 90
+      },
+      "bbox_xyxy": [
+        130,
+        135,
+        160,
+        175
+      ],
+      "class_name": "door",
+      "id": "gt_door",
+      "mask": {
+        "points": [
+          [
+            130,
+            135
+          ],
+          [
+            160,
+            135
+          ],
+          [
+            160,
+            175
+          ],
+          [
+            130,
+            175
+          ]
+        ],
+        "type": "polygon"
+      }
+    }
+  ],
+  "sample_id": "synthetic_office_002",
+  "schema_version": "1.0",
+  "verdicts": {
+    "door_width": "PASS",
+    "railing_presence": "PASS",
+    "stair_width": "FAIL"
+  }
+}

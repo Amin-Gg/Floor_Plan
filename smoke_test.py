@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-smoke_test.py — Phase 1 + Phase 2 end-to-end verification.
+smoke_test.py — final target-host end-to-end verification.
 
-Run this on the Ubuntu server AFTER:
-  - placing the Phase 1 files,
+Run this on the target Linux host AFTER:
+  - extracting the final release,
   - dropping weights/maskrcnn_15_epochs.h5 in place,
   - pip install -r requirements.txt
 
@@ -15,6 +15,7 @@ Usage
     python smoke_test.py --image path/to/a_real_floorplan.png
     python smoke_test.py --image plan.png --scale 50      # 50 mm per pixel
     python smoke_test.py --health-only                    # skip /analyze (no image needed)
+    python smoke_test.py --health-only --api-key "$FLOORPLAN_API_KEY"
 
 Exit code is 0 only if every stage that ran passed.
 
@@ -49,7 +50,10 @@ def main():
                     help="Scale factor in mm-per-pixel, if /analyze requires it.")
     ap.add_argument("--health-only", action="store_true",
                     help="Run only the import/health/openapi checks (no image needed).")
+    ap.add_argument("--api-key", default=None,
+                    help="Optional API key when authentication is enabled.")
     args = ap.parse_args()
+    headers = {"X-API-Key": args.api_key} if args.api_key else {}
 
     # ── Stage 0: app imports cleanly (catches dependency / wiring errors) ──────
     holder = {}
@@ -66,7 +70,7 @@ def main():
 
     # ── Stage 1: /health reports the Mask R-CNN model is loaded ────────────────
     def _health():
-        resp = client.get("/health")
+        resp = client.get("/health", headers=headers)
         assert resp.status_code in (200, 503), f"unexpected status {resp.status_code}"
         body = resp.get_json()
         print("   model_loaded =", body.get("model_loaded"),
@@ -80,7 +84,7 @@ def main():
 
     # ── Stage 2: OpenAPI/Swagger spec is generated ────────────────────────────
     def _openapi():
-        resp = client.get("/openapi/openapi.json")
+        resp = client.get("/openapi/openapi.json", headers=headers)
         assert resp.status_code == 200, f"status {resp.status_code}"
         spec = resp.get_json()
         assert "paths" in spec and spec["paths"], "no paths in OpenAPI spec"
@@ -105,7 +109,7 @@ def main():
             # Route reads request.form.get("scale_factor_mm_per_pixel"); sending
             # "scale_factor" here meant --scale was silently ignored (→ default 1.0).
             data["scale_factor_mm_per_pixel"] = str(args.scale)
-        resp = client.post("/analyze", data=data, content_type="multipart/form-data")
+        resp = client.post("/analyze", data=data, content_type="multipart/form-data", headers=headers)
         if resp.status_code != 200:
             # surface the server's message so a schema/field mismatch is obvious
             try:
@@ -137,7 +141,7 @@ def main():
             payload["analysis_file"] = analysis_holder["analysis_file"]
         else:
             payload["bim_data"] = analysis_holder["bim_data"]
-        resp = client.post("/export/ifc", json=payload)
+        resp = client.post("/export/ifc", json=payload, headers=headers)
         if resp.status_code != 200:
             try:
                 print("   server said:", json.dumps(resp.get_json(), indent=2)[:800])
@@ -149,7 +153,7 @@ def main():
                 alt["bim_data"] = analysis_holder["bim_data"]
             else:
                 alt["analysis_file"] = analysis_holder.get("analysis_file")
-            resp = client.post("/export/ifc", json=alt)
+            resp = client.post("/export/ifc", json=alt, headers=headers)
             assert resp.status_code == 200, f"/export/ifc returned {resp.status_code}"
         body = resp.data
         assert body[:13] == b"ISO-10303-21;", "output is not a STEP/IFC file (bad header)"

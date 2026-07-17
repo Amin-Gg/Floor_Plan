@@ -4,6 +4,7 @@ Image validation and memory monitoring services
 
 import logging
 from PIL import Image
+from services.preprocessing import normalize_exif_orientation
 from config.settings import get_config
 
 # Get application configuration
@@ -53,7 +54,8 @@ def validate_and_resize_image(image, max_size=None):
     """
     if max_size is None:
         max_size = app_config.MAX_IMAGE_SIZE
-    
+
+    image, exif_transposed = normalize_exif_orientation(image)
     original_size = image.size
     max_dimension = max(original_size)
     min_dimension = min(original_size)
@@ -62,7 +64,8 @@ def validate_and_resize_image(image, max_size=None):
         "original_size": original_size,
         "resized": False,
         "resize_factor": 1.0,
-        "reason": "no_resize_needed"
+        "reason": "no_resize_needed",
+        "exif_transposed": exif_transposed,
     }
     
     # Check minimum size

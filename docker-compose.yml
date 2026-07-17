@@ -1,139 +1,241 @@
-# ============================================================================
-# docker-compose.yml — Floor_Plan full pipeline
-# ============================================================================
-# Services:
-#   redis              Celery broker + job store (status, uploads, reports)
-#   compliance-api     Section 2 FastAPI  (photo-derived IFC → Mabhas verdicts)
-#   compliance-worker  Section 2 Celery worker (same image, worker command)
-#   floorplan-api      Section 1 Flask    (floor-plan photo → bim_data → IFC)
-#
-# Architecture note (decision 2026-07): the compliance api and worker share
-# NO volume. Job status, the uploaded IFC, and the finished reports all
-# travel through Redis (api/job_store.py), so workers scale horizontally by
-# raising the replica count — nothing else to wire.
-#
-#   cp .env.example .env        # fill in DATABASE_URL, GROQ_API_KEYS, …
-#   docker compose up --build -d
-#   docker compose ps           # wait for (healthy)
-#
-#   curl http://localhost:8000/health          # compliance engine
-#   curl http://localhost:8080/health          # Section 1 (needs weights/)
-#
-# Scale workers:
-#   docker compose up -d --scale compliance-worker=3
-# ============================================================================
-
 name: floorplan-pipeline
 
-services:
+x-common-runtime: &common-runtime
+  restart: unless-stopped
+  init: true
+  stop_grace_period: 30s
+  read_only: true
+  cap_drop: ["ALL"]
+  security_opt:
+    - no-new-privileges:true
+  ulimits:
+    nofile:
+      soft: 4096
+      hard: 8192
+    nproc: 512
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
 
-  # ── Redis — Celery broker + job store ──────────────────────────────────────
+x-compliance-env: &compliance-env
+  APP_ENV: production
+  CELERY_BROKER_URL: redis://redis:6379/0
+  JOB_STORE_REDIS_URL: redis://redis:6379/1
+  STRICT_JOB_STORE: "1"
+  JOB_TTL_SECONDS: ${JOB_TTL_SECONDS:-604800}
+  INCOMING_TTL_SECONDS: ${INCOMING_TTL_SECONDS:-3600}
+  COMPLIANCE_JOB_SOFT_TIME_LIMIT: ${COMPLIANCE_JOB_SOFT_TIME_LIMIT:-240}
+  COMPLIANCE_JOB_HARD_TIME_LIMIT: ${COMPLIANCE_JOB_HARD_TIME_LIMIT:-300}
+  WORKER_MAX_TASKS_PER_CHILD: ${WORKER_MAX_TASKS_PER_CHILD:-20}
+  MAX_IFC_UPLOAD_MB: ${MAX_IFC_UPLOAD_MB:-50}
+  MAX_REPORT_ARTIFACT_MB: ${MAX_REPORT_ARTIFACT_MB:-100}
+  ENGINE_MAX_REQUEST_BODY_MB: ${ENGINE_MAX_REQUEST_BODY_MB:-64}
+  ENGINE_SUBMIT_RATE_PER_MINUTE: ${ENGINE_SUBMIT_RATE_PER_MINUTE:-30}
+  ENGINE_SUBMIT_RATE_BURST: ${ENGINE_SUBMIT_RATE_BURST:-8}
+  ENGINE_READ_RATE_PER_MINUTE: ${ENGINE_READ_RATE_PER_MINUTE:-300}
+  ENGINE_READ_RATE_BURST: ${ENGINE_READ_RATE_BURST:-75}
+  INCLUDE_JOB_TRACEBACK: "0"
+  COMPLIANCE_API_KEYS_FILE: /run/secrets/compliance_api_key
+  DATABASE_URL: ${DATABASE_URL:-}
+  GROQ_API_KEYS: ${GROQ_API_KEYS:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-large}
+  UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+services:
   redis:
-    image: redis:7-alpine
-    command: >
-      redis-server
-      --appendonly yes
-      --maxmemory ${REDIS_MAXMEMORY:-1gb}
-      --maxmemory-policy volatile-ttl
-    # volatile-ttl: under memory pressure evict keys closest to expiry —
-    # every job-store key carries a TTL, so eviction hits the oldest jobs
-    # first and never touches Celery's broker structures unexpectedly.
+    platform: linux/amd64
+    profiles: ["full-pipeline"]
+    image: redis:7.4.2-alpine@sha256:02419de7eddf55aa5bcf49efb74e88fa8d931b4d77c07eff8a6b2144472b6952
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --save
+      - "60"
+      - "1000"
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-1gb}
+      - --maxmemory-policy
+      - volatile-ttl
+      - --protected-mode
+      - "yes"
+    expose: ["6379"]
     volumes:
       - redis-data:/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks: [backend]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
-    restart: unless-stopped
-    # Not published to the host by default — reachable as redis:6379 on the
-    # internal network. Uncomment to debug from the host:
-    # ports:
-    #   - "6379:6379"
+    mem_limit: ${REDIS_MEMORY_LIMIT:-1536m}
+    cpus: ${REDIS_CPU_LIMIT:-1.0}
+    pids_limit: 128
+    <<: *common-runtime
 
-  # ── Section 2: compliance engine API ───────────────────────────────────────
   compliance-api:
-    build: ./compliance-engine
-    image: mabhas-compliance:latest
-    ports:
-      - "${COMPLIANCE_PORT:-8000}:8000"
-    environment: &compliance-env
-      CELERY_BROKER_URL: redis://redis:6379/0
-      # Job state/uploads/reports — kept on a separate Redis DB from the
-      # broker so FLUSHDB on one never nukes the other.
-      JOB_STORE_REDIS_URL: redis://redis:6379/1
-      JOB_TTL_SECONDS: ${JOB_TTL_SECONDS:-604800}
-      DATABASE_URL: ${DATABASE_URL}
-      GROQ_API_KEYS: ${GROQ_API_KEYS}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      EMBED_MODEL: ${EMBED_MODEL:-intfloat/multilingual-e5-large}
-      UVICORN_WORKERS: ${UVICORN_WORKERS:-1}
-    volumes:
-      # Reranker weights (mount read-only); HF cache is baked into the image.
-      - ${RERANKER_DIR:-./compliance-engine/models/bge_reranker}:/app/models/bge_reranker:ro
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    # GPU (optional — embeddings/reranker use CUDA when present):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
-  # ── Section 2: compliance engine worker (same image, worker role) ─────────
-  compliance-worker:
-    build: ./compliance-engine
-    image: mabhas-compliance:latest
-    command: >
-      celery -A api.tasks.celery_app worker
-      --loglevel=info
-      --concurrency=${WORKER_CONCURRENCY:-1}
-      --without-heartbeat --without-gossip --without-mingle
+    platform: linux/amd64
+    profiles: ["full-pipeline"]
+    build:
+      context: .
+      dockerfile: compliance-engine/Dockerfile
+      args:
+        APP_VERSION: 1.4.0
+        VCS_REF: ${VCS_REF:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: mabhas-compliance:1.4.0
+    expose: ["8000"]
     environment: *compliance-env
+    secrets:
+      - compliance_api_key
     volumes:
+      - ${COMPLIANCE_HF_CACHE_DIR:-./compliance-engine/models/huggingface}:/app/.cache/huggingface:ro
       - ${RERANKER_DIR:-./compliance-engine/models/bge_reranker}:/app/models/bge_reranker:ro
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /app/jobs:size=${COMPLIANCE_JOBS_TMPFS_SIZE:-1g},uid=1000,gid=1000,mode=0700
+    networks: [backend]
     depends_on:
       redis:
         condition: service_healthy
+    mem_limit: ${COMPLIANCE_API_MEMORY_LIMIT:-2g}
+    cpus: ${COMPLIANCE_API_CPU_LIMIT:-2.0}
+    pids_limit: 256
     healthcheck:
-      # The image's default HEALTHCHECK curls the API port, which a worker
-      # doesn't open — probe the Celery control plane instead.
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/readyz"]
+      interval: 20s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    <<: *common-runtime
+
+  compliance-worker:
+    platform: linux/amd64
+    profiles: ["full-pipeline"]
+    build:
+      context: .
+      dockerfile: compliance-engine/Dockerfile
+      args:
+        APP_VERSION: 1.4.0
+        VCS_REF: ${VCS_REF:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: mabhas-compliance:1.4.0
+    command:
+      - celery
+      - -A
+      - api.tasks.celery_app
+      - worker
+      - --loglevel=info
+      - --concurrency=${WORKER_CONCURRENCY:-1}
+      - --max-tasks-per-child=${WORKER_MAX_TASKS_PER_CHILD:-20}
+      - --without-heartbeat
+      - --without-gossip
+      - --without-mingle
+    environment: *compliance-env
+    secrets:
+      - compliance_api_key
+    volumes:
+      - ${COMPLIANCE_HF_CACHE_DIR:-./compliance-engine/models/huggingface}:/app/.cache/huggingface:ro
+      - ${RERANKER_DIR:-./compliance-engine/models/bge_reranker}:/app/models/bge_reranker:ro
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /app/jobs:size=${COMPLIANCE_JOBS_TMPFS_SIZE:-1g},uid=1000,gid=1000,mode=0700
+    networks: [backend]
+    depends_on:
+      redis:
+        condition: service_healthy
+    mem_limit: ${COMPLIANCE_WORKER_MEMORY_LIMIT:-8g}
+    cpus: ${COMPLIANCE_WORKER_CPU_LIMIT:-4.0}
+    pids_limit: 512
+    healthcheck:
       test: ["CMD-SHELL", "celery -A api.tasks.celery_app inspect ping -d celery@$$HOSTNAME --timeout 10 | grep -q pong"]
       interval: 30s
       timeout: 15s
       start_period: 60s
       retries: 3
-    restart: unless-stopped
+    <<: *common-runtime
 
-  # ── Section 1: floor-plan analysis API (photo → bim_data → IFC) ───────────
   floorplan-api:
-    build: .
-    image: floorplan3d-api:latest
+    platform: linux/amd64
+    profiles: ["floorplan-only", "full-pipeline"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: 2.8.0
+        VCS_REF: ${VCS_REF:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: floorplan3d-api:2.8.0
     ports:
-      - "${FLOORPLAN_PORT:-8080}:8080"
+      - "127.0.0.1:${FLOORPLAN_PORT:-8080}:8080"
     environment:
-      APP_ENV: ${APP_ENV:-production}
-      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-*}
+      APP_ENV: production
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-http://localhost:3000}
+      APP_ALLOWED_HOSTS: ${APP_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      FLOORPLAN_API_KEYS_FILE: /run/secrets/floorplan_api_keys
+      COMPLIANCE_API_KEY_FILE: /run/secrets/compliance_api_key
       GUNICORN_WORKERS: ${GUNICORN_WORKERS:-1}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-150}
+      INFERENCE_ISOLATION: process
+      INFERENCE_TIMEOUT: ${INFERENCE_TIMEOUT:-90}
+      INFERENCE_STARTUP_TIMEOUT: ${INFERENCE_STARTUP_TIMEOUT:-240}
+      INFERENCE_WORKERS: "1"
+      MAX_CONCURRENT_HEAVY_REQUESTS: ${MAX_CONCURRENT_HEAVY_REQUESTS:-1}
+      RATE_LIMIT_HEAVY_PER_MINUTE: ${RATE_LIMIT_HEAVY_PER_MINUTE:-6}
+      RATE_LIMIT_HEAVY_BURST: ${RATE_LIMIT_HEAVY_BURST:-2}
+      RATE_LIMIT_GENERAL_PER_MINUTE: ${RATE_LIMIT_GENERAL_PER_MINUTE:-120}
+      RATE_LIMIT_POLL_PER_MINUTE: ${RATE_LIMIT_POLL_PER_MINUTE:-180}
+      MAX_REQUEST_BODY_MB: ${MAX_REQUEST_BODY_MB:-64}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
+      MAX_IMAGE_PIXELS: ${MAX_IMAGE_PIXELS:-40000000}
+      MAX_IMAGE_DIMENSION: ${MAX_IMAGE_DIMENSION:-12000}
+      MAX_IMAGE_ASPECT_RATIO: ${MAX_IMAGE_ASPECT_RATIO:-50}
+      OCR_ENABLED: ${OCR_ENABLED:-0}
+      PADDLEOCR_MODEL_DIR: /app/weights/paddleocr
+      OCR_USE_GPU: ${OCR_USE_GPU:-0}
+      COMPLIANCE_ENGINE_URL: ${COMPLIANCE_ENGINE_URL:-http://compliance-api:8000}
+      COMPLIANCE_TLS_VERIFY: ${COMPLIANCE_TLS_VERIFY:-1}
+    secrets:
+      - floorplan_api_keys
+      - compliance_api_key
     volumes:
-      # Model checkpoints are never baked into the image:
-      #   weights/maskrcnn_15_epochs.h5, weights/yolo_best.pt
       - ${WEIGHTS_DIR:-./weights}:/app/weights:ro
       - floorplan-outputs:/app/outputs
-    restart: unless-stopped
-    # GPU (recommended for Mask R-CNN inference; CPU works for smoke tests):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /app/logs:size=128m,uid=1000,gid=1000,mode=0700
+      - /app/.gunicorn:size=16m,uid=1000,gid=1000,mode=0700
+    networks: [edge, backend]
+    mem_limit: ${FLOORPLAN_MEMORY_LIMIT:-8g}
+    cpus: ${FLOORPLAN_CPU_LIMIT:-4.0}
+    pids_limit: 512
+    shm_size: ${FLOORPLAN_SHM_SIZE:-512m}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/readyz"]
+      interval: 20s
+      timeout: 5s
+      start_period: 300s
+      retries: 5
+    <<: *common-runtime
+
+secrets:
+  floorplan_api_keys:
+    file: ${FLOORPLAN_API_KEYS_SECRET_FILE:-./secrets/floorplan_api_keys.txt}
+  compliance_api_key:
+    file: ${COMPLIANCE_API_KEY_SECRET_FILE:-./secrets/compliance_api_key.txt}
+
+networks:
+  edge:
+  backend:
+    internal: true
 
 volumes:
   redis-data:

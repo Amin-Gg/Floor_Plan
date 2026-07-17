@@ -1,0 +1,1175 @@
+{
+  "components": {
+    "schemas": {
+      "AnalyzeFormRequest": {
+        "additionalProperties": false,
+        "description": "Documented multipart fields for POST /analyze.\n\nRuntime validation is performed by the same strict contract adapters used\nby direct exporter calls; these fields keep OpenAPI aligned with that public\nboundary.",
+        "properties": {
+          "image": {
+            "description": "Floor-plan image (PNG/JPEG/WebP/TIFF).",
+            "format": "binary",
+            "title": "Image",
+            "type": "string"
+          },
+          "manual_inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Strict Manual Inputs v1.0 payload; see contracts/manual_inputs_v1.json.",
+            "title": "Manual Inputs"
+          },
+          "scale_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Versioned Scale Evidence v1.0 payload; see contracts/scale_evidence_v1.json.",
+            "title": "Scale Evidence"
+          },
+          "scale_factor_mm_per_pixel": {
+            "default": 1.0,
+            "description": "Legacy scalar fallback. Without scale_evidence it is classified as default_unverified.",
+            "maximum": 100.0,
+            "minimum": 0.01,
+            "title": "Scale Factor Mm Per Pixel",
+            "type": "number"
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "title": "AnalyzeFormRequest",
+        "type": "object"
+      },
+      "AnalyzeResponse": {
+        "properties": {
+          "analysis_file": {
+            "title": "Analysis File",
+            "type": "string"
+          },
+          "analysis_report": {
+            "additionalProperties": true,
+            "title": "Analysis Report",
+            "type": "object"
+          },
+          "bim_data": {
+            "additionalProperties": true,
+            "title": "Bim Data",
+            "type": "object"
+          },
+          "image_processing": {
+            "additionalProperties": true,
+            "title": "Image Processing",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "visualization_file": {
+            "title": "Visualization File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "message",
+          "analysis_file",
+          "visualization_file",
+          "bim_data",
+          "summary",
+          "analysis_report",
+          "image_processing"
+        ],
+        "title": "AnalyzeResponse",
+        "type": "object"
+      },
+      "ComplianceFromAnalysisRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_file": {
+            "title": "Analysis File",
+            "type": "string"
+          },
+          "ifc_metadata": {
+            "$ref": "#/components/schemas/IFCMetadata"
+          },
+          "manual_inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inputs"
+          },
+          "plan_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Name"
+          }
+        },
+        "required": [
+          "analysis_file"
+        ],
+        "title": "ComplianceFromAnalysisRequest",
+        "type": "object"
+      },
+      "ComplianceIFCForm": {
+        "additionalProperties": false,
+        "properties": {
+          "ifc_file": {
+            "format": "binary",
+            "title": "Ifc File",
+            "type": "string"
+          },
+          "manual_inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inputs"
+          },
+          "plan_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Name"
+          }
+        },
+        "required": [
+          "ifc_file"
+        ],
+        "title": "ComplianceIFCForm",
+        "type": "object"
+      },
+      "ComplianceJobResponse": {
+        "properties": {
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "reports": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Reports",
+            "type": "object"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "status_url": {
+            "title": "Status Url",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "correlation_id",
+          "job_id",
+          "status",
+          "status_url",
+          "reports"
+        ],
+        "title": "ComplianceJobResponse",
+        "type": "object"
+      },
+      "ComplianceJobStatusResponse": {
+        "properties": {
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "job": {
+            "additionalProperties": true,
+            "title": "Job",
+            "type": "object"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "correlation_id",
+          "job"
+        ],
+        "title": "ComplianceJobStatusResponse",
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "description": "Stable machine-readable error code.",
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "message": {
+            "description": "Human-readable error description.",
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "description": "HTTP status code.",
+            "title": "Status",
+            "type": "integer"
+          },
+          "type": {
+            "description": "Exception category.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "status",
+          "type"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "success": {
+            "default": false,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExportIFCRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_file": {
+            "description": "Filename returned by POST /analyze.",
+            "title": "Analysis File",
+            "type": "string"
+          },
+          "ifc_metadata": {
+            "$ref": "#/components/schemas/IFCMetadata"
+          },
+          "manual_inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inputs"
+          },
+          "validate_only": {
+            "default": false,
+            "title": "Validate Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "analysis_file"
+        ],
+        "title": "ExportIFCRequest",
+        "type": "object"
+      },
+      "ExportIFCUploadForm": {
+        "additionalProperties": false,
+        "properties": {
+          "bim_json": {
+            "format": "binary",
+            "title": "Bim Json",
+            "type": "string"
+          },
+          "ifc_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ifc Metadata"
+          },
+          "manual_inputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inputs"
+          },
+          "validate_only": {
+            "default": false,
+            "title": "Validate Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bim_json"
+        ],
+        "title": "ExportIFCUploadForm",
+        "type": "object"
+      },
+      "IFCMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "building_name": {
+            "default": "Building",
+            "title": "Building Name",
+            "type": "string"
+          },
+          "project_address": {
+            "default": "",
+            "title": "Project Address",
+            "type": "string"
+          },
+          "project_name": {
+            "default": "Floor Plan Project",
+            "title": "Project Name",
+            "type": "string"
+          },
+          "storey_elevation": {
+            "default": 0.0,
+            "maximum": 50000.0,
+            "minimum": -5000.0,
+            "title": "Storey Elevation",
+            "type": "number"
+          },
+          "storey_name": {
+            "default": "Ground Floor",
+            "title": "Storey Name",
+            "type": "string"
+          }
+        },
+        "title": "IFCMetadata",
+        "type": "object"
+      },
+      "ValidationErrorModel": {
+        "properties": {
+          "ctx": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "an optional object which contains values required to render the error message.",
+            "title": "Error context"
+          },
+          "loc": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the error's location as a list. ",
+            "title": "Location"
+          },
+          "msg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "a computer-readable identifier of the error type.",
+            "title": "Message"
+          },
+          "type_": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "a human readable explanation of the error.",
+            "title": "Error Type"
+          }
+        },
+        "title": "ValidationErrorModel",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      },
+      "BearerAuth": {
+        "bearerFormat": "API key",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "AI-powered floor plan analysis system. Accepts a photograph of a floor plan and returns structured BIM data (walls, doors, windows, rooms, stairs) in mm coordinates, plus a downloadable IFC4 file for Revit, ArchiCAD, and FreeCAD.\n\n**Workflow:**\n1. `POST /analyze` → upload image → receive `bim_data` JSON\n2. `POST /export/ifc` → resolve Manual Inputs v1 and export IFC Contract 1.2\n3. `POST /compliance/jobs/ifc` or `/compliance/jobs/from-analysis` → submit to the public compliance-engine API\n4. Poll `/compliance/jobs/{job_id}` and download JSON/HTML/PDF/BCF reports\n\n**Authentication:** API key required in production via `Authorization: Bearer` or `X-API-Key`.",
+    "title": "FloorPlanTo3D API",
+    "version": "2.8.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/analyze": {
+      "post": {
+        "description": "Create enhanced visualization showing wall centerlines, junctions, and wall parameters",
+        "operationId": "visualization_analyze_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeFormRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Analyze a floor-plan image",
+        "tags": [
+          "Core"
+        ]
+      }
+    },
+    "/compliance/health": {
+      "get": {
+        "operationId": "compliance_compliance_health_get",
+        "responses": {
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Probe the compliance engine",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/compliance/jobs/from-analysis": {
+      "post": {
+        "operationId": "compliance_compliance_jobs_from_analysis_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComplianceFromAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceJobResponse"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Export a saved analysis and submit the IFC to compliance",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/compliance/jobs/ifc": {
+      "post": {
+        "operationId": "compliance_compliance_jobs_ifc_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ComplianceIFCForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceJobResponse"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Submit an existing IFC to the compliance engine",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/compliance/jobs/{job_id}": {
+      "get": {
+        "operationId": "compliance_compliance_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{12}$",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceJobStatusResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Poll compliance job status",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/compliance/jobs/{job_id}/report/{kind}": {
+      "get": {
+        "operationId": "compliance_compliance_jobs__job_id__report__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{12}$",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "json",
+                "html",
+                "pdf",
+                "bcf"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Download a compliance report",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/compliance/jobs/{job_id}/wait": {
+      "get": {
+        "operationId": "compliance_compliance_jobs__job_id__wait_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{12}$",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeout_seconds",
+            "required": false,
+            "schema": {
+              "default": 60.0,
+              "maximum": 300.0,
+              "minimum": 0.1,
+              "title": "Timeout Seconds",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "poll_interval_seconds",
+            "required": false,
+            "schema": {
+              "default": 1.0,
+              "maximum": 10.0,
+              "minimum": 0.1,
+              "title": "Poll Interval Seconds",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceJobStatusResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Wait a bounded time for a compliance job",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/export/ifc": {
+      "post": {
+        "description": "Canonical JSON endpoint. Multipart uploads use `/export/ifc/upload`.",
+        "operationId": "export_export_ifc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportIFCRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Export a saved analysis as IFC4",
+        "tags": [
+          "Export"
+        ]
+      }
+    },
+    "/export/ifc/parameters": {
+      "get": {
+        "operationId": "export_export_ifc_parameters_get",
+        "responses": {},
+        "summary": "Get IFC input contracts",
+        "tags": [
+          "Export"
+        ]
+      }
+    },
+    "/export/ifc/upload": {
+      "post": {
+        "operationId": "export_export_ifc_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportIFCUploadForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ValidationErrorModel"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Export uploaded bim_data JSON as IFC4",
+        "tags": [
+          "Export"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Structured health check.</br></br>Returns 200 when the model is loaded and ready,</br>503 when it is still initializing or failed to load.</br></br>The response is intentionally NOT wrapped in the standard error envelope</br>because monitoring tools (load balancers, uptime checkers) expect a simple</br>status object here, not a generic API error structure.",
+        "operationId": "health_health_get",
+        "responses": {},
+        "summary": "Stage-1 model readiness",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/livez": {
+      "get": {
+        "description": "Minimal unauthenticated probe: the HTTP process can answer requests.",
+        "operationId": "health_livez_get",
+        "responses": {},
+        "security": [],
+        "summary": "Process liveness probe",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Minimal unauthenticated probe used by container orchestrators.",
+        "operationId": "health_readyz_get",
+        "responses": {},
+        "security": [],
+        "summary": "Inference readiness probe",
+        "tags": [
+          "System"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "description": "Service health and runtime status",
+      "name": "System"
+    },
+    {
+      "description": "Floor-plan image analysis and BIM generation",
+      "name": "Core"
+    },
+    {
+      "description": "Validated IFC Contract 1.2 generation",
+      "name": "Export"
+    },
+    {
+      "description": "Orchestration proxy to the compliance engine",
+      "name": "Compliance"
+    }
+  ]
+}

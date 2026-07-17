@@ -1,0 +1,30 @@
+{
+  "phase8_reference": "Phase 8 acceptance artifact",
+  "phase9_reference": "artifacts/phase9_regression/pipeline_execution.json",
+  "compared_fields": [
+    "article_id",
+    "verdict",
+    "message",
+    "object",
+    "measured",
+    "required",
+    "unit",
+    "element_id",
+    "unsupported"
+  ],
+  "phase8_summary": {
+    "PASS": 15,
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8
+  },
+  "phase9_summary": {
+    "PASS": 15,
+    "FAIL": 9,
+    "NEEDS_REVIEW": 309,
+    "NOT_EVALUATED": 8
+  },
+  "phase8_finding_count": 341,
+  "phase9_finding_count": 341,
+  "behavioral_rows_identical": true
+}

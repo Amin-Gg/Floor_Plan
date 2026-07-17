@@ -1,5 +1,8 @@
 """
-Accuracy analysis routes
+Legacy confidence-diagnostics route.
+
+The historical URL contains ``accuracy`` but the endpoint has no ground truth.
+The legacy URL remains for compatibility while the semantics stay explicit.
 """
 
 import logging
@@ -7,7 +10,7 @@ import logging
 from flask_openapi3 import APIBlueprint
 from flask import request, jsonify
 
-from models.mask_rcnn_model import get_model, is_model_initialized
+from services.model_runtime import is_runtime_ready
 from services.image_validation import validate_and_resize_image, check_memory_usage
 from services.accuracy_service import performAccuracyAnalysis
 from image_processing.image_loader import myImageLoader
@@ -21,11 +24,12 @@ logger = logging.getLogger(__name__)
 bp = APIBlueprint('accuracy', __name__)
 
 
+@bp.route('/analyze_reliability', methods=['POST'])
 @bp.route('/analyze_accuracy', methods=['POST'])
 def analyze_accuracy():
-    """Analyze the accuracy and reliability of the model predictions."""
+    """Analyze prediction confidence; this is not ground-truth accuracy."""
 
-    if not is_model_initialized():
+    if not is_runtime_ready():
         raise ModelNotReadyError()
 
     # Validate image upload — raises ImageValidationError (→ 400) if bad
@@ -60,7 +64,7 @@ def analyze_accuracy():
             resize_info["original_size"], resize_info["new_size"]
         )
 
-    r = get_executor().run(get_model().detect, [image], verbose=0)[0]
+    r = get_executor().detect_primary(image)
 
     accuracy_report = performAccuracyAnalysis(r, w, h)
 
@@ -72,6 +76,11 @@ def analyze_accuracy():
 
     return jsonify({
         **accuracy_report,
+        "endpoint_migration": {
+            "preferred_path": "/analyze_reliability",
+            "legacy_path": "/analyze_accuracy",
+            "legacy_path_deprecated": True,
+        },
         "analysis_file": filename,
         "image_processing": {
             "original_size":  resize_info["original_size"],

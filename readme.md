@@ -1,183 +1,227 @@
-# FloorPlanTo3D API — Section 1 (Mask R-CNN → BIM → IFC)
+# Floor Plan → IFC → Mabhas Compliance
 
-Turns a **photograph of a residential floor plan** into structured `bim_data`
-(walls, doors, windows, rooms — all in millimetres) and a downloadable **IFC4**
-file that opens in Revit, ArchiCAD, FreeCAD/Bonsai, Solibri, and any IFC4 viewer.
-The IFC output is the input to a **separate** downstream project that checks the
-model against the Iranian National Building Regulations (Mabhas).
+Final unified release of a two-service pipeline:
 
-> **Scope of this repository = Section 1 only:** the vision API that produces
-> the 3D/BIM data. The Mabhas compliance engine and the supplementary YOLO
-> detector are **separate phases** and are not part of this running service
-> (see *Project phases* below).
-
----
-
-## What the running model actually detects
-
-The live detector is **Mask R-CNN** (Matterport, Keras/TensorFlow), configured
-for **4 classes**: `background + wall + window + door`
-(`config/settings.py → NUM_CLASSES = 4`).
-
-| Element | How it is produced | Detected by the model? |
-|---------|--------------------|------------------------|
-| Walls   | Mask R-CNN masks → skeletonise → centerlines, junctions, thickness | ✅ yes |
-| Doors   | Mask R-CNN boxes/masks → orientation, size, host wall | ✅ yes |
-| Windows | Mask R-CNN boxes/masks → size, host wall | ✅ yes |
-| Rooms   | **Geometric** flood-fill of the wall mask + watershed split; **type/name from OCR only** | ⚠️ derived, not detected |
-| Stairs / balcony / parking / terrace / railing / closet | code branches exist but **never fire** with a 4-class model | ❌ no (Section 2 / Mask2Former) |
-
-**Practical consequence for code-checking:** scope your rules to walls, doors,
-windows, and OCR-named rooms. Rooms with no OCR label are emitted with
-`name_source: "none"` and `needs_review: true` — treat those as
-`NEEDS_REVIEW`, not as compliant. There is no stair/guard/egress geometry from
-this model.
-
----
-
-## Canonical BIM contract (v1) & honest flags
-
-The `bim_data` (and the IFC built from it) now carries a versioned, honest
-contract that the compliance engine reads directly:
-
-- **`schema_version: "bim-canonical-v1"`** + **`units: {length: mm, area: m2}`** —
-  one explicit contract; the engine validates the version (Issue 16).
-- **`scale: {mm_per_pixel, source, confidence, needs_review, reasons}`** — the
-  pixel→mm scale, *where it came from* (`user` / `ocr` / `calibration` /
-  `default`), and a plausibility-based confidence. An **uncalibrated default
-  (1 mm/px) is flagged** (confidence 0.3); implausible door/room dimensions lower
-  it. When confidence is low, the engine downgrades **all** dimensional verdicts
-  to `NEEDS_REVIEW` — a wrong scale can never produce a false PASS/FAIL (Issue 4).
-- **Canonical room categories** — every room is normalized to `room_bedroom /
-  room_kitchen / room_bathroom / room_living / room_toilet / room_entry /
-  room_storage` via `services/room_taxonomy.py` (English + Persian + broad-bucket
-  aliases). Anything unmappable keeps its raw label and is marked
-  `needs_review` — **never guessed** (Issue 2). `bim_data._category_summary`
-  reports canonical / normalized / unmapped counts.
-- **Per-element provenance** — `source / confidence / needs_review /
-  review_reason` ride through to `Pset_SimsysProvenance` in the IFC, so the
-  engine can defer uncertain elements (Issue 11). These flags are now set by
-  geometry-reliability heuristics:
-  - **Rooms** (Issue 5) — `confidence` + `review_reasons` from a quality check
-    (implausible area, thin/sliver polygon, image-border contact, missing OCR
-    type, degenerate polygon). Suspicious rooms are flagged, never trusted.
-  - **Doors & windows** (Issue 6) — host-wall binding carries
-    `host_wall_confidence`, `host_wall_distance_mm`, and `candidate_host_walls`;
-    openings with a far or ambiguous host are flagged.
-  - **Exterior walls** (Issue 7) — `exterior_confidence` + `exterior_reasons`;
-    a window on a low-confidence-exterior wall inherits review so it can't drive
-    a hard natural-light / ventilation verdict.
-
-  When any element is flagged, the compliance engine downgrades the verdicts that
-  depend on it to `NEEDS_REVIEW` — a brittle detection can never become a false
-  PASS/FAIL.
-
-`services/room_taxonomy.py` mirrors the engine's `ingest/category_normalizer.py`
-— keep the two `ALIASES` dicts in sync when adding vocabulary from real plans.
-
-## Pipeline
-
-```
-image ─► validate / resize ─► Mask R-CNN .detect() ─► {walls, windows, doors}
-                                     │
-   ┌─────────────────────────────────┼─────────────────────────────────────┐
-   │ wall masks → skeleton → segments → junctions → wall params (mm)        │
-   │ door/window boxes → orientation, size, nearest host wall               │
-   │ PaddleOCR → space names (Persian / English)                           │
-   │ flood-fill wall mask → room polygons → bind OCR name (or needs_review) │
-   └─────────────────────────────────┬─────────────────────────────────────┘
-                                     ▼
-                       BimDataBuilder → bim_data (mm)
-                                     ▼
-                  (POST /export/ifc) ifc_exporter → .ifc (IFC4)
+```text
+2D floor-plan image
+        │
+        ▼
+Stage 1 — Floor-plan analysis API
+Mask R-CNN + optional YOLO + OCR
+        │
+        ▼
+Canonical BIM data + IFC Contract 1.2
+        │
+        ├── producer-side export validation
+        └── independent Geometry/Provenance Gate
+        │
+        ▼
+Stage 2 — Mabhas compliance engine
+Schema → Quality → deterministic compliance
+        │
+        ▼
+JSON + HTML + PDF + BCF reports
 ```
 
----
+The repository contains both services and the versioned contracts between them.
+The compliance engine never lets an LLM create or override deterministic
+`PASS`/`FAIL` verdicts. Missing or untrusted information is reported as
+`NEEDS_REVIEW` or `NOT_EVALUATED` instead of being invented.
 
-## API endpoints
+## Final release status
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/analyze` | Upload an image → `bim_data` JSON + saved visualisation + analysis report |
-| POST | `/export/ifc` | Convert a prior `/analyze` result (or uploaded `bim_json`) → IFC4 file |
-| GET  | `/export/ifc/parameters` | List building-height parameters and defaults |
-| GET  | `/health` | Model + system diagnostics (reports `num_classes: 4`) |
-| POST | `/analyze_accuracy` | Accuracy/diagnostics route |
+- Stage 1 package/API: `2.8.0`
+- Compliance engine package/API: `1.4.0`
+- IFC handoff contract: `1.2`
+- Target runtime: CPython `3.11`, Linux `amd64`, CUDA `11.8`
+- Previous verified regression evidence:
+  - Stage 1: 174 tests passed
+  - Compliance engine: 572 tests passed
+  - Phase 8 evaluator: 15 focused tests passed
+- Empirical ML accuracy remains blocked until sealed weights and an adjudicated
+  holdout dataset are supplied. Synthetic reference metrics are contract tests,
+  not claims about model accuracy.
+- Final cleanup verification on the review host:
+  - 7 final-release cleanup tests passed;
+  - 42 detector/packaging/evaluation tests passed;
+  - 12 geometry/container tests passed;
+  - 16/16 evaluation-infrastructure acceptance checks passed;
+  - serialized contracts, Markdown links, dependency locks, container/security
+    contracts, compileall, and deterministic SBOM generation passed.
+- The review host did not contain Flask, IfcOpenShell, Ruff, Docker, CUDA, or the
+  external model artifacts, so the complete 174/572 runtime suites were not
+  re-executed during cleanup. Their last complete verified summaries are retained
+  under `release/evidence/phase8/`; target-host acceptance remains mandatory.
 
-Interactive docs: `http://localhost:8080/openapi/swagger`
-(Note: `/analyze` and `/analyze_accuracy` use `@bp.route`, so they run but do
-not appear in the Swagger UI — call them directly.)
+Compact verification evidence is retained under `release/evidence/`. Historical
+per-phase build outputs, duplicated reports, old checksum sets, and generated
+JUnit archives were deliberately removed from the final source release.
 
----
+## Repository layout
 
-## Quick start
+| Path | Purpose |
+|---|---|
+| `application.py`, `routes/` | Stage 1 Flask/OpenAPI service |
+| `models/`, `analysis/`, `services/` | Detection, geometry, BIM semantics, orchestration |
+| `export/`, `validation/` | IFC export and independent trust gates |
+| `stage1_contracts/`, `contracts/` | Manual Inputs, Scale Evidence, provenance, IFC/OpenAPI contracts |
+| `evaluation/` | Ground-truth ML evaluation and verdict-impact metrics |
+| `compliance-engine/` | FastAPI/Celery compliance service and deterministic engine |
+| `requirements/` | Hash-locked Stage 1 dependency sets |
+| `sbom/` | CycloneDX software bills of materials |
+| `scripts/` | Preflight, acceptance, evaluation, lock, SBOM, and release tools |
+| `docs/` | Current architecture decisions and ML-evaluation protocol |
+| `release/` | Compact final evidence and release metadata |
+
+## External artifacts
+
+The following large files are intentionally not bundled:
+
+```text
+wheels/torch-2.1.2+cu118-cp311-cp311-linux_x86_64.whl
+wheels/torchvision-0.16.2+cu118-cp311-cp311-linux_x86_64.whl
+weights/maskrcnn_15_epochs.h5
+weights/yolo_best.pt
+compliance-engine/models/huggingface/
+compliance-engine/models/bge_reranker/
+```
+
+After copying them into place, seal their size and SHA-256 values:
 
 ```bash
-# 1) Python 3.10 or 3.11 (TensorFlow 2.13 does NOT support 3.12+)
-python3.11 -m venv venv && source venv/bin/activate
-
-# 2) System lib for paddle, then deps
-sudo apt-get install -y libgomp1
-pip install -r requirements.txt
-#    Verify the two load-bearing pins:
-python -c "import numpy; assert numpy.__version__ == '1.24.3', numpy.__version__"
-python -c "import ifcopenshell, ifcopenshell.api.geometry; print('ifcopenshell', ifcopenshell.version)"
-
-# 3) Place the Mask R-CNN weights (see weights/README.md)
-#    weights/maskrcnn_15_epochs.h5   (~244 MB, 4-class)
-
-# 4) Run
-python application.py                      # development
-APP_ENV=production gunicorn --config gunicorn.conf.py application:application
+python3.11 scripts/preflight.py \
+  --mode full-pipeline \
+  --refresh-manifest \
+  --strict \
+  --artifacts-only
 ```
 
-Smoke test (recommended after install):
+## Production secrets
+
+Create the secret files outside version control:
 
 ```bash
-python smoke_test.py --health-only                 # imports + health + openapi
-python smoke_test.py --image plan.png --scale 10.0 # full /analyze + /export/ifc
+mkdir -p secrets
+python -c "import secrets; print(secrets.token_urlsafe(48))" \
+  > secrets/floorplan_api_keys.txt
+python -c "import secrets; print(secrets.token_urlsafe(48))" \
+  > secrets/compliance_api_key.txt
+chmod 600 secrets/*.txt
 ```
 
----
+Then copy `.env.example` to `.env` and set at least the allowed origins and
+hosts for your deployment.
 
-## Building parameters (heights, mm)
+## Build and run
 
-Pass per-request as a JSON form field `building_params`, or rely on the
-Iranian-residential defaults:
+### Full pipeline with Docker Compose
 
-| Parameter | Default (mm) |
-|-----------|-------------:|
-| `wall_height` | 2800 |
-| `door_height` | 2100 |
-| `window_height` | 1200 |
-| `window_sill_height` | 900 |
-| `floor_thickness` | 200 |
+```bash
+cp .env.example .env
+python3.11 scripts/preflight.py --mode full-pipeline --strict --artifacts-only
+docker compose --profile full-pipeline build --no-cache
+docker compose --profile full-pipeline up -d
+```
 
----
+The main public service is bound to loopback by default:
 
-## Project phases
+```text
+http://127.0.0.1:8080
+```
 
-- **Section 1 (this repo, active):** Mask R-CNN vision API → `bim_data` → IFC4.
-- **Section 2 (later, not wired):** supplementary **YOLO** detector
-  (`yolo_best.pt`) for columns / railings / staircases, merged at the
-  `bim_data` layer. Design lives in `config/yolo_classes.py`,
-  `models/yolo_detector.py`, `services/yolo_elements.py`. `build_yolo_elements`
-  is **not called yet** — do not expect YOLO output until Section 2 is built.
-- **Downstream (separate project):** the Mabhas compliance engine
-  (deterministic checks + RAG) consumes this IFC/`bim_data`. It is **not** in
-  this repository.
+Place it behind a TLS reverse proxy for Internet-facing deployment. Redis and
+the compliance API are kept on the internal Compose network.
 
-A shelved **Mask2Former** path also exists in the codebase (15-class taxonomy
-in `config/classes.py`, kept for that future work). It does **not** drive the
-running service.
+### Stage 1 only
 
----
+```bash
+docker compose --profile floorplan-only build
+docker compose --profile floorplan-only up -d
+```
 
-## Review fixes applied (see CHANGES_REVIEW_FIXES.md)
+### Local Python development
 
-This checkout has had the Critical/High review items addressed: the
-`ifcopenshell` pin (C1), a visible weight-loader warning (C2), corrected
-`weights/README.md` (C3), explicit 4-class scope (H1), `needs_review` room
-flags (H2), accurate `model_mode` reporting (M3), and a clarifying banner on
-`config/classes.py` (M2). The supplementary YOLO integration (H3) is
-intentionally deferred to Section 2.
+Use CPython 3.11. The production build is defined by the hash-locked files in
+`requirements/`; `requirements.txt` remains the human-readable top-level input.
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --require-hashes -r requirements/baseline.lock
+```
+
+For the full ML runtime, install the runtime locks and provision the local CUDA
+wheels as described in `requirements/README.md` and `wheels/README.md`.
+
+## Public workflow
+
+1. `POST /analyze` — image + Manual Inputs v1 + Scale Evidence v1
+2. `POST /export/ifc` — export IFC Contract 1.2
+3. `POST /compliance/jobs/from-analysis` or `/compliance/jobs/ifc`
+4. `GET /compliance/jobs/{job_id}` or `/wait`
+5. Download JSON, HTML, PDF, or BCF reports
+
+Current OpenAPI snapshots:
+
+```text
+contracts/openapi_stage1.json
+compliance-engine/docs/contracts/openapi.json
+```
+
+## Verification
+
+Run the final acceptance entry point:
+
+```bash
+python3.11 scripts/run_final_acceptance.py --out release/local/final-acceptance
+```
+
+Individual checks:
+
+```bash
+make verify
+make test
+make acceptance
+python3.11 scripts/generate_openapi.py --check
+python3.11 -m compileall -q application.py routes services models evaluation export validation compliance-engine
+```
+
+Real ML holdout evaluation is documented in:
+
+```text
+docs/phase8/HOLDOUT_DATASET_PROTOCOL_FA.md
+docs/phase8/REAL_EVALUATION_CHECKLIST_FA.md
+```
+
+## Trust model
+
+The IFC boundary is intentionally defensive in depth:
+
+1. The exporter resolves versioned Manual Inputs and Scale Evidence, builds
+   correct geometry, validates it, and publishes atomically.
+2. Stage 1 reopens the written file and independently checks geometry,
+   relationships, counts, attributes, quantities, and provenance.
+3. The compliance engine performs its own schema, geometry, and trace checks on
+   every received IFC, including old, external, or edited files.
+
+A file that merely contains plausible metadata but contradicts its Body or
+relationships is rejected before compliance verdicts are evaluated.
+
+## Final documentation
+
+- `FINAL_CHANGELOG_FA.md` — complete project change history and removed files
+- `FINAL_RUNBOOK_FA.md` — deployment, validation, backup, and maintenance steps
+- `docs/ADR-009_FINAL_RELEASE_CLEANUP.md` — final cleanup and release decisions
+- `compliance-engine/README.md` — engine-specific usage
+- `compliance-engine/ARCHITECTURE.md` — engine architecture
+
+## Known limitations
+
+- Real image-model accuracy is not certified until a human-adjudicated holdout
+  is run with the sealed runtime weights.
+- External model directories and CUDA wheels must be supplied by the operator.
+- Docker/GPU behavior must be validated on the target NVIDIA host.
+- Process-local rate limiting should be complemented by shared gateway limits
+  when multiple replicas are deployed.
+- TLS termination, OIDC, or mTLS belong at the deployment gateway.
